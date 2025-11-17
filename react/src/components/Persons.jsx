@@ -15,26 +15,26 @@ import {
 } from '@mui/material';
 import { Edit, Delete, Add } from '@mui/icons-material';
 
-const Organization = () => {
-  const [organizations, setOrganizations] = useState([]);
+const Persons = () => {
+  const [persons, setPersons] = useState([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    fetchOrganizations();
+    fetchPersons();
   }, []);
 
-  const fetchOrganizations = async () => {
+  const fetchPersons = async () => {
     setLoading(true);
     try {
       // TODO: Replace with actual API call
-      // const response = await fetch('/api/organizations');
+      // const response = await fetch('/api/persons');
       // const data = await response.json();
-      // setOrganizations(data);
+      // setPersons(data);
       
       // Mock data for now
-      setOrganizations([]);
+      setPersons([]);
     } catch (error) {
-      console.error('Error fetching organizations:', error);
+      console.error('Error fetching persons:', error);
     } finally {
       setLoading(false);
     }
@@ -42,24 +42,24 @@ const Organization = () => {
 
   const handleAdd = () => {
     // TODO: Implement add functionality
-    console.log('Add organization');
+    console.log('Add person');
   };
 
   const handleEdit = (id) => {
     // TODO: Implement edit functionality
-    console.log('Edit organization:', id);
+    console.log('Edit person:', id);
   };
 
   const handleDelete = (id) => {
     // TODO: Implement delete functionality
-    console.log('Delete organization:', id);
+    console.log('Delete person:', id);
   };
 
   return (
     <Box sx={{ p: 3 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h4" component="h1">
-          Organizations
+          Persons
         </Typography>
         <Button
           variant="contained"
@@ -67,7 +67,7 @@ const Organization = () => {
           startIcon={<Add />}
           onClick={handleAdd}
         >
-          Add Organization
+          Add Person
         </Button>
       </Box>
 
@@ -81,44 +81,42 @@ const Organization = () => {
             <TableHead>
               <TableRow>
                 <TableCell>ID</TableCell>
-                <TableCell>Name</TableCell>
-                <TableCell>Code</TableCell>
-                <TableCell>Coordinator Name</TableCell>
-                <TableCell>Coordinator Email</TableCell>
-                <TableCell>Coordinator Phone</TableCell>
+                <TableCell>First Name</TableCell>
+                <TableCell>Last Name</TableCell>
+                <TableCell>Email</TableCell>
+                <TableCell>Phone</TableCell>
                 <TableCell align="center">Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {organizations.length === 0 ? (
+              {persons.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} align="center">
+                  <TableCell colSpan={6} align="center">
                     <Typography variant="body1" color="textSecondary" sx={{ py: 3 }}>
-                      No organizations found
+                      No persons found
                     </Typography>
                   </TableCell>
                 </TableRow>
               ) : (
-                organizations.map((org) => (
-                  <TableRow key={org.id} hover>
-                    <TableCell>{org.id}</TableCell>
-                    <TableCell>{org.name}</TableCell>
-                    <TableCell>{org.code}</TableCell>
-                    <TableCell>{org.coordinator_name}</TableCell>
-                    <TableCell>{org.coordinator_email}</TableCell>
-                    <TableCell>{org.coordinator_phone_number}</TableCell>
+                persons.map((person) => (
+                  <TableRow key={person.id} hover>
+                    <TableCell>{person.id}</TableCell>
+                    <TableCell>{person.first_name}</TableCell>
+                    <TableCell>{person.last_name}</TableCell>
+                    <TableCell>{person.email}</TableCell>
+                    <TableCell>{person.phone}</TableCell>
                     <TableCell align="center">
                       <IconButton
                         color="primary"
                         size="small"
-                        onClick={() => handleEdit(org.id)}
+                        onClick={() => handleEdit(person.id)}
                       >
                         <Edit />
                       </IconButton>
                       <IconButton
                         color="error"
                         size="small"
-                        onClick={() => handleDelete(org.id)}
+                        onClick={() => handleDelete(person.id)}
                       >
                         <Delete />
                       </IconButton>
@@ -134,4 +132,4 @@ const Organization = () => {
   );
 };
 
-export default Organization;
+export default Persons;

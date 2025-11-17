@@ -16,12 +16,7 @@ class CreateOrganizationsTable extends Migration
             $table->string('coordinator_designation', 100);
             $table->string('coordinator_phone_number', 12);
             $table->string('coordinator_email', 150)->nullable();
-            $table->unsignedBigInteger('session_id');
-            $table->foreign('session_id')->references('id')->on('login_sessions')->onDelete('restrict')->onUpdate('restrict');
-            // $table->foreignId('session_id')->constrained('login_sessions')->onDelete('restrict')->onUpdate('restrict');
             $table->timestamps();
-            // $table->dateTime('created_date');
-            // $table->dateTime('updated_date')->nullable();
         });
     }
 

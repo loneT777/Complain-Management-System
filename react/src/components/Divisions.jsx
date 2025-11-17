@@ -15,26 +15,26 @@ import {
 } from '@mui/material';
 import { Edit, Delete, Add } from '@mui/icons-material';
 
-const Organization = () => {
-  const [organizations, setOrganizations] = useState([]);
+const Divisions = () => {
+  const [divisions, setDivisions] = useState([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    fetchOrganizations();
+    fetchDivisions();
   }, []);
 
-  const fetchOrganizations = async () => {
+  const fetchDivisions = async () => {
     setLoading(true);
     try {
       // TODO: Replace with actual API call
-      // const response = await fetch('/api/organizations');
+      // const response = await fetch('/api/divisions');
       // const data = await response.json();
-      // setOrganizations(data);
+      // setDivisions(data);
       
       // Mock data for now
-      setOrganizations([]);
+      setDivisions([]);
     } catch (error) {
-      console.error('Error fetching organizations:', error);
+      console.error('Error fetching divisions:', error);
     } finally {
       setLoading(false);
     }
@@ -42,24 +42,24 @@ const Organization = () => {
 
   const handleAdd = () => {
     // TODO: Implement add functionality
-    console.log('Add organization');
+    console.log('Add division');
   };
 
   const handleEdit = (id) => {
     // TODO: Implement edit functionality
-    console.log('Edit organization:', id);
+    console.log('Edit division:', id);
   };
 
   const handleDelete = (id) => {
     // TODO: Implement delete functionality
-    console.log('Delete organization:', id);
+    console.log('Delete division:', id);
   };
 
   return (
     <Box sx={{ p: 3 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h4" component="h1">
-          Organizations
+          Divisions
         </Typography>
         <Button
           variant="contained"
@@ -67,7 +67,7 @@ const Organization = () => {
           startIcon={<Add />}
           onClick={handleAdd}
         >
-          Add Organization
+          Add Division
         </Button>
       </Box>
 
@@ -81,44 +81,40 @@ const Organization = () => {
             <TableHead>
               <TableRow>
                 <TableCell>ID</TableCell>
-                <TableCell>Name</TableCell>
+                <TableCell>Division Name</TableCell>
                 <TableCell>Code</TableCell>
-                <TableCell>Coordinator Name</TableCell>
-                <TableCell>Coordinator Email</TableCell>
-                <TableCell>Coordinator Phone</TableCell>
+                <TableCell>Description</TableCell>
                 <TableCell align="center">Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {organizations.length === 0 ? (
+              {divisions.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} align="center">
+                  <TableCell colSpan={5} align="center">
                     <Typography variant="body1" color="textSecondary" sx={{ py: 3 }}>
-                      No organizations found
+                      No divisions found
                     </Typography>
                   </TableCell>
                 </TableRow>
               ) : (
-                organizations.map((org) => (
-                  <TableRow key={org.id} hover>
-                    <TableCell>{org.id}</TableCell>
-                    <TableCell>{org.name}</TableCell>
-                    <TableCell>{org.code}</TableCell>
-                    <TableCell>{org.coordinator_name}</TableCell>
-                    <TableCell>{org.coordinator_email}</TableCell>
-                    <TableCell>{org.coordinator_phone_number}</TableCell>
+                divisions.map((division) => (
+                  <TableRow key={division.id} hover>
+                    <TableCell>{division.id}</TableCell>
+                    <TableCell>{division.name}</TableCell>
+                    <TableCell>{division.code}</TableCell>
+                    <TableCell>{division.description}</TableCell>
                     <TableCell align="center">
                       <IconButton
                         color="primary"
                         size="small"
-                        onClick={() => handleEdit(org.id)}
+                        onClick={() => handleEdit(division.id)}
                       >
                         <Edit />
                       </IconButton>
                       <IconButton
                         color="error"
                         size="small"
-                        onClick={() => handleDelete(org.id)}
+                        onClick={() => handleDelete(division.id)}
                       >
                         <Delete />
                       </IconButton>
@@ -134,4 +130,4 @@ const Organization = () => {
   );
 };
 
-export default Organization;
+export default Divisions;
