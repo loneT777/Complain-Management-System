@@ -79,7 +79,7 @@ export default function NavContent({ navigation, activeNav }) {
           letterSpacing: '0.5px'
         }}>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
-            <div style={{ fontSize: '2.8rem' }}>LMS</div>
+            <div style={{ fontSize: '2.8rem' }}>CMS</div>
             <div style={{ fontSize: '1.2rem', fontStyle: 'italic' }}>v1.0</div>
             </div>
         </div>
