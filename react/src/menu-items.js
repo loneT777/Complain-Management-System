@@ -44,6 +44,14 @@ const menuItems = {
           icon: 'material-icons-two-tone',
           iconname: 'account_tree',
           url: '/divisions'
+        },
+        {
+          id: 'roles',
+          title: 'Roles',
+          type: 'item',
+          icon: 'material-icons-two-tone',
+          iconname: 'security',
+          url: '/roles'
         }
       ]
     }

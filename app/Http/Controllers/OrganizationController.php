@@ -1,8 +1,9 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Models\Organization;
-use App\Models\Permission;
+// use App\Models\Permission;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
@@ -25,15 +26,16 @@ class OrganizationController extends Controller
         //     return true;
         // }
 
-        $permission = Permission::where('name', $permissionName)->first();
-        if (!$permission) {
-            return false;
-        }
+        // $permission = Permission::where('name', $permissionName)->first();
+        // if (!$permission) {
+        //     return false;
+        // }
 
-        return DB::table('role_permissions')
-            ->where('role_id', $user->role_id)
-            ->where('permission_id', $permission->id)
-            ->exists();
+        // return DB::table('role_permissions')
+        //     ->where('role_id', $user->role_id)
+        //     ->where('permission_id', $permission->id)
+        //     ->exists();
+        return true;
     }
 
     /**
@@ -51,7 +53,7 @@ class OrganizationController extends Controller
 
         $perPage = 10;
         $query = Organization::query();
-        
+
         // Include parent organization data if requested
         if ($request->has('with')) {
             $relations = explode(',', $request->with);
@@ -62,18 +64,18 @@ class OrganizationController extends Controller
                 $query->with('children');
             }
         }
-        
+
         // Get only parent organizations (those without parent_id) - for ministries
         if ($request->has('parents_only') && $request->parents_only === 'true') {
             $query->whereNull('parent_id');
         }
-        
+
         // Get ALL organizations that can be parents (both ministries and departments)
         if ($request->has('all_parents') && $request->all_parents === 'true') {
             // All organizations can be parents, no filter applied
             // We'll return all organizations for parent selection
         }
-        
+
         // Filter by parent_id (null for top-level, numeric for specific parent)
         if ($request->has('parent_id')) {
             if ($request->parent_id === 'null') {
@@ -82,7 +84,7 @@ class OrganizationController extends Controller
                 $query->where('parent_id', $request->parent_id);
             }
         }
-        
+
         // Allow searching for organizations
         if ($request->has('search') && $request->search != '') {
             $search = $request->search;
@@ -92,15 +94,15 @@ class OrganizationController extends Controller
                     ->orWhere('coordinator_name', 'LIKE', "%{$search}%");
             });
         }
-        
+
         // Check if pagination is needed
         if ($request->has('page')) {
             // Return paginated results
             // $organizations = $query->paginate($perPage);
             $organizations = $query
-            ->orderBy('organizations.id', 'desc')
-            ->paginate(perPage: $perPage);
-            
+                ->orderBy('organizations.id', 'desc')
+                ->paginate(perPage: $perPage);
+
             return response()->json([
                 'data' => $organizations->items(),
                 'current_page' => $organizations->currentPage(),
@@ -115,10 +117,11 @@ class OrganizationController extends Controller
             if ($request->has('search')) {
                 $query->limit(30);
             } else {
-                $query->limit(30);          }
+                $query->limit(30);
+            }
             // Load all results for complete listing
             $organizations = $query->get();
-            
+
             return response()->json([
                 'data' => $organizations
             ]);
@@ -230,28 +233,28 @@ class OrganizationController extends Controller
 
         try {
             $validated = $validator->validated();
-            
+
             // If no session_id provided or session_id is null, get current user's active session
             if (!isset($validated['session_id']) || $validated['session_id'] === null) {
                 // Auto-assign the current user's active login session
                 $currentUser = auth()->user();
                 if ($currentUser) {
                     // Find the current user's most recent active login session (where logout_time is null)
-                    $activeSession = \App\Models\LoginSession::where('user_id', $currentUser->id)
-                        ->whereNull('logout_time')
-                        ->orderBy('login_time', 'desc')
-                        ->first();
-                        
-                    if ($activeSession) {
-                        $validated['session_id'] = $activeSession->id;
-                    } else {
-                        $validated['session_id'] = 1; // Default to session 1 if no active session
-                    }
+                    // $activeSession = \App\Models\LoginSession::where('user_id', $currentUser->id)
+                    //     ->whereNull('logout_time')
+                    //     ->orderBy('login_time', 'desc')
+                    //     ->first();
+
+                    // if ($activeSession) {
+                    //     $validated['session_id'] = $activeSession->id;
+                    // } else {
+                    $validated['session_id'] = 1; // Default to session 1 if no active session
+                    // }
                 } else {
                     $validated['session_id'] = 1; // Default to session 1 if no user
                 }
             }
-            
+
             $organization = Organization::create($validated);
             return response()->json([
                 'success' => true,
@@ -289,7 +292,7 @@ class OrganizationController extends Controller
                 'error' => $e->getMessage()
             ], 404);
         }
-        
+
         $validator = Validator::make($request->all(), [
             'name' => [
                 'sometimes',
@@ -361,7 +364,7 @@ class OrganizationController extends Controller
 
         try {
             $validated = $validator->validated();
-            
+
             // If session_id is explicitly provided in the request, use it
             if (isset($request->session_id)) {
                 $validated['session_id'] = $request->session_id;
@@ -372,17 +375,17 @@ class OrganizationController extends Controller
                 $currentUser = auth()->user();
                 if ($currentUser) {
                     // Find the current user's most recent active login session (where logout_time is null)
-                    $activeSession = \App\Models\LoginSession::where('user_id', $currentUser->id)
-                        ->whereNull('logout_time')
-                        ->orderBy('login_time', 'desc')
-                        ->first();
-                        
-                    if ($activeSession) {
-                        $validated['session_id'] = $activeSession->id;
-                    }
+                    // $activeSession = \App\Models\LoginSession::where('user_id', $currentUser->id)
+                    //     ->whereNull('logout_time')
+                    //     ->orderBy('login_time', 'desc')
+                    //     ->first();
+
+                    // if ($activeSession) {
+                    //     $validated['session_id'] = $activeSession->id;
+                    // }
                 }
             }
-            
+
             $organization->update($validated);
             return response()->json([
                 'success' => true,

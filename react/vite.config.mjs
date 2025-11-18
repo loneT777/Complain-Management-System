@@ -8,7 +8,7 @@ const resolvePath = (str) => path.resolve(__dirname, str);
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
-  const API_URL = `${env.VITE_APP_BASE_NAME}`;
+  const API_URL = env.VITE_APP_BASE_NAME || '/';
   const PORT = 3000;
 
   return {
@@ -20,6 +20,13 @@ export default defineConfig(({ mode }) => {
       host: true,
       hmr: {
         host: 'localhost'
+      },
+      proxy: {
+        '/api': {
+          target: 'http://127.0.0.1:8000',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/api/, '/api')
+        }
       }
     },
     preview: {

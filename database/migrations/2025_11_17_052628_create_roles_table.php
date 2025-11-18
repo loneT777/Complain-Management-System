@@ -13,9 +13,11 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::table('employees', function (Blueprint $table) {
-            $table->enum('gender', ['Male', 'Female', 'Other'])->nullable()->after('last_name');
-            $table->unique('nic_no');
+        Schema::create('roles', function (Blueprint $table) {
+            $table->id();
+            $table->string('name')->unique();
+            $table->text('description')->nullable();
+            $table->timestamps();
         });
     }
 
@@ -26,9 +28,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::table('employees', function (Blueprint $table) {
-            $table->dropUnique(['nic_no']);
-            $table->dropColumn('gender');
-        });
+        Schema::dropIfExists('roles');
     }
 };

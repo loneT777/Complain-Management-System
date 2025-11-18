@@ -16,13 +16,13 @@ export default function AdminLayout() {
   const { collapseLayout } = configContext.state;
   const { dispatch } = configContext;
 
-  // Check if user is authenticated
-  const isAuthenticated = localStorage.getItem('authToken');
-  
-  // If not authenticated, redirect to login
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
+  // Check if user is authenticated (commented out for development)
+  // const isAuthenticated = localStorage.getItem('authToken');
+
+  // If not authenticated, redirect to login (disabled for development)
+  // if (!isAuthenticated) {
+  //   return <Navigate to="/login" replace />;
+  // }
 
   useEffect(() => {
     if (windowSize.width > 992 && windowSize.width <= 1024) {
@@ -43,7 +43,7 @@ export default function AdminLayout() {
     <>
       <Header />
       <Navigation />
-      
+
       <div className="pc-container">
         <div className="pcoded-content mt-3">
           <Suspense fallback={<Loader />}>
