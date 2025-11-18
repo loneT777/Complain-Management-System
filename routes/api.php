@@ -9,7 +9,7 @@ use App\Http\Controllers\DivisionController;
 // use App\Http\Controllers\ServicesController;
 // use App\Http\Controllers\Auth\AuthController;
 // use App\Http\Controllers\PermissionController;
-// use App\Http\Controllers\DesignationController;
+use App\Http\Controllers\DesignationController;
 use App\Http\Controllers\OrganizationController;
 // use App\Http\Controllers\ExpenseTypeController;
 use App\Http\Controllers\EmployeesController;
@@ -38,7 +38,7 @@ Route::get('/sanctum/csrf-cookie', function (Request $request) {
 
 // Public routes for dropdowns (without authentication)
 Route::get('/public/organizations', [OrganizationController::class, 'publicIndex']);
-// Route::get('/public/designations', [DesignationController::class, 'publicIndex']);
+Route::get('/public/designations', [DesignationController::class, 'publicIndex']);
 // Route::get('/public/services', [ServicesController::class, 'publicIndex']);
 Route::get('/public/roles', [RoleController::class, 'publicIndex']);
 
@@ -56,6 +56,13 @@ Route::get('/divisions/{id}', [DivisionController::class, 'show']);
 Route::put('/divisions/{id}', [DivisionController::class, 'update']);
 Route::delete('/divisions/{id}', [DivisionController::class, 'destroy']);
 Route::get('/public/divisions', [DivisionController::class, 'publicIndex']);
+
+// Public CRUD for Designations (for development)
+Route::get('/designations', [DesignationController::class, 'index']);
+Route::post('/designations', [DesignationController::class, 'store']);
+Route::get('/designations/{id}', [DesignationController::class, 'show']);
+Route::put('/designations/{id}', [DesignationController::class, 'update']);
+Route::delete('/designations/{id}', [DesignationController::class, 'destroy']);
 
 // Protected routes with authentication
 Route::middleware('auth:sanctum')->group(function () {

@@ -129,12 +129,18 @@ const Divisions = () => {
       const url = editingDivision ? `/api/divisions/${editingDivision.id}` : '/api/divisions';
       const method = editingDivision ? 'PUT' : 'POST';
 
+      // Convert empty parent_id to null
+      const submitData = {
+        ...formData,
+        parent_id: formData.parent_id === '' ? null : formData.parent_id
+      };
+
       const response = await fetch(url, {
         method: method,
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(submitData)
       });
 
       const data = await response.json();
@@ -183,12 +189,7 @@ const Divisions = () => {
     <Box sx={{ p: 3 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h4">Divisions</Typography>
-        <Button
-          variant="contained"
-          color="primary"
-          startIcon={<Add />}
-          onClick={() => handleOpenDialog()}
-        >
+        <Button variant="contained" color="primary" startIcon={<Add />} onClick={() => handleOpenDialog()}>
           Add Division
         </Button>
       </Box>
@@ -248,20 +249,10 @@ const Divisions = () => {
                       )}
                     </TableCell>
                     <TableCell sx={{ textAlign: 'center' }}>
-                      <IconButton
-                        size="small"
-                        color="primary"
-                        onClick={() => handleOpenDialog(division)}
-                        title="Edit"
-                      >
+                      <IconButton size="small" color="primary" onClick={() => handleOpenDialog(division)} title="Edit">
                         <Edit />
                       </IconButton>
-                      <IconButton
-                        size="small"
-                        color="error"
-                        onClick={() => handleDelete(division.id)}
-                        title="Delete"
-                      >
+                      <IconButton size="small" color="error" onClick={() => handleDelete(division.id)} title="Delete">
                         <Delete />
                       </IconButton>
                     </TableCell>
@@ -276,130 +267,112 @@ const Divisions = () => {
       {/* Add/Edit Dialog */}
       <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
         <DialogTitle>
-          {editingDivision ? 'Edit Division' : 'Add Division'}
-          <IconButton
-            onClick={handleCloseDialog}
-            sx={{ position: 'absolute', right: 8, top: 8 }}
-          >
-            <Close />
-          </IconButton>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            {editingDivision ? 'Edit Division' : 'Add New Division'}
+            <IconButton size="small" onClick={handleCloseDialog}>
+              <Close />
+            </IconButton>
+          </Box>
         </DialogTitle>
 
         <DialogContent sx={{ pt: 2 }}>
-          <Grid container spacing={2}>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Division Name"
-                name="name"
-                value={formData.name}
-                onChange={handleInputChange}
-                error={!!errors.name}
-                helperText={errors.name ? errors.name[0] : ''}
-                placeholder="Enter division name"
-              />
-            </Grid>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <TextField
+              fullWidth
+              size="small"
+              label="Division Name"
+              name="name"
+              value={formData.name}
+              onChange={handleInputChange}
+              error={!!errors.name}
+              helperText={errors.name ? errors.name[0] : ''}
+              placeholder="e.g., Finance Division"
+            />
 
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Division Code"
-                name="code"
-                value={formData.code}
-                onChange={handleInputChange}
-                error={!!errors.code}
-                helperText={errors.code ? errors.code[0] : ''}
-                placeholder="e.g., DIV001"
-              />
-            </Grid>
+            <TextField
+              fullWidth
+              size="small"
+              label="Division Code"
+              name="code"
+              value={formData.code}
+              onChange={handleInputChange}
+              error={!!errors.code}
+              helperText={errors.code ? errors.code[0] : ''}
+              placeholder="e.g., DIV001"
+            />
 
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Location"
-                name="location"
-                value={formData.location}
-                onChange={handleInputChange}
-                error={!!errors.location}
-                helperText={errors.location ? errors.location[0] : ''}
-                placeholder="Enter location"
-              />
-            </Grid>
+            <TextField
+              fullWidth
+              size="small"
+              label="Location"
+              name="location"
+              value={formData.location}
+              onChange={handleInputChange}
+              error={!!errors.location}
+              helperText={errors.location ? errors.location[0] : ''}
+              placeholder="Enter location"
+            />
 
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Officer in Charge"
-                name="officer_in_charge"
-                value={formData.officer_in_charge}
-                onChange={handleInputChange}
-                error={!!errors.officer_in_charge}
-                helperText={errors.officer_in_charge ? errors.officer_in_charge[0] : ''}
-                placeholder="Enter officer name"
-              />
-            </Grid>
+            <TextField
+              fullWidth
+              size="small"
+              label="Officer in Charge"
+              name="officer_in_charge"
+              value={formData.officer_in_charge}
+              onChange={handleInputChange}
+              error={!!errors.officer_in_charge}
+              helperText={errors.officer_in_charge ? errors.officer_in_charge[0] : ''}
+              placeholder="Enter officer name"
+            />
 
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Contact Number"
-                name="contact_no"
-                value={formData.contact_no}
-                onChange={handleInputChange}
-                error={!!errors.contact_no}
-                helperText={errors.contact_no ? errors.contact_no[0] : ''}
-                placeholder="Enter contact number"
-              />
-            </Grid>
+            <TextField
+              fullWidth
+              size="small"
+              label="Contact Number"
+              name="contact_no"
+              value={formData.contact_no}
+              onChange={handleInputChange}
+              error={!!errors.contact_no}
+              helperText={errors.contact_no ? errors.contact_no[0] : ''}
+              placeholder="e.g., +94-11-1234567"
+            />
 
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Parent Division ID"
-                name="parent_id"
-                type="number"
-                value={formData.parent_id}
-                onChange={handleInputChange}
-                error={!!errors.parent_id}
-                helperText={errors.parent_id ? errors.parent_id[0] : ''}
-                placeholder="Optional"
-              />
-            </Grid>
+            <TextField
+              fullWidth
+              size="small"
+              label="Parent Division ID"
+              name="parent_id"
+              type="number"
+              value={formData.parent_id}
+              onChange={handleInputChange}
+              error={!!errors.parent_id}
+              helperText={errors.parent_id ? errors.parent_id[0] : 'Optional'}
+              placeholder="Leave blank if no parent"
+            />
 
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Remark"
-                name="remark"
-                value={formData.remark}
-                onChange={handleInputChange}
-                error={!!errors.remark}
-                helperText={errors.remark ? errors.remark[0] : ''}
-                placeholder="Enter remark"
-                multiline
-                rows={3}
-              />
-            </Grid>
+            <TextField
+              fullWidth
+              size="small"
+              label="Remark"
+              name="remark"
+              value={formData.remark}
+              onChange={handleInputChange}
+              error={!!errors.remark}
+              helperText={errors.remark ? errors.remark[0] : ''}
+              placeholder="Enter any additional remarks"
+              multiline
+              rows={2}
+            />
 
-            <Grid item xs={12}>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    name="is_approved"
-                    checked={formData.is_approved}
-                    onChange={handleInputChange}
-                  />
-                }
-                label="Approved"
-              />
-            </Grid>
-          </Grid>
+            <FormControlLabel
+              control={<Checkbox name="is_approved" checked={formData.is_approved} onChange={handleInputChange} />}
+              label="Mark as Approved"
+            />
+          </Box>
         </DialogContent>
 
-        <DialogActions sx={{ p: 2 }}>
-          <Button onClick={handleCloseDialog} color="inherit">
-            Cancel
-          </Button>
+        <DialogActions>
+          <Button onClick={handleCloseDialog}>Cancel</Button>
           <Button onClick={handleSaveDivision} variant="contained" color="primary">
             {editingDivision ? 'Update' : 'Create'}
           </Button>
