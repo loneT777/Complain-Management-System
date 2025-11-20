@@ -1,0 +1,40 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     *
+     * @return void
+     */
+    public function up()
+    {
+        Schema::create('attachments', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('complaint_id')->nullable();
+            $table->unsignedBigInteger('complaint_log_id')->nullable();
+            $table->unsignedBigInteger('user_id')->nullable();
+            $table->timestamp('uploaded_at')->nullable();
+            $table->string('file_name')->nullable();
+            $table->string('extension')->nullable();
+
+            $table->foreign('complaint_id')->references('id')->on('complaints')->onDelete('cascade');
+            $table->foreign('complaint_log_id')->references('id')->on('complaint_logs')->onDelete('cascade');
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('set null');
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     *
+     * @return void
+     */
+    public function down()
+    {
+        Schema::dropIfExists('attachments');
+    }
+};

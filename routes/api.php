@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\DivisionController;
+use App\Http\Controllers\CategoryController;
 // use App\Http\Controllers\TestController;
 // use App\Http\Controllers\UserController;
 // use App\Http\Controllers\ServicesController;
@@ -56,6 +57,14 @@ Route::get('/divisions/{id}', [DivisionController::class, 'show']);
 Route::put('/divisions/{id}', [DivisionController::class, 'update']);
 Route::delete('/divisions/{id}', [DivisionController::class, 'destroy']);
 Route::get('/public/divisions', [DivisionController::class, 'publicIndex']);
+
+// Public CRUD for Categories (for development)
+Route::get('/categories', [CategoryController::class, 'index']);
+Route::post('/categories', [CategoryController::class, 'store']);
+Route::get('/categories/{id}', [CategoryController::class, 'show']);
+Route::put('/categories/{id}', [CategoryController::class, 'update']);
+Route::delete('/categories/{id}', [CategoryController::class, 'destroy']);
+Route::get('/public/categories', [CategoryController::class, 'publicIndex']);
 
 // Public CRUD for Designations (for development)
 Route::get('/designations', [DesignationController::class, 'index']);

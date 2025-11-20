@@ -52,6 +52,14 @@ const menuItems = {
           icon: 'material-icons-two-tone',
           iconname: 'security',
           url: '/roles'
+        },
+        {
+          id: 'categories',
+          title: 'Categories',
+          type: 'item',
+          icon: 'material-icons-two-tone',
+          iconname: 'category',
+          url: '/categories'
         }
       ]
     }
