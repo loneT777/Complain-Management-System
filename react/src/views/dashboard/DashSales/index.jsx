@@ -31,8 +31,46 @@ ChartJS.register(
   Legend
 );
 
+// Mock stats data when API is not available
+const getMockStats = () => ({
+  po_application_details: {
+    pending_applications: { title: 'Pending', value: 0, icon: 'schedule' },
+    checked_applications: { title: 'Checked', value: 0, icon: 'done' },
+    recommended_applications: { title: 'Recommended', value: 0, icon: 'thumb_up' },
+    not_recommended_applications: { title: 'Not Recommended', value: 0, icon: 'thumb_down' },
+    approved_applications: { title: 'Approved', value: 0, icon: 'check_circle' },
+    rejected_applications: { title: 'Rejected', value: 0, icon: 'cancel' },
+    required_resubmit_applications: { title: 'Resubmit Required', value: 0, icon: 'redo' },
+    resubmit_pending_applications: { title: 'Resubmit Pending', value: 0, icon: 'hourglass_empty' }
+  },
+  pm_application_details: {
+    pending_applications: { title: 'Pending', value: 0, icon: 'schedule' },
+    checked_applications: { title: 'Checked', value: 0, icon: 'done' },
+    recommended_applications: { title: 'Recommended', value: 0, icon: 'thumb_up' },
+    not_recommended_applications: { title: 'Not Recommended', value: 0, icon: 'thumb_down' },
+    approved_applications: { title: 'Approved', value: 0, icon: 'check_circle' },
+    rejected_applications: { title: 'Rejected', value: 0, icon: 'cancel' },
+    required_resubmit_applications: { title: 'Resubmit Required', value: 0, icon: 'redo' },
+    resubmit_pending_applications: { title: 'Resubmit Pending', value: 0, icon: 'hourglass_empty' }
+  },
+  employee_details: {
+    public_officers: { title: 'Public Officers', value: 0, icon: 'person' },
+    parliament_members: { title: 'Parliament Members', value: 0, icon: 'groups' },
+    total_members: { title: 'Total Members', value: 0, icon: 'people' },
+    po_total_applications: { title: 'PO Total Applications', value: 0, icon: 'description' },
+    pm_total_applications: { title: 'PM Total Applications', value: 0, icon: 'description' },
+    all_total_applications: { title: 'All Total Applications', value: 0, icon: 'description' }
+  },
+  total_applications: 0,
+  total_users: 0,
+  total_divisions: 0,
+  total_organizations: 0,
+  pie_chart_data: []
+});
+
 export default function DashSales() {
-  const [stats, setStats] = useState(null);
+  const initialStats = getMockStats();
+  const [stats, setStats] = useState(initialStats);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -40,9 +78,15 @@ export default function DashSales() {
     const fetchStats = async () => {
       try {
         const response = await axios.get(`${API_URL}/dashboard/stats`);
-        setStats(response.data);
+        if (response.data && response.data.po_application_details) {
+          setStats(response.data);
+        } else {
+          setStats(getMockStats());
+        }
       } catch (error) {
         console.error('Error fetching stats:', error);
+        // Set mock data if API fails
+        setStats(getMockStats());
       } finally {
         setLoading(false);
       }
@@ -53,7 +97,9 @@ export default function DashSales() {
     return () => clearInterval(interval);
   }, []);
 
-  if (loading || !stats) return <div>Loading...</div>;
+  if (loading || !stats || !stats.po_application_details || !stats.employee_details) {
+    return <div style={{ padding: '20px' }}>Loading...</div>;
+  }
 
   // Helper function to get status ID based on title
   const getStatusId = (statusTitle) => {

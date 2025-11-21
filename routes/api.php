@@ -5,6 +5,24 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\DivisionController;
 use App\Http\Controllers\PersonController;
+use App\Http\Controllers\CategoryController;
+// use App\Http\Controllers\TestController;
+// use App\Http\Controllers\UserController;
+// use App\Http\Controllers\ServicesController;
+// use App\Http\Controllers\Auth\AuthController;
+// use App\Http\Controllers\PermissionController;
+use App\Http\Controllers\DesignationController;
+use App\Http\Controllers\OrganizationController;
+// use App\Http\Controllers\ExpenseTypeController;
+use App\Http\Controllers\EmployeesController;
+// use App\Http\Controllers\LoginSessionController;
+// use App\Http\Controllers\GoslFundTypeController;
+// use App\Http\Controllers\ApplicationController;
+// use App\Http\Controllers\ParlimentApplicationController;
+// use App\Http\Controllers\ParliamentMemberController;
+// use App\Http\Controllers\PdfController;
+// use App\Http\Controllers\ParlimentPdfController;
+// use App\Http\Controllers\DashboardController;
 
 // CSRF Cookie
 Route::get('/sanctum/csrf-cookie', function (Request $request) {
@@ -22,7 +40,7 @@ Route::get('/sanctum/csrf-cookie', function (Request $request) {
 
 // Public routes for dropdowns (without authentication)
 Route::get('/public/organizations', [OrganizationController::class, 'publicIndex']);
-// Route::get('/public/designations', [DesignationController::class, 'publicIndex']);
+Route::get('/public/designations', [DesignationController::class, 'publicIndex']);
 // Route::get('/public/services', [ServicesController::class, 'publicIndex']);
 Route::get('/public/roles', [RoleController::class, 'publicIndex']);
 
@@ -47,6 +65,21 @@ Route::post('/persons', [PersonController::class, 'store']);
 Route::get('/persons/{id}', [PersonController::class, 'show']);
 Route::put('/persons/{id}', [PersonController::class, 'update']);
 Route::delete('/persons/{id}', [PersonController::class, 'destroy']);
+
+// Public CRUD for Categories (for development)
+Route::get('/categories', [CategoryController::class, 'index']);
+Route::post('/categories', [CategoryController::class, 'store']);
+Route::get('/categories/{id}', [CategoryController::class, 'show']);
+Route::put('/categories/{id}', [CategoryController::class, 'update']);
+Route::delete('/categories/{id}', [CategoryController::class, 'destroy']);
+Route::get('/public/categories', [CategoryController::class, 'publicIndex']);
+
+// Public CRUD for Designations (for development)
+Route::get('/designations', [DesignationController::class, 'index']);
+Route::post('/designations', [DesignationController::class, 'store']);
+Route::get('/designations/{id}', [DesignationController::class, 'show']);
+Route::put('/designations/{id}', [DesignationController::class, 'update']);
+Route::delete('/designations/{id}', [DesignationController::class, 'destroy']);
 
 // Protected routes with authentication
 Route::middleware('auth:sanctum')->group(function () {

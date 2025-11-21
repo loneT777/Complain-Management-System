@@ -13,14 +13,11 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('login_sessions', function (Blueprint $table) {
+        Schema::create('status', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('user_id');
-            $table->timestamp('login_time');
-            $table->timestamp('logout_time')->nullable();
-            $table->timestamps();
-
-            $table->foreign('user_id')->references('id')->on('users');
+            $table->string('name');
+            $table->string('code', 50)->unique();
+            $table->timestamp('created_at')->nullable();
         });
     }
 
@@ -31,6 +28,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('login_sessions');
+        Schema::dropIfExists('status');
     }
 };
