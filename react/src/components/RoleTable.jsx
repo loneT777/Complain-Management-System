@@ -1,0 +1,64 @@
+import React from 'react';
+import { Table, Spinner } from 'react-bootstrap';
+import { Edit, Delete } from '@mui/icons-material';
+import { IconButton } from '@mui/material';
+
+const RoleTable = ({ roles, loading, handleEdit, handleDelete }) => {
+  if (loading) {
+    return (
+      <div className="text-center py-5">
+        <Spinner animation="border" role="status" variant="primary">
+          <span className="visually-hidden">Loading...</span>
+        </Spinner>
+      </div>
+    );
+  }
+
+  if (roles.length === 0) {
+    return (
+      <div className="text-center py-5">
+        <p className="text-muted">No roles found</p>
+      </div>
+    );
+  }
+
+  return (
+    <Table responsive hover>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Description</th>
+          <th className="text-center">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {roles.map((role) => (
+          <tr key={role.id}>
+            <td>{role.id}</td>
+            <td>{role.name}</td>
+            <td>{role.description || '-'}</td>
+            <td className="text-center">
+              <IconButton
+                color="primary"
+                size="small"
+                onClick={() => handleEdit(role)}
+              >
+                <Edit fontSize="small" />
+              </IconButton>
+              <IconButton
+                color="error"
+                size="small"
+                onClick={() => handleDelete(role.id)}
+              >
+                <Delete fontSize="small" />
+              </IconButton>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </Table>
+  );
+};
+
+export default RoleTable;

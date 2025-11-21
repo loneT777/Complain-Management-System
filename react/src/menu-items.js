@@ -14,22 +14,6 @@ const menuItems = {
           url: '/dashboard/summary'
         },
         {
-          id: 'employees',
-          title: 'Employees',
-          type: 'item',
-          icon: 'material-icons-two-tone',
-          iconname: 'group',
-          url: '/employees'
-        },
-        {
-          id: 'organizations',
-          title: 'Organizations',
-          type: 'item',
-          icon: 'material-icons-two-tone',
-          iconname: 'business',
-          url: '/organizations'
-        },
-        {
           id: 'persons',
           title: 'Persons',
           type: 'item',

@@ -3,8 +3,6 @@ import AdminLayout from 'layouts/AdminLayout';
 import GuestLayout from 'layouts/GuestLayout';
 
 const DashboardSales = lazy(() => import('../views/dashboard/DashSales/index'));
-const Organizations = lazy(() => import('../components/Organization'));
-const Employees = lazy(() => import('../components/Employees'));
 const Persons = lazy(() => import('../components/Persons'));
 const Divisions = lazy(() => import('../components/Divisions'));
 const Roles = lazy(() => import('../components/Roles'));
@@ -39,10 +37,8 @@ const MainRoutes = {
           path: 'dashboard',
           element: <DashboardSales />
         },
-        { path: 'employees', element: <Employees /> },
-        { path: 'organizations', element: <Organizations /> },
-        { path: 'persons', element: <Persons /> },
-        { path: 'divisions', element: <Divisions /> },
+        {path: 'persons', element: <Persons />},
+        {path: 'divisions', element: <Divisions />},
         { path: 'roles', element: <Roles /> },
 
         // Catch-all for undefined routes

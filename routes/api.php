@@ -4,23 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\DivisionController;
-// use App\Http\Controllers\TestController;
-// use App\Http\Controllers\UserController;
-// use App\Http\Controllers\ServicesController;
-// use App\Http\Controllers\Auth\AuthController;
-// use App\Http\Controllers\PermissionController;
-// use App\Http\Controllers\DesignationController;
-use App\Http\Controllers\OrganizationController;
-// use App\Http\Controllers\ExpenseTypeController;
-use App\Http\Controllers\EmployeesController;
-// use App\Http\Controllers\LoginSessionController;
-// use App\Http\Controllers\GoslFundTypeController;
-// use App\Http\Controllers\ApplicationController;
-// use App\Http\Controllers\ParlimentApplicationController;
-// use App\Http\Controllers\ParliamentMemberController;
-// use App\Http\Controllers\PdfController;
-// use App\Http\Controllers\ParlimentPdfController;
-// use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\PersonController;
 
 // CSRF Cookie
 Route::get('/sanctum/csrf-cookie', function (Request $request) {
@@ -56,6 +40,13 @@ Route::get('/divisions/{id}', [DivisionController::class, 'show']);
 Route::put('/divisions/{id}', [DivisionController::class, 'update']);
 Route::delete('/divisions/{id}', [DivisionController::class, 'destroy']);
 Route::get('/public/divisions', [DivisionController::class, 'publicIndex']);
+
+// Public CRUD for Persons (for development)
+Route::get('/persons', [PersonController::class, 'index']);
+Route::post('/persons', [PersonController::class, 'store']);
+Route::get('/persons/{id}', [PersonController::class, 'show']);
+Route::put('/persons/{id}', [PersonController::class, 'update']);
+Route::delete('/persons/{id}', [PersonController::class, 'destroy']);
 
 // Protected routes with authentication
 Route::middleware('auth:sanctum')->group(function () {

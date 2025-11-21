@@ -1,47 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  Button,
-  IconButton,
-  Typography,
-  Box,
-  CircularProgress,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  Alert,
-  Grid,
-  FormControlLabel,
-  Checkbox
-} from '@mui/material';
-import { Edit, Delete, Add, Close } from '@mui/icons-material';
+import { Container, Row, Col, Card, Button } from 'react-bootstrap';
+import { Add } from '@mui/icons-material';
+import axios from 'axios';
+import DivisionTable from './DivisionTable';
+import DivisionForm from './DivisionForm';
 
 const Divisions = () => {
   const [divisions, setDivisions] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [openDialog, setOpenDialog] = useState(false);
-  const [editingDivision, setEditingDivision] = useState(null);
-  const [formData, setFormData] = useState({
+  const [showModal, setShowModal] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [currentDivision, setCurrentDivision] = useState({
     name: '',
     code: '',
-    location: '',
-    officer_in_charge: '',
-    contact_no: '',
-    parent_id: '',
-    is_approved: false,
-    remark: ''
+    description: ''
   });
-  const [errors, setErrors] = useState({});
-  const [successMessage, setSuccessMessage] = useState('');
-  const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
     fetchDivisions();
@@ -50,362 +23,108 @@ const Divisions = () => {
   const fetchDivisions = async () => {
     setLoading(true);
     try {
-      const response = await fetch('/api/divisions');
-      const data = await response.json();
-      setDivisions(data.data || []);
+      const response = await axios.get('http://localhost:8000/api/divisions');
+      setDivisions(response.data.data || []);
     } catch (error) {
       console.error('Error fetching divisions:', error);
-      setErrorMessage('Failed to load divisions');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleOpenDialog = (division = null) => {
+  const handleOpenModal = (division = null) => {
     if (division) {
-      setEditingDivision(division);
-      setFormData({
-        name: division.name || '',
-        code: division.code || '',
-        location: division.location || '',
-        officer_in_charge: division.officer_in_charge || '',
-        contact_no: division.contact_no || '',
-        parent_id: division.parent_id || '',
-        is_approved: division.is_approved || false,
-        remark: division.remark || ''
-      });
+      setEditMode(true);
+      setCurrentDivision(division);
     } else {
-      setEditingDivision(null);
-      setFormData({
+      setEditMode(false);
+      setCurrentDivision({
         name: '',
         code: '',
-        location: '',
-        officer_in_charge: '',
-        contact_no: '',
-        parent_id: '',
-        is_approved: false,
-        remark: ''
+        description: ''
       });
     }
-    setErrors({});
-    setOpenDialog(true);
+    setShowModal(true);
   };
 
-  const handleCloseDialog = () => {
-    setOpenDialog(false);
-    setEditingDivision(null);
-    setFormData({
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setCurrentDivision({
       name: '',
       code: '',
-      location: '',
-      officer_in_charge: '',
-      contact_no: '',
-      parent_id: '',
-      is_approved: false,
-      remark: ''
+      description: ''
     });
-    setErrors({});
   };
 
-  const handleInputChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }));
-    if (errors[name]) {
-      setErrors((prev) => ({
-        ...prev,
-        [name]: ''
-      }));
-    }
+  const handleChange = (e) => {
+    setCurrentDivision({
+      ...currentDivision,
+      [e.target.name]: e.target.value
+    });
   };
 
-  const handleSaveDivision = async () => {
-    setSuccessMessage('');
-    setErrorMessage('');
-
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     try {
-      const url = editingDivision ? `/api/divisions/${editingDivision.id}` : '/api/divisions';
-      const method = editingDivision ? 'PUT' : 'POST';
-
-      const response = await fetch(url, {
-        method: method,
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(formData)
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        if (data.errors) {
-          setErrors(data.errors);
-        }
-        setErrorMessage(data.message || 'Failed to save division');
-        return;
+      if (editMode) {
+        await axios.put(`http://localhost:8000/api/divisions/${currentDivision.id}`, currentDivision);
+      } else {
+        await axios.post('http://localhost:8000/api/divisions', currentDivision);
       }
-
-      setSuccessMessage(data.message || (editingDivision ? 'Division updated successfully' : 'Division created successfully'));
-      handleCloseDialog();
       fetchDivisions();
+      handleCloseModal();
     } catch (error) {
       console.error('Error saving division:', error);
-      setErrorMessage('Error saving division');
+      alert('Error saving division. Please check the form.');
     }
   };
 
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this division?')) {
       try {
-        const response = await fetch(`/api/divisions/${id}`, {
-          method: 'DELETE'
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          setErrorMessage(data.message || 'Failed to delete division');
-          return;
-        }
-
-        setSuccessMessage(data.message || 'Division deleted successfully');
+        await axios.delete(`http://localhost:8000/api/divisions/${id}`);
         fetchDivisions();
       } catch (error) {
         console.error('Error deleting division:', error);
-        setErrorMessage('Error deleting division');
       }
     }
   };
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4">Divisions</Typography>
-        <Button
-          variant="contained"
-          color="primary"
-          startIcon={<Add />}
-          onClick={() => handleOpenDialog()}
-        >
-          Add Division
-        </Button>
-      </Box>
-
-      {successMessage && (
-        <Alert severity="success" onClose={() => setSuccessMessage('')} sx={{ mb: 2 }}>
-          {successMessage}
-        </Alert>
-      )}
-
-      {errorMessage && (
-        <Alert severity="error" onClose={() => setErrorMessage('')} sx={{ mb: 2 }}>
-          {errorMessage}
-        </Alert>
-      )}
-
-      {loading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', p: 5 }}>
-          <CircularProgress />
-        </Box>
-      ) : (
-        <TableContainer component={Paper}>
-          <Table>
-            <TableHead sx={{ backgroundColor: '#f5f5f5' }}>
-              <TableRow>
-                <TableCell sx={{ fontWeight: 'bold' }}>ID</TableCell>
-                <TableCell sx={{ fontWeight: 'bold' }}>Name</TableCell>
-                <TableCell sx={{ fontWeight: 'bold' }}>Code</TableCell>
-                <TableCell sx={{ fontWeight: 'bold' }}>Location</TableCell>
-                <TableCell sx={{ fontWeight: 'bold' }}>Officer</TableCell>
-                <TableCell sx={{ fontWeight: 'bold' }}>Contact</TableCell>
-                <TableCell sx={{ fontWeight: 'bold' }}>Status</TableCell>
-                <TableCell sx={{ fontWeight: 'bold', textAlign: 'center' }}>Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {divisions.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan="8" sx={{ textAlign: 'center', p: 3 }}>
-                    No divisions found
-                  </TableCell>
-                </TableRow>
-              ) : (
-                divisions.map((division) => (
-                  <TableRow key={division.id} sx={{ '&:hover': { backgroundColor: '#f9f9f9' } }}>
-                    <TableCell>{division.id}</TableCell>
-                    <TableCell>{division.name}</TableCell>
-                    <TableCell>{division.code}</TableCell>
-                    <TableCell>{division.location}</TableCell>
-                    <TableCell>{division.officer_in_charge}</TableCell>
-                    <TableCell>{division.contact_no}</TableCell>
-                    <TableCell>
-                      {division.is_approved ? (
-                        <Typography sx={{ color: 'green', fontWeight: 'bold' }}>Approved</Typography>
-                      ) : (
-                        <Typography sx={{ color: 'orange', fontWeight: 'bold' }}>Pending</Typography>
-                      )}
-                    </TableCell>
-                    <TableCell sx={{ textAlign: 'center' }}>
-                      <IconButton
-                        size="small"
-                        color="primary"
-                        onClick={() => handleOpenDialog(division)}
-                        title="Edit"
-                      >
-                        <Edit />
-                      </IconButton>
-                      <IconButton
-                        size="small"
-                        color="error"
-                        onClick={() => handleDelete(division.id)}
-                        title="Delete"
-                      >
-                        <Delete />
-                      </IconButton>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      )}
-
-      {/* Add/Edit Dialog */}
-      <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
-        <DialogTitle>
-          {editingDivision ? 'Edit Division' : 'Add Division'}
-          <IconButton
-            onClick={handleCloseDialog}
-            sx={{ position: 'absolute', right: 8, top: 8 }}
-          >
-            <Close />
-          </IconButton>
-        </DialogTitle>
-
-        <DialogContent sx={{ pt: 2 }}>
-          <Grid container spacing={2}>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Division Name"
-                name="name"
-                value={formData.name}
-                onChange={handleInputChange}
-                error={!!errors.name}
-                helperText={errors.name ? errors.name[0] : ''}
-                placeholder="Enter division name"
+    <Container fluid className="p-4">
+      <Row className="mb-4">
+        <Col>
+          <Card>
+            <Card.Header className="d-flex justify-content-between align-items-center">
+              <h4 className="mb-0">Divisions</h4>
+              <Button
+                style={{ backgroundColor: '#3a4c4a', borderColor: '#3a4c4a' }}
+                onClick={() => handleOpenModal()}
+              >
+                <Add className="me-1" /> Add Division
+              </Button>
+            </Card.Header>
+            <Card.Body>
+              <DivisionTable
+                divisions={divisions}
+                loading={loading}
+                handleEdit={handleOpenModal}
+                handleDelete={handleDelete}
               />
-            </Grid>
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
 
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Division Code"
-                name="code"
-                value={formData.code}
-                onChange={handleInputChange}
-                error={!!errors.code}
-                helperText={errors.code ? errors.code[0] : ''}
-                placeholder="e.g., DIV001"
-              />
-            </Grid>
-
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Location"
-                name="location"
-                value={formData.location}
-                onChange={handleInputChange}
-                error={!!errors.location}
-                helperText={errors.location ? errors.location[0] : ''}
-                placeholder="Enter location"
-              />
-            </Grid>
-
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Officer in Charge"
-                name="officer_in_charge"
-                value={formData.officer_in_charge}
-                onChange={handleInputChange}
-                error={!!errors.officer_in_charge}
-                helperText={errors.officer_in_charge ? errors.officer_in_charge[0] : ''}
-                placeholder="Enter officer name"
-              />
-            </Grid>
-
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Contact Number"
-                name="contact_no"
-                value={formData.contact_no}
-                onChange={handleInputChange}
-                error={!!errors.contact_no}
-                helperText={errors.contact_no ? errors.contact_no[0] : ''}
-                placeholder="Enter contact number"
-              />
-            </Grid>
-
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Parent Division ID"
-                name="parent_id"
-                type="number"
-                value={formData.parent_id}
-                onChange={handleInputChange}
-                error={!!errors.parent_id}
-                helperText={errors.parent_id ? errors.parent_id[0] : ''}
-                placeholder="Optional"
-              />
-            </Grid>
-
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Remark"
-                name="remark"
-                value={formData.remark}
-                onChange={handleInputChange}
-                error={!!errors.remark}
-                helperText={errors.remark ? errors.remark[0] : ''}
-                placeholder="Enter remark"
-                multiline
-                rows={3}
-              />
-            </Grid>
-
-            <Grid item xs={12}>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    name="is_approved"
-                    checked={formData.is_approved}
-                    onChange={handleInputChange}
-                  />
-                }
-                label="Approved"
-              />
-            </Grid>
-          </Grid>
-        </DialogContent>
-
-        <DialogActions sx={{ p: 2 }}>
-          <Button onClick={handleCloseDialog} color="inherit">
-            Cancel
-          </Button>
-          <Button onClick={handleSaveDivision} variant="contained" color="primary">
-            {editingDivision ? 'Update' : 'Create'}
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
+      <DivisionForm
+        show={showModal}
+        handleClose={handleCloseModal}
+        division={currentDivision}
+        handleChange={handleChange}
+        handleSubmit={handleSubmit}
+        editMode={editMode}
+      />
+    </Container>
   );
 };
 

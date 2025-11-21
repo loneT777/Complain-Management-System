@@ -1,23 +1,27 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  Button,
-  IconButton,
-  Typography,
-  Box,
-  CircularProgress
-} from '@mui/material';
-import { Edit, Delete, Add } from '@mui/icons-material';
+import { Container, Row, Col, Card, Button } from 'react-bootstrap';
+import { Add } from '@mui/icons-material';
+import axios from 'axios';
+import PersonTable from './PersonTable';
+import PersonForm from './PersonForm';
 
 const Persons = () => {
   const [persons, setPersons] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [currentPerson, setCurrentPerson] = useState({
+    title: '',
+    full_name: '',
+    nic: '',
+    code: '',
+    office_phone: '',
+    whatsapp: '',
+    address: '',
+    type: '',
+    designation: '',
+    remark: ''
+  });
 
   useEffect(() => {
     fetchPersons();
@@ -26,13 +30,8 @@ const Persons = () => {
   const fetchPersons = async () => {
     setLoading(true);
     try {
-      // TODO: Replace with actual API call
-      // const response = await fetch('/api/persons');
-      // const data = await response.json();
-      // setPersons(data);
-      
-      // Mock data for now
-      setPersons([]);
+      const response = await axios.get('http://localhost:8000/api/persons');
+      setPersons(response.data);
     } catch (error) {
       console.error('Error fetching persons:', error);
     } finally {
@@ -40,95 +39,113 @@ const Persons = () => {
     }
   };
 
-  const handleAdd = () => {
-    // TODO: Implement add functionality
-    console.log('Add person');
+  const handleOpenModal = (person = null) => {
+    if (person) {
+      setEditMode(true);
+      setCurrentPerson(person);
+    } else {
+      setEditMode(false);
+      setCurrentPerson({
+        title: '',
+        full_name: '',
+        nic: '',
+        code: '',
+        office_phone: '',
+        whatsapp: '',
+        address: '',
+        type: '',
+        designation: '',
+        remark: ''
+      });
+    }
+    setShowModal(true);
   };
 
-  const handleEdit = (id) => {
-    // TODO: Implement edit functionality
-    console.log('Edit person:', id);
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setCurrentPerson({
+      title: '',
+      full_name: '',
+      nic: '',
+      code: '',
+      office_phone: '',
+      whatsapp: '',
+      address: '',
+      type: '',
+      designation: '',
+      remark: ''
+    });
   };
 
-  const handleDelete = (id) => {
-    // TODO: Implement delete functionality
-    console.log('Delete person:', id);
+  const handleChange = (e) => {
+    setCurrentPerson({
+      ...currentPerson,
+      [e.target.name]: e.target.value
+    });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      if (editMode) {
+        await axios.put(`http://localhost:8000/api/persons/${currentPerson.id}`, currentPerson);
+      } else {
+        await axios.post('http://localhost:8000/api/persons', currentPerson);
+      }
+      fetchPersons();
+      handleCloseModal();
+    } catch (error) {
+      console.error('Error saving person:', error);
+      alert('Error saving person. Please check the form.');
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (window.confirm('Are you sure you want to delete this person?')) {
+      try {
+        await axios.delete(`http://localhost:8000/api/persons/${id}`);
+        fetchPersons();
+      } catch (error) {
+        console.error('Error deleting person:', error);
+      }
+    }
   };
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4" component="h1">
-          Persons
-        </Typography>
-        <Button
-          variant="contained"
-          color="primary"
-          startIcon={<Add />}
-          onClick={handleAdd}
-        >
-          Add Person
-        </Button>
-      </Box>
+    <Container fluid className="p-4">
+      <Row className="mb-4">
+        <Col>
+          <Card>
+            <Card.Header className="d-flex justify-content-between align-items-center">
+              <h4 className="mb-0">Persons</h4>
+              <Button
+                style={{ backgroundColor: '#3a4c4a', borderColor: '#3a4c4a' }}
+                onClick={() => handleOpenModal()}
+              >
+                <Add className="me-1" /> Add Person
+              </Button>
+            </Card.Header>
+            <Card.Body>
+              <PersonTable
+                persons={persons}
+                loading={loading}
+                handleEdit={handleOpenModal}
+                handleDelete={handleDelete}
+              />
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
 
-      {loading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', p: 5 }}>
-          <CircularProgress />
-        </Box>
-      ) : (
-        <TableContainer component={Paper}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>ID</TableCell>
-                <TableCell>First Name</TableCell>
-                <TableCell>Last Name</TableCell>
-                <TableCell>Email</TableCell>
-                <TableCell>Phone</TableCell>
-                <TableCell align="center">Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {persons.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={6} align="center">
-                    <Typography variant="body1" color="textSecondary" sx={{ py: 3 }}>
-                      No persons found
-                    </Typography>
-                  </TableCell>
-                </TableRow>
-              ) : (
-                persons.map((person) => (
-                  <TableRow key={person.id} hover>
-                    <TableCell>{person.id}</TableCell>
-                    <TableCell>{person.first_name}</TableCell>
-                    <TableCell>{person.last_name}</TableCell>
-                    <TableCell>{person.email}</TableCell>
-                    <TableCell>{person.phone}</TableCell>
-                    <TableCell align="center">
-                      <IconButton
-                        color="primary"
-                        size="small"
-                        onClick={() => handleEdit(person.id)}
-                      >
-                        <Edit />
-                      </IconButton>
-                      <IconButton
-                        color="error"
-                        size="small"
-                        onClick={() => handleDelete(person.id)}
-                      >
-                        <Delete />
-                      </IconButton>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      )}
-    </Box>
+      <PersonForm
+        show={showModal}
+        handleClose={handleCloseModal}
+        person={currentPerson}
+        handleChange={handleChange}
+        handleSubmit={handleSubmit}
+        editMode={editMode}
+      />
+    </Container>
   );
 };
 
