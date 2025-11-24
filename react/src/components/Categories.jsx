@@ -293,23 +293,14 @@ const Categories = () => {
             <TextField
               fullWidth
               size="small"
-              select
               label="Parent Category"
               name="parent_id"
               value={formData.parent_id}
               onChange={handleInputChange}
               error={!!errors.parent_id}
               helperText={errors.parent_id ? errors.parent_id[0] : 'Optional'}
-            >
-              <MenuItem value="">None</MenuItem>
-              {categories
-                .filter(c => !editingCategory || c.id !== editingCategory.id)
-                .map((category) => (
-                  <MenuItem key={category.id} value={category.id}>
-                    {category.category_name}
-                  </MenuItem>
-                ))}
-            </TextField>
+              placeholder="Enter parent category ID"
+            />
 
             <TextField
               fullWidth

@@ -1,23 +1,41 @@
-import { useState, useEffect } from 'react';
-import { Row, Col, Card, Button } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  ArcElement,
-  Title,
-  Tooltip,
-  Legend
-} from 'chart.js';
-import { Doughnut } from 'react-chartjs-2';
-import axios from 'axios';
-const API_URL = import.meta.env.VITE_API_URL;
+import React from 'react';
+import { Box, Typography, Paper, Grid } from '@mui/material';
 
-import FlatCard from 'components/Widgets/Statistic/FlatCard';
+export default function DashSales() {
+  return (
+    <Box sx={{ p: 3 }}>
+      <Typography variant="h4" gutterBottom>
+        Dashboard
+      </Typography>
+      <Grid container spacing={3}>
+        <Grid item xs={12} sm={6} md={3}>
+          <Paper sx={{ p: 2, textAlign: 'center' }}>
+            <Typography variant="h6">Total Complaints</Typography>
+            <Typography variant="h3">0</Typography>
+          </Paper>
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <Paper sx={{ p: 2, textAlign: 'center' }}>
+            <Typography variant="h6">Pending</Typography>
+            <Typography variant="h3">0</Typography>
+          </Paper>
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <Paper sx={{ p: 2, textAlign: 'center' }}>
+            <Typography variant="h6">Resolved</Typography>
+            <Typography variant="h3">0</Typography>
+          </Paper>
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <Paper sx={{ p: 2, textAlign: 'center' }}>
+            <Typography variant="h6">Closed</Typography>
+            <Typography variant="h3">0</Typography>
+          </Paper>
+        </Grid>
+      </Grid>
+    </Box>
+  );
+}
 
 ChartJS.register(
   CategoryScale,
