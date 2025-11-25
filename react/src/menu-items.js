@@ -44,6 +44,14 @@ const menuItems = {
           icon: 'material-icons-two-tone',
           iconname: 'category',
           url: '/categories'
+        },
+        {
+          id: 'messages',
+          title: 'Messages',
+          type: 'item',
+          icon: 'material-icons-two-tone',
+          iconname: 'message',
+          url: '/messages'
         }
       ]
     }

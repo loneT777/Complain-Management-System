@@ -8,6 +8,7 @@ const Persons = lazy(() => import('../components/Persons'));
 const Divisions = lazy(() => import('../components/Divisions'));
 const Roles = lazy(() => import('../components/Roles'));
 const Categories = lazy(() => import('../components/Categories'));
+const Messages = lazy(() => import('../components/Messages'));
 
 // And in your routes:
 const MainRoutes = {
@@ -35,6 +36,7 @@ const MainRoutes = {
         {path: 'divisions', element: <Divisions />},
         { path: 'roles', element: <Roles /> },
         { path: 'categories', element: <Categories /> },
+        { path: 'messages', element: <Messages /> },
 
         // Catch-all for undefined routes
         {
