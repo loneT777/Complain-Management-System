@@ -1,35 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  Button,
-  IconButton,
-  Typography,
-  Box,
-  CircularProgress,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  Alert,
-  MenuItem,
-  TablePagination,
-  InputAdornment
-} from '@mui/material';
-import { Edit, Delete, Add, Close, Search } from '@mui/icons-material';
+import { Container, Row, Col, Card, Button, Form, Alert, Pagination, InputGroup } from 'react-bootstrap';
+import { Add, Search } from '@mui/icons-material';
+import CategoryTable from './CategoryTable';
+import CategoryForm from './CategoryForm';
+import axios from 'axios';
 
 const Categories = () => {
   const [categories, setCategories] = useState([]);
   const [divisions, setDivisions] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [openDialog, setOpenDialog] = useState(false);
-  const [editingCategory, setEditingCategory] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [editMode, setEditMode] = useState(false);
   const [formData, setFormData] = useState({
     code: '',
     parent_id: '',
@@ -37,12 +18,11 @@ const Categories = () => {
     description: '',
     division_id: ''
   });
-  const [errors, setErrors] = useState({});
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   
   // Pagination and search states
-  const [page, setPage] = useState(0);
+  const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [totalRows, setTotalRows] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
@@ -56,23 +36,20 @@ const Categories = () => {
   const fetchCategories = async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams({
-        page: page + 1, // Laravel pages start from 1
-        per_page: rowsPerPage,
-        search: searchQuery
+      const response = await axios.get('/api/categories', {
+        params: {
+          page: page,
+          per_page: rowsPerPage,
+          search: searchQuery
+        }
       });
-
-      const response = await fetch(`/api/categories?${params}`);
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const data = await response.json();
-      setCategories(data.data || []);
-      setTotalRows(data.pagination?.total || 0);
+      
+      setCategories(response.data.data || []);
+      setTotalRows(response.data.pagination?.total || 0);
       setErrorMessage('');
     } catch (error) {
       console.error('Error fetching categories:', error);
-      setErrorMessage('Failed to load categories: ' + error.message);
+      setErrorMessage('Failed to load categories: ' + (error.response?.data?.message || error.message));
       setCategories([]);
     } finally {
       setLoading(false);
@@ -81,22 +58,19 @@ const Categories = () => {
 
   const fetchDivisions = async () => {
     try {
-      const response = await fetch('/api/public/divisions');
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const data = await response.json();
-      setDivisions(data.data || []);
+      const response = await axios.get('/api/public/divisions');
+      setDivisions(response.data.data || []);
     } catch (error) {
       console.error('Error fetching divisions:', error);
       setDivisions([]);
     }
   };
 
-  const handleOpenDialog = (category = null) => {
+  const handleOpenModal = (category = null) => {
     if (category) {
-      setEditingCategory(category);
+      setEditMode(true);
       setFormData({
+        id: category.id,
         code: category.code || '',
         parent_id: category.parent_id || '',
         category_name: category.category_name || '',
@@ -104,7 +78,7 @@ const Categories = () => {
         division_id: category.division_id || ''
       });
     } else {
-      setEditingCategory(null);
+      setEditMode(false);
       setFormData({
         code: '',
         parent_id: '',
@@ -113,13 +87,12 @@ const Categories = () => {
         division_id: ''
       });
     }
-    setErrors({});
-    setOpenDialog(true);
+    setShowModal(true);
   };
 
-  const handleCloseDialog = () => {
-    setOpenDialog(false);
-    setEditingCategory(null);
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setEditMode(false);
     setFormData({
       code: '',
       parent_id: '',
@@ -127,7 +100,6 @@ const Categories = () => {
       description: '',
       division_id: ''
     });
-    setErrors({});
   };
 
   const handleInputChange = (e) => {
@@ -136,22 +108,14 @@ const Categories = () => {
       ...prev,
       [name]: value
     }));
-    if (errors[name]) {
-      setErrors((prev) => ({
-        ...prev,
-        [name]: ''
-      }));
-    }
   };
 
-  const handleSaveCategory = async () => {
+  const handleSaveCategory = async (e) => {
+    e.preventDefault();
     setSuccessMessage('');
     setErrorMessage('');
 
     try {
-      const url = editingCategory ? `/api/categories/${editingCategory.id}` : '/api/categories';
-      const method = editingCategory ? 'PUT' : 'POST';
-
       // Convert empty values to null
       const submitData = {
         ...formData,
@@ -159,63 +123,42 @@ const Categories = () => {
         division_id: formData.division_id === '' ? null : formData.division_id
       };
 
-      const response = await fetch(url, {
-        method: method,
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(submitData)
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        if (data.errors) {
-          setErrors(data.errors);
-        }
-        setErrorMessage(data.message || 'Failed to save category');
-        return;
+      if (editMode) {
+        await axios.put(`/api/categories/${formData.id}`, submitData);
+        setSuccessMessage('Category updated successfully');
+      } else {
+        await axios.post('/api/categories', submitData);
+        setSuccessMessage('Category created successfully');
       }
 
-      setSuccessMessage(data.message || (editingCategory ? 'Category updated successfully' : 'Category created successfully'));
-      handleCloseDialog();
+      handleCloseModal();
       fetchCategories();
     } catch (error) {
       console.error('Error saving category:', error);
-      setErrorMessage('Error saving category');
+      setErrorMessage(error.response?.data?.message || 'Error saving category');
     }
   };
 
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this category?')) {
       try {
-        const response = await fetch(`/api/categories/${id}`, {
-          method: 'DELETE'
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          setErrorMessage(data.message || 'Failed to delete category');
-          return;
-        }
-
-        setSuccessMessage(data.message || 'Category deleted successfully');
+        await axios.delete(`/api/categories/${id}`);
+        setSuccessMessage('Category deleted successfully');
         fetchCategories();
       } catch (error) {
         console.error('Error deleting category:', error);
-        setErrorMessage('Error deleting category');
+        setErrorMessage(error.response?.data?.message || 'Error deleting category');
       }
     }
   };
 
-  const handleChangePage = (event, newPage) => {
+  const handleChangePage = (newPage) => {
     setPage(newPage);
   };
 
   const handleChangeRowsPerPage = (event) => {
     setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
+    setPage(1);
   };
 
   const handleSearchChange = (event) => {
@@ -228,223 +171,141 @@ const Categories = () => {
     }
     
     const timeout = setTimeout(() => {
-      setPage(0); // Reset to first page on search
+      setPage(1); // Reset to first page on search
     }, 500);
     
     setSearchTimeout(timeout);
   };
 
-  const getDivisionName = (divisionId) => {
-    const division = divisions.find(d => d.id === divisionId);
-    return division ? division.name : '-';
-  };
-
-  const getParentCategoryName = (parentId) => {
-    const parent = categories.find(c => c.id === parentId);
-    return parent ? parent.category_name : '-';
-  };
+  // Calculate total pages
+  const totalPages = Math.ceil(totalRows / rowsPerPage);
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4">Categories</Typography>
-        <Button variant="contained" color="primary" startIcon={<Add />} onClick={() => handleOpenDialog()}>
-          Add Category
-        </Button>
-      </Box>
-
-      {successMessage && (
-        <Alert severity="success" onClose={() => setSuccessMessage('')} sx={{ mb: 2 }}>
-          {successMessage}
-        </Alert>
-      )}
-
-      {errorMessage && (
-        <Alert severity="error" onClose={() => setErrorMessage('')} sx={{ mb: 2 }}>
-          <strong>Error:</strong> {errorMessage}
-          <br />
-          <Typography variant="caption">
-            Make sure the database is configured and migrations are run: `php artisan migrate`
-          </Typography>
-        </Alert>
-      )}
-
-      {/* Search Box */}
-      <Box sx={{ mb: 2 }}>
-        <TextField
-          fullWidth
-          size="small"
-          placeholder="Search by code, name, or description..."
-          value={searchQuery}
-          onChange={handleSearchChange}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <Search />
-              </InputAdornment>
-            ),
-          }}
-          sx={{ maxWidth: 400 }}
-        />
-      </Box>
-
-      {loading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px', flexDirection: 'column', gap: 2 }}>
-          <CircularProgress />
-          <Typography>Loading categories...</Typography>
-        </Box>
-      ) : (
-        <TableContainer component={Paper}>
-          <Table>
-            <TableHead sx={{ backgroundColor: '#f5f5f5' }}>
-              <TableRow>
-                <TableCell sx={{ fontWeight: 'bold' }}>ID</TableCell>
-                <TableCell sx={{ fontWeight: 'bold' }}>Code</TableCell>
-                <TableCell sx={{ fontWeight: 'bold' }}>Parent ID</TableCell>
-                <TableCell sx={{ fontWeight: 'bold' }}>Category Name</TableCell>
-                <TableCell sx={{ fontWeight: 'bold' }}>Description</TableCell>
-                <TableCell sx={{ fontWeight: 'bold' }}>Division ID</TableCell>
-                <TableCell sx={{ fontWeight: 'bold', textAlign: 'center' }}>Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {categories.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan="7" sx={{ textAlign: 'center', p: 3 }}>
-                    No categories found
-                  </TableCell>
-                </TableRow>
-              ) : (
-                categories.map((category) => (
-                  <TableRow key={category.id} sx={{ '&:hover': { backgroundColor: '#f9f9f9' } }}>
-                    <TableCell>{category.id}</TableCell>
-                    <TableCell>{category.code}</TableCell>
-                    <TableCell>{getParentCategoryName(category.parent_id)}</TableCell>
-                    <TableCell>{category.category_name}</TableCell>
-                    <TableCell>{category.description || '-'}</TableCell>
-                    <TableCell>{getDivisionName(category.division_id)}</TableCell>
-                    <TableCell sx={{ textAlign: 'center' }}>
-                      <IconButton size="small" color="primary" onClick={() => handleOpenDialog(category)} title="Edit">
-                        <Edit />
-                      </IconButton>
-                      <IconButton size="small" color="error" onClick={() => handleDelete(category.id)} title="Delete">
-                        <Delete />
-                      </IconButton>
-                    </TableCell>
-                  </TableRow>
-                ))
+    <Container fluid className="py-4">
+      <Row className="mb-4">
+        <Col>
+          <Card>
+            <Card.Header className="d-flex justify-content-between align-items-center bg-white">
+              <h4 className="mb-0">Categories</h4>
+              <Button variant="primary" onClick={() => handleOpenModal()}>
+                <Add className="me-2" fontSize="small" />
+                Add Category
+              </Button>
+            </Card.Header>
+            <Card.Body>
+              {successMessage && (
+                <Alert variant="success" dismissible onClose={() => setSuccessMessage('')}>
+                  {successMessage}
+                </Alert>
               )}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      )}
 
-      {/* Pagination */}
-      {!loading && categories.length > 0 && (
-        <TablePagination
-          component="div"
-          count={totalRows}
-          page={page}
-          onPageChange={handleChangePage}
-          rowsPerPage={rowsPerPage}
-          onRowsPerPageChange={handleChangeRowsPerPage}
-          rowsPerPageOptions={[5, 10, 25, 50, 100]}
-          sx={{ mt: 2 }}
-        />
-      )}
+              {errorMessage && (
+                <Alert variant="danger" dismissible onClose={() => setErrorMessage('')}>
+                  <strong>Error:</strong> {errorMessage}
+                  <br />
+                  <small>Make sure the database is configured and migrations are run: `php artisan migrate`</small>
+                </Alert>
+              )}
 
-      {/* Add/Edit Dialog */}
-      <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
-        <DialogTitle>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            {editingCategory ? 'Edit Category' : 'Add New Category'}
-            <IconButton size="small" onClick={handleCloseDialog}>
-              <Close />
-            </IconButton>
-          </Box>
-        </DialogTitle>
+              {/* Search and Per Page */}
+              <Row className="mb-3">
+                <Col md={6}>
+                  <InputGroup>
+                    <InputGroup.Text>
+                      <Search fontSize="small" />
+                    </InputGroup.Text>
+                    <Form.Control
+                      type="text"
+                      placeholder="Search by code, name, or description..."
+                      value={searchQuery}
+                      onChange={handleSearchChange}
+                    />
+                  </InputGroup>
+                </Col>
+                <Col md={6} className="d-flex justify-content-end align-items-center">
+                  <Form.Label className="mb-0 me-2">Show</Form.Label>
+                  <Form.Select
+                    style={{ width: 'auto' }}
+                    value={rowsPerPage}
+                    onChange={handleChangeRowsPerPage}
+                  >
+                    <option value={5}>5</option>
+                    <option value={10}>10</option>
+                    <option value={25}>25</option>
+                    <option value={50}>50</option>
+                    <option value={100}>100</option>
+                  </Form.Select>
+                  <span className="ms-2">entries</span>
+                </Col>
+              </Row>
 
-        <DialogContent sx={{ pt: 2 }}>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <TextField
-              fullWidth
-              size="small"
-              label="Code"
-              name="code"
-              value={formData.code}
-              onChange={handleInputChange}
-              error={!!errors.code}
-              helperText={errors.code ? errors.code[0] : ''}
-              placeholder="e.g., CAT001"
-            />
+              {/* Table */}
+              <CategoryTable
+                categories={categories}
+                divisions={divisions}
+                loading={loading}
+                handleEdit={handleOpenModal}
+                handleDelete={handleDelete}
+              />
 
-            <TextField
-              fullWidth
-              size="small"
-              label="Parent Category"
-              name="parent_id"
-              value={formData.parent_id}
-              onChange={handleInputChange}
-              error={!!errors.parent_id}
-              helperText={errors.parent_id ? errors.parent_id[0] : 'Optional'}
-              placeholder="Enter parent category ID"
-            />
+              {/* Pagination */}
+              {!loading && categories.length > 0 && (
+                <Row className="mt-3">
+                  <Col md={6} className="d-flex align-items-center">
+                    <span className="text-muted">
+                      Showing {((page - 1) * rowsPerPage) + 1} to {Math.min(page * rowsPerPage, totalRows)} of {totalRows} entries
+                    </span>
+                  </Col>
+                  <Col md={6} className="d-flex justify-content-end">
+                    <Pagination>
+                      <Pagination.First onClick={() => handleChangePage(1)} disabled={page === 1} />
+                      <Pagination.Prev onClick={() => handleChangePage(page - 1)} disabled={page === 1} />
+                      
+                      {[...Array(totalPages)].map((_, index) => {
+                        const pageNum = index + 1;
+                        if (
+                          pageNum === 1 ||
+                          pageNum === totalPages ||
+                          (pageNum >= page - 1 && pageNum <= page + 1)
+                        ) {
+                          return (
+                            <Pagination.Item
+                              key={pageNum}
+                              active={pageNum === page}
+                              onClick={() => handleChangePage(pageNum)}
+                            >
+                              {pageNum}
+                            </Pagination.Item>
+                          );
+                        } else if (pageNum === page - 2 || pageNum === page + 2) {
+                          return <Pagination.Ellipsis key={pageNum} />;
+                        }
+                        return null;
+                      })}
+                      
+                      <Pagination.Next onClick={() => handleChangePage(page + 1)} disabled={page === totalPages} />
+                      <Pagination.Last onClick={() => handleChangePage(totalPages)} disabled={page === totalPages} />
+                    </Pagination>
+                  </Col>
+                </Row>
+              )}
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
 
-            <TextField
-              fullWidth
-              size="small"
-              label="Category Name"
-              name="category_name"
-              value={formData.category_name}
-              onChange={handleInputChange}
-              error={!!errors.category_name}
-              helperText={errors.category_name ? errors.category_name[0] : ''}
-              placeholder="Enter category name"
-            />
-
-            <TextField
-              fullWidth
-              size="small"
-              label="Description"
-              name="description"
-              value={formData.description}
-              onChange={handleInputChange}
-              error={!!errors.description}
-              helperText={errors.description ? errors.description[0] : ''}
-              placeholder="Enter description"
-              multiline
-              rows={3}
-            />
-
-            <TextField
-              fullWidth
-              size="small"
-              select
-              label="Division"
-              name="division_id"
-              value={formData.division_id}
-              onChange={handleInputChange}
-              error={!!errors.division_id}
-              helperText={errors.division_id ? errors.division_id[0] : 'Optional'}
-            >
-              <MenuItem value="">None</MenuItem>
-              {divisions.map((division) => (
-                <MenuItem key={division.id} value={division.id}>
-                  {division.name}
-                </MenuItem>
-              ))}
-            </TextField>
-          </Box>
-        </DialogContent>
-
-        <DialogActions>
-          <Button onClick={handleCloseDialog}>Cancel</Button>
-          <Button onClick={handleSaveCategory} variant="contained" color="primary">
-            {editingCategory ? 'Update' : 'Create'}
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
+      {/* Form Modal */}
+      <CategoryForm
+        show={showModal}
+        handleClose={handleCloseModal}
+        category={formData}
+        handleChange={handleInputChange}
+        handleSubmit={handleSaveCategory}
+        editMode={editMode}
+        divisions={divisions}
+        categories={categories}
+      />
+    </Container>
   );
 };
 
