@@ -8,6 +8,9 @@ const Persons = lazy(() => import('../components/Persons'));
 const Divisions = lazy(() => import('../components/Divisions'));
 const Roles = lazy(() => import('../components/Roles'));
 const Categories = lazy(() => import('../components/Categories'));
+const Complaints = lazy(() => import('../components/Complaints')); // Added Complaints import
+const ComplaintAssignments = lazy(() => import('../components/ComplaintAssignments'));
+
 
 // And in your routes:
 const MainRoutes = {
@@ -31,10 +34,16 @@ const MainRoutes = {
           path: 'dashboard',
           element: <DashboardSales />
         },
-        {path: 'persons', element: <Persons />},
-        {path: 'divisions', element: <Divisions />},
+
+        { path: 'complaint-assignments', element: <ComplaintAssignments /> },
+
+
+
+        { path: 'persons', element: <Persons /> },
+        { path: 'divisions', element: <Divisions /> },
         { path: 'roles', element: <Roles /> },
         { path: 'categories', element: <Categories /> },
+        { path: 'complaints', element: <Complaints /> }, // Added route for Complaints
 
         // Catch-all for undefined routes
         {

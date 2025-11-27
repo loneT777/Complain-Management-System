@@ -2,7 +2,10 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\ComplaintController;
+use App\Http\Controllers\ComplaintAssignmentController;
 use App\Http\Controllers\DivisionController;
 use App\Http\Controllers\PersonController;
 use App\Http\Controllers\CategoryController;
@@ -11,10 +14,10 @@ use App\Http\Controllers\CategoryController;
 // use App\Http\Controllers\ServicesController;
 // use App\Http\Controllers\Auth\AuthController;
 // use App\Http\Controllers\PermissionController;
-use App\Http\Controllers\DesignationController;
-use App\Http\Controllers\OrganizationController;
+// use App\Http\Controllers\DesignationController;
+// use App\Http\Controllers\OrganizationController;
 // use App\Http\Controllers\ExpenseTypeController;
-use App\Http\Controllers\EmployeesController;
+// use App\Http\Controllers\EmployeesController;
 // use App\Http\Controllers\LoginSessionController;
 // use App\Http\Controllers\GoslFundTypeController;
 // use App\Http\Controllers\ApplicationController;
@@ -39,8 +42,8 @@ Route::get('/sanctum/csrf-cookie', function (Request $request) {
 // Route::get('/login-sessions', [LoginSessionController::class, 'index'])->middleware('auth:sanctum');
 
 // Public routes for dropdowns (without authentication)
-Route::get('/public/organizations', [OrganizationController::class, 'publicIndex']);
-Route::get('/public/designations', [DesignationController::class, 'publicIndex']);
+//Route::get('/public/organizations', [OrganizationController::class, 'publicIndex']);
+//Route::get('/public/designations', [DesignationController::class, 'publicIndex']);
 // Route::get('/public/services', [ServicesController::class, 'publicIndex']);
 Route::get('/public/roles', [RoleController::class, 'publicIndex']);
 
@@ -74,32 +77,42 @@ Route::put('/categories/{id}', [CategoryController::class, 'update']);
 Route::delete('/categories/{id}', [CategoryController::class, 'destroy']);
 Route::get('/public/categories', [CategoryController::class, 'publicIndex']);
 
+
+Route::get('/complaint_assignments', [ComplaintAssignmentController::class, 'index']);
+Route::post('/complaint_assignments', [ComplaintAssignmentController::class, 'store']);
+Route::get('/complaint_assignments/{id}', [ComplaintAssignmentController::class, 'show']);
+Route::put('/complaint_assignments/{id}', [ComplaintAssignmentController::class, 'update']);
+Route::delete('/complaint_assignments/{id}', [ComplaintAssignmentController::class, 'destroy']);
+
 // Public CRUD for Designations (for development)
-Route::get('/designations', [DesignationController::class, 'index']);
-Route::post('/designations', [DesignationController::class, 'store']);
-Route::get('/designations/{id}', [DesignationController::class, 'show']);
-Route::put('/designations/{id}', [DesignationController::class, 'update']);
-Route::delete('/designations/{id}', [DesignationController::class, 'destroy']);
+//Route::get('/designations', [DesignationController::class, 'index']);
+//Route::post('/designations', [DesignationController::class, 'store']);
+//Route::get('/designations/{id}', [DesignationController::class, 'show']);
+//Route::put('/designations/{id}', [DesignationController::class, 'update']);
+//Route::delete('/designations/{id}', [DesignationController::class, 'destroy']);
 
 // Protected routes with authentication
 Route::middleware('auth:sanctum')->group(function () {
     // User permissions
+
+    Route::post('/complaint_assignments', [\App\Http\Controllers\ComplaintAssignmentController::class, 'store']);
+    Route::get('/complaint_assignments', [\App\Http\Controllers\ComplaintAssignmentController::class, 'index']);
     // Route::get('/user/permissions', [UserController::class, 'permissions']);
 
     // Employees CRUD
-    Route::get('employees', [EmployeesController::class, 'index']);
-    Route::get('employees/nic/{nic}', [EmployeesController::class, 'getByNIC']);
-    Route::post('employees', [EmployeesController::class, 'store']);
-    Route::get('employees/{employee}', [EmployeesController::class, 'show']);
-    Route::put('employees/{employee}', [EmployeesController::class, 'update']);
-    Route::delete('employees/{employee}', [EmployeesController::class, 'destroy']);
+    //Route::get('employees', [EmployeesController::class, 'index']);
+    //Route::get('employees/nic/{nic}', [EmployeesController::class, 'getByNIC']);
+    //Route::post('employees', [EmployeesController::class, 'store']);
+    //Route::get('employees/{employee}', [EmployeesController::class, 'show']);
+    //Route::put('employees/{employee}', [EmployeesController::class, 'update']);
+    //Route::delete('employees/{employee}', [EmployeesController::class, 'destroy']);
 
     // Organizations CRUD
-    Route::get('/organizations', [OrganizationController::class, 'index']);
-    Route::post('/organizations', [OrganizationController::class, 'store']);
-    Route::get('/organizations/{organization}', [OrganizationController::class, 'show']);
-    Route::put('/organizations/{organization}', [OrganizationController::class, 'update']);
-    Route::delete('/organizations/{organization}', [OrganizationController::class, 'destroy']);
+    //Route::get('/organizations', [OrganizationController::class, 'index']);
+    //Route::post('/organizations', [OrganizationController::class, 'store']);
+    //Route::get('/organizations/{organization}', [OrganizationController::class, 'show']);
+    //Route::put('/organizations/{organization}', [OrganizationController::class, 'update']);
+    //Route::delete('/organizations/{organization}', [OrganizationController::class, 'destroy']);
 
     // Services CRUD
     // Route::get('services', [ServicesController::class, 'index']);

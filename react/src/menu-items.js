@@ -44,6 +44,22 @@ const menuItems = {
           icon: 'material-icons-two-tone',
           iconname: 'category',
           url: '/categories'
+        },
+        {
+          id: 'complaints',
+          title: 'Complaints',
+          type: 'item',
+          icon: 'material-icons-two-tone',
+          iconname: 'report',
+          url: '/complaints'
+        },
+        {
+          id: 'complaint-assignments',
+          title: 'Complaint Assignments',
+          type: 'item',
+          icon: 'material-icons-two-tone',
+          iconname: 'assignment',
+          url: '/complaint-assignments'
         }
       ]
     }

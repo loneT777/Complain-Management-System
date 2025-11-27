@@ -23,6 +23,7 @@ return new class extends Migration
             $table->timestamp('created_at')->nullable();
 
             $table->foreign('parent_id')->references('id')->on('messages')->onDelete('cascade');
+            $table->foreign('session_id')->references('id')->on('sessions')->onDelete('set null');
             $table->foreign('complaint_id')->references('id')->on('complaints')->onDelete('cascade');
         });
     }

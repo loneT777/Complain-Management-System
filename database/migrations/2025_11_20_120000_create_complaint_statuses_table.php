@@ -13,14 +13,15 @@ return new class extends Migration
      */
     public function up()
 {
-    Schema::create('admin_logs', function (Blueprint $table) {
+    Schema::create('complaint_statuses', function (Blueprint $table) {
         $table->id();
-        $table->unsignedBigInteger('session_id')->nullable();
-        $table->text('log')->nullable();
+        $table->unsignedBigInteger('status_id');
+        $table->unsignedBigInteger('complaint_id');
+        $table->text('remark')->nullable();
         $table->timestamp('created_at')->nullable();
-        $table->timestamp('updated_at')->nullable();
 
-        $table->foreign('session_id')->references('id')->on('sessions')->onDelete('set null'); // ADD THIS
+        $table->foreign('status_id')->references('id')->on('status')->onDelete('cascade');
+        $table->foreign('complaint_id')->references('id')->on('complaints')->onDelete('cascade'); // ADD THIS
     });
 }
 
@@ -31,6 +32,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('admin_logs');
+        Schema::dropIfExists('complaint_statuses');
     }
 };
