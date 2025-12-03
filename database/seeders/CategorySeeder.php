@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
@@ -192,6 +193,8 @@ class CategorySeeder extends Seeder
 
         DB::table('categories')->insert($categories);
 =======
+=======
+>>>>>>> Stashed changes
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\Category;
@@ -227,6 +230,9 @@ class CategorySeeder extends Seeder
             ['code' => 'SAF'],
             ['category_name' => 'Safety', 'description' => 'Public safety concerns']
         );
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
     }
 }

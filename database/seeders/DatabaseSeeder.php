@@ -3,6 +3,10 @@
 namespace Database\Seeders;
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+=======
+// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+>>>>>>> Stashed changes
 =======
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 >>>>>>> Stashed changes
@@ -13,6 +17,7 @@ class DatabaseSeeder extends Seeder
     /**
      * Seed the application's database.
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
      *
      * @return void
      */
@@ -21,6 +26,8 @@ class DatabaseSeeder extends Seeder
         $this->call([
             CategorySeeder::class,
 =======
+=======
+>>>>>>> Stashed changes
      */
     public function run(): void
     {
@@ -29,6 +36,9 @@ class DatabaseSeeder extends Seeder
             CategorySeeder::class,
             StatusSeeder::class,
             ComplaintSeeder::class,
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
         ]);
     }

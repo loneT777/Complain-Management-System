@@ -18,12 +18,15 @@ Route::get('/public/divisions', [DivisionController::class, 'publicIndex']);
 Route::get('/public/categories', [CategoryController::class, 'publicIndex']);
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 // CRUD Routes
 Route::apiResource('roles', RoleController::class);
 Route::apiResource('divisions', DivisionController::class);
 Route::apiResource('persons', PersonController::class);
 Route::apiResource('categories', CategoryController::class);
 =======
+=======
+>>>>>>> Stashed changes
 // Public CRUD for Complaints (for development)
 Route::get('/complaints', [ComplaintController::class, 'index']);
 Route::post('/complaints', [ComplaintController::class, 'store']);
