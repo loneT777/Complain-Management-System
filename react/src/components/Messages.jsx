@@ -5,8 +5,12 @@ import MessageTable from './MessageTable';
 import MessageForm from './MessageForm';
 import MessageThread from './MessageThread';
 import axios from 'axios';
+import { useSearchParams } from 'react-router-dom';
 
 const Messages = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const preSelectedComplaintId = searchParams.get('complaint_id');
+  
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -18,6 +22,16 @@ const Messages = () => {
     type: '',
     parent_id: ''
   });
+  
+  // Auto-open modal if complaint_id is in URL
+  useEffect(() => {
+    if (preSelectedComplaintId) {
+      handleOpenModal(null, preSelectedComplaintId);
+      // Clear the URL parameter after opening
+      searchParams.delete('complaint_id');
+      setSearchParams(searchParams);
+    }
+  }, [preSelectedComplaintId]);
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   
@@ -60,7 +74,7 @@ const Messages = () => {
     }
   };
 
-  const handleOpenModal = (message = null) => {
+  const handleOpenModal = (message = null, complaintId = null) => {
     if (message) {
       setEditMode(true);
       setFormData({
@@ -73,7 +87,7 @@ const Messages = () => {
     } else {
       setEditMode(false);
       setFormData({
-        complaint_id: '',
+        complaint_id: complaintId || '',
         message: '',
         type: '',
         parent_id: ''
@@ -108,8 +122,11 @@ const Messages = () => {
 
     try {
       const submitData = {
-        ...formData,
-        parent_id: formData.parent_id === '' ? null : formData.parent_id
+        complaint_id: formData.complaint_id,
+        message: formData.message,
+        type: formData.type || null,
+        parent_id: formData.parent_id || null,
+        session_id: 1 // Default session ID from our seeder
       };
 
       if (editMode) {
@@ -124,7 +141,18 @@ const Messages = () => {
       fetchMessages();
     } catch (error) {
       console.error('Error saving message:', error);
-      setErrorMessage(error.response?.data?.message || 'Error saving message');
+      const errorMsg = error.response?.data?.message || 'Error saving message';
+      const errors = error.response?.data?.errors;
+      
+      if (errors) {
+        const errorList = Object.values(errors).flat().join(', ');
+        setErrorMessage(`${errorMsg}: ${errorList}`);
+      } else {
+        setErrorMessage(errorMsg);
+      }
+      
+      // Re-throw to let form handle validation errors
+      throw error;
     }
   };
 

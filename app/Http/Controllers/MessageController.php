@@ -81,7 +81,7 @@ class MessageController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'complaint_id' => 'required|integer|exists:complaints,id',
-            'message' => 'required|string',
+            'message' => 'required|string|min:10|max:1000',
             'type' => 'nullable|string|max:50',
             'parent_id' => 'nullable|integer|exists:messages,id',
             'session_id' => 'nullable|integer',
@@ -89,6 +89,8 @@ class MessageController extends Controller
             'complaint_id.required' => 'Complaint is required',
             'complaint_id.exists' => 'Invalid complaint',
             'message.required' => 'Message content is required',
+            'message.min' => 'Message must be at least 10 characters long',
+            'message.max' => 'Message cannot exceed 1000 characters',
             'parent_id.exists' => 'Invalid parent message',
         ]);
 
@@ -149,7 +151,7 @@ class MessageController extends Controller
 
             $validator = Validator::make($request->all(), [
                 'complaint_id' => 'required|integer|exists:complaints,id',
-                'message' => 'required|string',
+                'message' => 'required|string|min:10|max:1000',
                 'type' => 'nullable|string|max:50',
                 'parent_id' => 'nullable|integer|exists:messages,id',
                 'session_id' => 'nullable|integer',
@@ -157,6 +159,8 @@ class MessageController extends Controller
                 'complaint_id.required' => 'Complaint is required',
                 'complaint_id.exists' => 'Invalid complaint',
                 'message.required' => 'Message content is required',
+                'message.min' => 'Message must be at least 10 characters long',
+                'message.max' => 'Message cannot exceed 1000 characters',
                 'parent_id.exists' => 'Invalid parent message',
             ]);
 

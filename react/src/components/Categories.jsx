@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Button, Form, Alert, Pagination, InputGroup } from 'react-bootstrap';
-import { Add, Search } from '@mui/icons-material';
+import { Container, Row, Col, Card, Button, Form, Alert, Pagination, InputGroup, Modal, Table, Spinner, Badge } from 'react-bootstrap';
+import { Add, Search, Message as MessageIcon } from '@mui/icons-material';
 import CategoryTable from './CategoryTable';
 import CategoryForm from './CategoryForm';
 import axios from 'axios';
@@ -20,6 +20,10 @@ const Categories = () => {
   });
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const [showComplaintsModal, setShowComplaintsModal] = useState(false);
+  const [categoryComplaints, setCategoryComplaints] = useState([]);
+  const [selectedCategoryId, setSelectedCategoryId] = useState(null);
+  const [loadingComplaints, setLoadingComplaints] = useState(false);
   
   // Pagination and search states
   const [page, setPage] = useState(1);
@@ -177,6 +181,29 @@ const Categories = () => {
     setSearchTimeout(timeout);
   };
 
+  const handleViewComplaints = async (categoryId) => {
+    setSelectedCategoryId(categoryId);
+    setLoadingComplaints(true);
+    setShowComplaintsModal(true);
+    
+    try {
+      // Fetch complaints for this category
+      const response = await axios.get(`/api/categories/${categoryId}/complaints`);
+      setCategoryComplaints(response.data.data || []);
+    } catch (error) {
+      console.error('Error fetching complaints for category:', error);
+      setErrorMessage('Failed to load complaints for this category');
+      setCategoryComplaints([]);
+    } finally {
+      setLoadingComplaints(false);
+    }
+  };
+
+  const handleAddMessageForComplaint = (complaintId) => {
+    // Navigate to Messages page with pre-selected complaint
+    window.location.href = `/messages?complaint_id=${complaintId}`;
+  };
+
   // Calculate total pages
   const totalPages = Math.ceil(totalRows / rowsPerPage);
 
@@ -246,6 +273,7 @@ const Categories = () => {
                 loading={loading}
                 handleEdit={handleOpenModal}
                 handleDelete={handleDelete}
+                handleViewComplaints={handleViewComplaints}
               />
 
               {/* Pagination */}
@@ -305,6 +333,86 @@ const Categories = () => {
         divisions={divisions}
         categories={categories}
       />
+
+      {/* Complaints Modal */}
+      <Modal show={showComplaintsModal} onHide={() => setShowComplaintsModal(false)} size="lg">
+        <Modal.Header closeButton>
+          <Modal.Title>Complaints in this Category</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {loadingComplaints ? (
+            <div className="text-center py-4">
+              <Spinner animation="border" />
+              <p className="mt-2">Loading complaints...</p>
+            </div>
+          ) : categoryComplaints.length === 0 ? (
+            <Alert variant="info">
+              <p className="mb-2">No complaints found for this category</p>
+              <Button 
+                variant="primary" 
+                size="sm"
+                onClick={() => window.location.href = '/complaints'}
+              >
+                Create New Complaint
+              </Button>
+            </Alert>
+          ) : (
+            <>
+              <div className="mb-3">
+                <Button 
+                  variant="success" 
+                  size="sm"
+                  onClick={() => window.location.href = '/complaints'}
+                >
+                  <Add fontSize="small" className="me-1" />
+                  Create New Complaint
+                </Button>
+              </div>
+              <Table striped bordered hover responsive>
+                <thead>
+                  <tr>
+                    <th>Reference</th>
+                    <th>Title</th>
+                    <th>Priority</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {categoryComplaints.map((complaint) => (
+                    <tr key={complaint.id}>
+                      <td>{complaint.reference_no}</td>
+                      <td>{complaint.title}</td>
+                      <td>
+                        <Badge bg={
+                          complaint.priority_level === 'High' ? 'danger' :
+                          complaint.priority_level === 'Medium' ? 'warning' : 'info'
+                        }>
+                          {complaint.priority_level || 'Normal'}
+                        </Badge>
+                      </td>
+                      <td>
+                        <Button
+                          variant="primary"
+                          size="sm"
+                          onClick={() => handleAddMessageForComplaint(complaint.id)}
+                        >
+                          <MessageIcon fontSize="small" className="me-1" />
+                          Add Message
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </Table>
+            </>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowComplaintsModal(false)}>
+            Close
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </Container>
   );
 };

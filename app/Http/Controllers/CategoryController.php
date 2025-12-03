@@ -213,4 +213,27 @@ class CategoryController extends Controller
             ], 500);
         }
     }
+    
+    /**
+     * Get complaints for a specific category
+     */
+    public function getComplaints($id)
+    {
+        try {
+            $complaints = \App\Models\Complaint::whereHas('categories', function($query) use ($id) {
+                $query->where('category_id', $id);
+            })->get();
+            
+            return response()->json([
+                'success' => true,
+                'data' => $complaints
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error fetching complaints',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

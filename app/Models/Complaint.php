@@ -42,4 +42,12 @@ class Complaint extends Model
     {
         return $this->belongsTo(Person::class, 'complainant_id');
     }
+    
+    /**
+     * Get the categories for this complaint
+     */
+    public function categories()
+    {
+        return $this->belongsToMany(Category::class, 'complaint_categories');
+    }
 }
