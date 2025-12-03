@@ -34,13 +34,13 @@ const AssignComplaintForm = ({ show, handleClose, complaint, onSaved }) => {
   useEffect(() => {
     if (show) {
       fetchDivisions();
+      fetchAllPersons();
       setFormData({
         assignee_division_id: "",
         assignee_user_id: "",
         due_at: "",
         remark: "",
       });
-      setPersons([]);
       setErrors({});
     }
   }, [show]);
@@ -54,17 +54,11 @@ const AssignComplaintForm = ({ show, handleClose, complaint, onSaved }) => {
     }
   };
 
-  const fetchPersonsByDivision = async (divisionId) => {
-    if (!divisionId) {
-      setPersons([]);
-      return;
-    }
+  const fetchAllPersons = async () => {
     setLoadingPersons(true);
     try {
-      const response = await axios.get(
-        `http://localhost:8000/api/persons?division_id=${divisionId}`
-      );
-      setPersons(response.data.data || []);
+      const response = await axios.get("http://localhost:8000/api/persons");
+      setPersons(response.data || []);
     } catch (error) {
       console.error("Failed to fetch persons", error);
       setPersons([]);
@@ -80,7 +74,6 @@ const AssignComplaintForm = ({ show, handleClose, complaint, onSaved }) => {
       assignee_division_id: divisionId,
       assignee_user_id: "",
     });
-    fetchPersonsByDivision(divisionId);
     
     if (errors.assignee_division_id) {
       setErrors({ ...errors, assignee_division_id: null });
@@ -165,7 +158,7 @@ const AssignComplaintForm = ({ show, handleClose, complaint, onSaved }) => {
             fullWidth 
             size="small" 
             error={!!errors.assignee_user_id}
-            disabled={saving || loadingPersons || !formData.assignee_division_id}
+            disabled={saving || loadingPersons}
           >
             <InputLabel>Person</InputLabel>
             <Select
@@ -234,7 +227,7 @@ const AssignComplaintForm = ({ show, handleClose, complaint, onSaved }) => {
           color="primary"
           disabled={saving}
         >
-          {saving ? "Saving..." : "Save"}
+          {saving ? "Assigning..." : "Assign"}
         </Button>
       </DialogActions>
     </Dialog>

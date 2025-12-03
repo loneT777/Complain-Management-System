@@ -77,6 +77,12 @@ Route::put('/categories/{id}', [CategoryController::class, 'update']);
 Route::delete('/categories/{id}', [CategoryController::class, 'destroy']);
 Route::get('/public/categories', [CategoryController::class, 'publicIndex']);
 
+// Public CRUD for Complaints (for development)
+Route::get('/complaints', [ComplaintController::class, 'index']);
+Route::post('/complaints', [ComplaintController::class, 'store']);
+Route::get('/complaints/{id}', [ComplaintController::class, 'show']);
+Route::put('/complaints/{id}', [ComplaintController::class, 'update']);
+Route::delete('/complaints/{id}', [ComplaintController::class, 'destroy']);
 
 Route::get('/complaint_assignments', [ComplaintAssignmentController::class, 'index']);
 Route::post('/complaint_assignments', [ComplaintAssignmentController::class, 'store']);
@@ -95,8 +101,8 @@ Route::delete('/complaint_assignments/{id}', [ComplaintAssignmentController::cla
 Route::middleware('auth:sanctum')->group(function () {
     // User permissions
 
-    Route::post('/complaint_assignments', [\App\Http\Controllers\ComplaintAssignmentController::class, 'store']);
-    Route::get('/complaint_assignments', [\App\Http\Controllers\ComplaintAssignmentController::class, 'index']);
+    // Route::post('/complaint_assignments', [\App\Http\Controllers\ComplaintAssignmentController::class, 'store']);
+    // Route::get('/complaint_assignments', [\App\Http\Controllers\ComplaintAssignmentController::class, 'index']);
     // Route::get('/user/permissions', [UserController::class, 'permissions']);
 
     // Employees CRUD
