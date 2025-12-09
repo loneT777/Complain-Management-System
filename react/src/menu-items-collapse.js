@@ -6,8 +6,15 @@ const menuItems = {
       type: 'group',
       children: [
         { id: 'dashboard', title: 'Dashboard', type: 'item', url: '/dashboard/summary' },
-        { id: 'complaints', title: 'Complaints', type: 'item', url: '/complaints' },
-        { id: 'complaint', title: 'Complaint', type: 'item', url: '/complaint/1' },
+        { 
+          id: 'complaints', 
+          title: 'Complaints', 
+          type: 'collapse',
+          children: [
+            { id: 'new-complaint', title: 'New Complaint', type: 'item', url: '/add-complaint' },
+            { id: 'complaint-details', title: 'Complaint Details', type: 'item', url: '/complaint/1' }
+          ]
+        },
         { id: 'persons', title: 'Persons', type: 'item', url: '/persons' },
         { id: 'divisions', title: 'Divisions', type: 'item', url: '/divisions' },
         { id: 'roles', title: 'Roles', type: 'item', url: '/roles' },

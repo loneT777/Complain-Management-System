@@ -2,7 +2,7 @@ import React from 'react';
 import { Table, Spinner, Button } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 
-const ComplaintTable = ({ complaints, loading, handleEdit, handleDelete }) => {
+const ComplaintTable = ({ complaints, loading }) => {
   const navigate = useNavigate();
 
   const handleView = (complaint) => {
@@ -74,7 +74,7 @@ const ComplaintTable = ({ complaints, loading, handleEdit, handleDelete }) => {
             <td>
               <div className="d-flex flex-column gap-2">
                 <Button
-                  variant="primary"
+                  style={{ backgroundColor: '#05443cff', borderColor: '#05443cff' }}
                   size="sm"
                   onClick={() => handleView(complaint)}
                 >
@@ -82,32 +82,12 @@ const ComplaintTable = ({ complaints, loading, handleEdit, handleDelete }) => {
                 </Button>
 
                 <Button
-                  variant="success"
+                  style={{ backgroundColor: '#011e1bff', borderColor: '#011e1bff' }}
                   size="sm"
                   onClick={() => alert('Assign functionality to be implemented')}
                 >
                   Assign
                 </Button>
-
-                {handleEdit && (
-                  <Button
-                    variant="warning"
-                    size="sm"
-                    onClick={() => handleEdit(complaint)}
-                  >
-                    Edit
-                  </Button>
-                )}
-
-                {handleDelete && (
-                  <Button
-                    variant="danger"
-                    size="sm"
-                    onClick={() => handleDelete(complaint.id)}
-                  >
-                    Delete
-                  </Button>
-                )}
               </div>
             </td>
           </tr>

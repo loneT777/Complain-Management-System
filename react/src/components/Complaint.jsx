@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Card, Button, Badge, Spinner, Tab, Tabs } from 'react-bootstrap';
-import { ArrowBack, Edit, Delete } from '@mui/icons-material';
+import { ArrowBack, Edit } from '@mui/icons-material';
 import axios from 'axios';
 
 const Complaint = () => {
@@ -28,18 +28,6 @@ const Complaint = () => {
 
   const handleEdit = () => {
     navigate('/complaints', { state: { editComplaint: complaint } });
-  };
-
-  const handleDelete = async () => {
-    if (window.confirm('Are you sure you want to delete this complaint?')) {
-      try {
-        await axios.delete(`http://localhost:8000/api/complaints/${id}`);
-        navigate('/complaints');
-      } catch (error) {
-        console.error('Error deleting complaint:', error);
-        alert('Error deleting complaint');
-      }
-    }
   };
 
   const getPriorityBadge = (priority) => {
@@ -70,9 +58,6 @@ const Complaint = () => {
           <Card.Body>
             <p className="text-muted text-center">Complaint not found</p>
             <div className="text-center">
-              <Button variant="primary" onClick={() => navigate('/complaints')}>
-                Back to Complaints
-              </Button>
             </div>
           </Card.Body>
         </Card>
@@ -87,13 +72,13 @@ const Complaint = () => {
           <div className="d-flex justify-content-between align-items-center">
             <div className="d-flex align-items-center">
               <Button
-                variant="outline-secondary"
-                size="sm"
-                className="me-3"
+                variant="link"
+                className="text-decoration-none p-0 me-3"
                 onClick={() => navigate('/complaints')}
               >
-                <ArrowBack fontSize="small" className="me-1" /> Back
+                <ArrowBack className="me-1" fontSize="small" /> Complaints
               </Button>
+              <span className="mx-2">/</span>
               <h4 className="mb-0">Complaint Details - {complaint.reference_no}</h4>
             </div>
 
@@ -101,18 +86,9 @@ const Complaint = () => {
               <Button
                 variant="outline-primary"
                 size="sm"
-                className="me-2"
                 onClick={handleEdit}
               >
                 <Edit fontSize="small" className="me-1" /> Edit
-              </Button>
-
-              <Button
-                variant="outline-danger"
-                size="sm"
-                onClick={handleDelete}
-              >
-                <Delete fontSize="small" className="me-1" /> Delete
               </Button>
             </div>
           </div>

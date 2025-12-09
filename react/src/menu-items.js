@@ -16,18 +16,24 @@ const menuItems = {
         {
           id: 'complaints',
           title: 'Complaints',
-          type: 'item',
+          type: 'collapse',
           icon: 'material-icons-two-tone',
           iconname: 'description',
-          url: '/complaints'
-        },
-        {
-          id: 'complaint',
-          title: 'Complaint',
-          type: 'item',
-          icon: 'material-icons-two-tone',
-          iconname: 'article',
-          url: '/complaint/1'
+          children: [
+            {
+              id: 'new-complaint',
+              title: 'New Complaint',
+              type: 'item',
+              url: '/add-complaint'
+            },
+            {
+              id: 'complaint-details',
+              title: 'Complaint Details',
+              type: 'item',
+              url: '/complaint/1',
+              breadcrumbs: false
+            }
+          ]
         },
         {
           id: 'persons',

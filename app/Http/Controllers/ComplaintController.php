@@ -33,6 +33,8 @@ class ComplaintController extends Controller
             'priority_level' => 'nullable|string',
             'complainant_name' => 'nullable|string',
             'complainant_phone' => 'nullable|string',
+            'category_ids' => 'nullable|array',
+            'category_ids.*' => 'exists:categories,id',
         ]);
 
         if ($validator->fails()) {
@@ -42,11 +44,16 @@ class ComplaintController extends Controller
         // Generate unique reference number
         $referenceNo = 'CMP-' . date('Ymd') . '-' . str_pad(Complaint::count() + 1, 4, '0', STR_PAD_LEFT);
 
-        $complaint = Complaint::create(array_merge($request->all(), [
+        $complaint = Complaint::create(array_merge($request->except('category_ids'), [
             'reference_no' => $referenceNo,
             'received_at' => now(),
             'complainant_id' => 1 // Default complainant ID for now
         ]));
+
+        // Attach categories if provided
+        if ($request->has('category_ids') && is_array($request->category_ids)) {
+            $complaint->categories()->attach($request->category_ids);
+        }
 
         return response()->json($complaint, 201);
     }
