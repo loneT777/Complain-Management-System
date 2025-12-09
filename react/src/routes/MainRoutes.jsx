@@ -4,6 +4,8 @@ import AdminLayout from 'layouts/AdminLayout';
 import GuestLayout from 'layouts/GuestLayout';
 
 const DashboardSales = lazy(() => import('../views/dashboard/DashSales/index'));
+const Complaints = lazy(() => import('../components/Complaints'));
+const Complaint = lazy(() => import('../components/Complaint'));
 const Persons = lazy(() => import('../components/Persons'));
 const Divisions = lazy(() => import('../components/Divisions'));
 const Roles = lazy(() => import('../components/Roles'));
@@ -31,6 +33,8 @@ const MainRoutes = {
           path: 'dashboard',
           element: <DashboardSales />
         },
+        {path: 'complaints', element: <Complaints />},
+        {path: 'complaint/:id', element: <Complaint />},
         {path: 'persons', element: <Persons />},
         {path: 'divisions', element: <Divisions />},
         { path: 'roles', element: <Roles /> },

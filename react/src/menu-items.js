@@ -14,6 +14,22 @@ const menuItems = {
           url: '/dashboard/summary'
         },
         {
+          id: 'complaints',
+          title: 'Complaints',
+          type: 'item',
+          icon: 'material-icons-two-tone',
+          iconname: 'description',
+          url: '/complaints'
+        },
+        {
+          id: 'complaint',
+          title: 'Complaint',
+          type: 'item',
+          icon: 'material-icons-two-tone',
+          iconname: 'article',
+          url: '/complaint/1'
+        },
+        {
           id: 'persons',
           title: 'Persons',
           type: 'item',
