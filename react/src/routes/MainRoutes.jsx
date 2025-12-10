@@ -12,8 +12,8 @@ const Persons = lazy(() => import('../components/Persons'));
 const Divisions = lazy(() => import('../components/Divisions'));
 const Roles = lazy(() => import('../components/Roles'));
 const Categories = lazy(() => import('../components/Categories'));
+const ComplaintAssignments = lazy(() => import('../components/ComplaintAssignments'));
 
-// And in your routes:
 const MainRoutes = {
   path: '/',
   children: [
@@ -35,12 +35,16 @@ const MainRoutes = {
           path: 'dashboard',
           element: <DashboardSales />
         },
-        {path: 'complaints', element: <Complaints />},
-        {path: 'add-complaint', element: <AddComplaint />},
-        {path: 'complaint/:id', element: <Complaint />},
-        {path: 'edit-complaint/:id', element: <EditComplaint />},
-        {path: 'persons', element: <Persons />},
-        {path: 'divisions', element: <Divisions />},
+        // Complaint-related routes
+        { path: 'complaints', element: <Complaints /> },
+        { path: 'add-complaint', element: <AddComplaint /> },
+        { path: 'complaint/:id', element: <Complaint /> },
+        { path: 'edit-complaint/:id', element: <EditComplaint /> },
+        { path: 'complaint-assignments', element: <ComplaintAssignments /> },
+        
+        // Other entity routes
+        { path: 'persons', element: <Persons /> },
+        { path: 'divisions', element: <Divisions /> },
         { path: 'roles', element: <Roles /> },
         { path: 'categories', element: <Categories /> },
 

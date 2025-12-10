@@ -73,8 +73,15 @@ class Complaint extends Model
         return $this->hasMany(ComplaintLog::class);
     }
 
+    // Using assignments() as the method name from main branch
+    // but keeping complaintAssignments() as an alias for backward compatibility
     public function assignments()
     {
         return $this->hasMany(ComplaintAssignment::class);
+    }
+
+    public function complaintAssignments()
+    {
+        return $this->assignments();
     }
 }
