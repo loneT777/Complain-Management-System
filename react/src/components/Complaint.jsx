@@ -76,7 +76,7 @@ const Complaint = () => {
 
             <div>
               <Button
-                variant="outline-primary"
+                style={{ backgroundColor: '#3a4c4a', borderColor: '#3a4c4a' }}
                 size="sm"
                 onClick={handleEdit}
               >
