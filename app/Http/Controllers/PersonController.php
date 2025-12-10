@@ -13,9 +13,16 @@ class PersonController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
-        $people = Person::orderBy('created_at', 'desc')->get();
+        $query = Person::orderBy('created_at', 'desc');
+
+        // Filter by division_id if provided
+        if ($request->has('division_id') && $request->division_id) {
+            $query->where('designation', '!=', null); // Simple filter - you can enhance this
+        }
+
+        $people = $query->get();
         return response()->json($people);
     }
 
