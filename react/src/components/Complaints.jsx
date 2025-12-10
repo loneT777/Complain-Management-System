@@ -1,9 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Button, Table } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button } from 'react-bootstrap';
+import { Add } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import ComplaintTable from './ComplaintTable';
 import AssignComplaintForm from './AssignComplaintForm';
 
 const Complaints = () => {
+  const navigate = useNavigate();
   const [complaints, setComplaints] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showAssignModal, setShowAssignModal] = useState(false);
@@ -18,7 +22,7 @@ const Complaints = () => {
     setLoading(true);
     try {
       const response = await axios.get('http://localhost:8000/api/complaints');
-      const complaintsData = response.data.data || [];
+      const complaintsData = response.data.data || response.data;
       setComplaints(complaintsData);
 
       // Fetch assignments for all complaints
@@ -73,80 +77,26 @@ const Complaints = () => {
 
   return (
     <Container fluid className="p-4">
-      <Row>
+      <Row className="mb-4">
         <Col>
           <Card>
-            <Card.Header>
-              <h4>Complaints</h4>
+            <Card.Header className="d-flex justify-content-between align-items-center">
+              <h4 className="mb-0">Complaints</h4>
+              <Button
+                style={{ backgroundColor: '#3a4c4a', borderColor: '#3a4c4a' }}
+                onClick={() => navigate('/add-complaint')}
+              >
+                <Add className="me-1" /> Add New Complaint
+              </Button>
             </Card.Header>
+
             <Card.Body>
-              {loading ? (
-                <p>Loading complaints...</p>
-              ) : (
-                <Table bordered hover responsive>
-                  <thead>
-                    <tr>
-                      <th>ID</th>
-                      <th>Title</th>
-                      <th>Description</th>
-                      <th>Assignment</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {complaints.length === 0 && (
-                      <tr>
-                        <td colSpan="5" className="text-center">
-                          No complaints found.
-                        </td>
-                      </tr>
-                    )}
-                    {complaints.map((complaint) => {
-                      const assignment = assignments[complaint.id];
-                      return (
-                        <tr key={complaint.id}>
-                          <td>{complaint.id}</td>
-                          <td>{complaint.title}</td>
-                          <td>{complaint.description}</td>
-                          <td>
-                            {assignment ? (
-                              <>
-                                <div>
-                                  <strong>Division:</strong> {assignment.assigneeDivision ? assignment.assigneeDivision.name : '-'}
-                                </div>
-                                <div>
-                                  <strong>Person:</strong> {assignment.assigneeUser ? assignment.assigneeUser.full_name : '-'}
-                                </div>
-                                <div>
-                                  <strong>Due:</strong> {assignment.due_at || '-'}
-                                </div>
-                                <div>
-                                  <strong>Remark:</strong> {assignment.remark || '-'}
-                                </div>
-                              </>
-                            ) : (
-                              <span>No Assignment</span>
-                            )}
-                          </td>
-                          <td>
-                            <Button
-                              size="sm"
-                              variant="primary"
-                              className="me-2"
-                              onClick={() => alert(`View complaint ID: ${complaint.id}`)}
-                            >
-                              View
-                            </Button>
-                            <Button size="sm" variant="success" onClick={() => handleAssignClick(complaint)}>
-                              Assign
-                            </Button>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </Table>
-              )}
+              <ComplaintTable
+                complaints={complaints}
+                loading={loading}
+                assignments={assignments}
+                onAssignClick={handleAssignClick}
+              />
             </Card.Body>
           </Card>
         </Col>

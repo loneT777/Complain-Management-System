@@ -27,18 +27,61 @@ class Complaint extends Model
         'remark'
     ];
 
-    public function complaintAssignments()
-    {
-        return $this->hasMany(\App\Models\ComplaintAssignment::class);
-    }
+    protected $casts = [
+        'received_at' => 'datetime',
+        'due_at' => 'date',
+    ];
 
+    // Relationships
     public function complainant()
     {
-        return $this->belongsTo(\App\Models\Person::class, 'complainant_id');
+        return $this->belongsTo(Person::class, 'complainant_id');
     }
 
     public function lastStatus()
     {
-        return $this->belongsTo(\App\Models\Status::class, 'last_status_id');
+        return $this->belongsTo(Status::class, 'last_status_id');
+    }
+
+    public function complaintRequested()
+    {
+        return $this->belongsTo(Person::class, 'complaint_requested_id');
+    }
+
+    public function userReceived()
+    {
+        return $this->belongsTo(User::class, 'user_received_id');
+    }
+
+    public function categories()
+    {
+        return $this->belongsToMany(Category::class, 'complaint_categories');
+    }
+
+    public function messages()
+    {
+        return $this->hasMany(Message::class);
+    }
+
+    public function attachments()
+    {
+        return $this->hasMany(Attachment::class);
+    }
+
+    public function logs()
+    {
+        return $this->hasMany(ComplaintLog::class);
+    }
+
+    // Using assignments() as the method name from main branch
+    // but keeping complaintAssignments() as an alias for backward compatibility
+    public function assignments()
+    {
+        return $this->hasMany(ComplaintAssignment::class);
+    }
+
+    public function complaintAssignments()
+    {
+        return $this->assignments();
     }
 }

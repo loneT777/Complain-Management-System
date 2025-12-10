@@ -20,11 +20,13 @@ return new class extends Migration
             $table->string('category_name');
             $table->text('description')->nullable();
             $table->unsignedBigInteger('division_id')->nullable();
+            $table->unsignedBigInteger('updated_session_id')->nullable();
             $table->timestamps();
 
             // Foreign keys
             $table->foreign('parent_id')->references('id')->on('categories')->onDelete('set null');
             $table->foreign('division_id')->references('id')->on('divisions')->onDelete('set null');
+            $table->foreign('updated_session_id')->references('id')->on('sessions')->onDelete('set null');
         });
     }
 

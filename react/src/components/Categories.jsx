@@ -18,9 +18,11 @@ import {
   DialogActions,
   TextField,
   Alert,
-  MenuItem
+  MenuItem,
+  TablePagination,
+  InputAdornment
 } from '@mui/material';
-import { Edit, Delete, Add, Close } from '@mui/icons-material';
+import { Edit, Delete, Add, Close, Search } from '@mui/icons-material';
 
 const Categories = () => {
   const [categories, setCategories] = useState([]);
@@ -38,21 +40,40 @@ const Categories = () => {
   const [errors, setErrors] = useState({});
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  
+  // Pagination and search states
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [totalRows, setTotalRows] = useState(0);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchTimeout, setSearchTimeout] = useState(null);
 
   useEffect(() => {
     fetchCategories();
     fetchDivisions();
-  }, []);
+  }, [page, rowsPerPage, searchQuery]);
 
   const fetchCategories = async () => {
     setLoading(true);
     try {
-      const response = await fetch('/api/categories');
+      const params = new URLSearchParams({
+        page: page + 1, // Laravel pages start from 1
+        per_page: rowsPerPage,
+        search: searchQuery
+      });
+
+      const response = await fetch(`/api/categories?${params}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
       const data = await response.json();
       setCategories(data.data || []);
+      setTotalRows(data.pagination?.total || 0);
+      setErrorMessage('');
     } catch (error) {
       console.error('Error fetching categories:', error);
-      setErrorMessage('Failed to load categories');
+      setErrorMessage('Failed to load categories: ' + error.message);
+      setCategories([]);
     } finally {
       setLoading(false);
     }
@@ -61,10 +82,14 @@ const Categories = () => {
   const fetchDivisions = async () => {
     try {
       const response = await fetch('/api/public/divisions');
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
       const data = await response.json();
       setDivisions(data.data || []);
     } catch (error) {
       console.error('Error fetching divisions:', error);
+      setDivisions([]);
     }
   };
 
@@ -184,6 +209,31 @@ const Categories = () => {
     }
   };
 
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
+  const handleSearchChange = (event) => {
+    const value = event.target.value;
+    setSearchQuery(value);
+    
+    // Debounce search
+    if (searchTimeout) {
+      clearTimeout(searchTimeout);
+    }
+    
+    const timeout = setTimeout(() => {
+      setPage(0); // Reset to first page on search
+    }, 500);
+    
+    setSearchTimeout(timeout);
+  };
+
   const getDivisionName = (divisionId) => {
     const division = divisions.find(d => d.id === divisionId);
     return division ? division.name : '-';
@@ -211,13 +261,37 @@ const Categories = () => {
 
       {errorMessage && (
         <Alert severity="error" onClose={() => setErrorMessage('')} sx={{ mb: 2 }}>
-          {errorMessage}
+          <strong>Error:</strong> {errorMessage}
+          <br />
+          <Typography variant="caption">
+            Make sure the database is configured and migrations are run: `php artisan migrate`
+          </Typography>
         </Alert>
       )}
 
+      {/* Search Box */}
+      <Box sx={{ mb: 2 }}>
+        <TextField
+          fullWidth
+          size="small"
+          placeholder="Search by code, name, or description..."
+          value={searchQuery}
+          onChange={handleSearchChange}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <Search />
+              </InputAdornment>
+            ),
+          }}
+          sx={{ maxWidth: 400 }}
+        />
+      </Box>
+
       {loading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', p: 5 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px', flexDirection: 'column', gap: 2 }}>
           <CircularProgress />
+          <Typography>Loading categories...</Typography>
         </Box>
       ) : (
         <TableContainer component={Paper}>
@@ -265,6 +339,20 @@ const Categories = () => {
         </TableContainer>
       )}
 
+      {/* Pagination */}
+      {!loading && categories.length > 0 && (
+        <TablePagination
+          component="div"
+          count={totalRows}
+          page={page}
+          onPageChange={handleChangePage}
+          rowsPerPage={rowsPerPage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+          rowsPerPageOptions={[5, 10, 25, 50, 100]}
+          sx={{ mt: 2 }}
+        />
+      )}
+
       {/* Add/Edit Dialog */}
       <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
         <DialogTitle>
@@ -293,23 +381,14 @@ const Categories = () => {
             <TextField
               fullWidth
               size="small"
-              select
               label="Parent Category"
               name="parent_id"
               value={formData.parent_id}
               onChange={handleInputChange}
               error={!!errors.parent_id}
               helperText={errors.parent_id ? errors.parent_id[0] : 'Optional'}
-            >
-              <MenuItem value="">None</MenuItem>
-              {categories
-                .filter(c => !editingCategory || c.id !== editingCategory.id)
-                .map((category) => (
-                  <MenuItem key={category.id} value={category.id}>
-                    {category.category_name}
-                  </MenuItem>
-                ))}
-            </TextField>
+              placeholder="Enter parent category ID"
+            />
 
             <TextField
               fullWidth
