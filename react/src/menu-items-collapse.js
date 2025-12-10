@@ -11,8 +11,9 @@ const menuItems = {
           title: 'Complaints', 
           type: 'collapse',
           children: [
-            { id: 'new-complaint', title: 'New Complaint', type: 'item', url: '/add-complaint' },
-            { id: 'complaint-details', title: 'Complaint Details', type: 'item', url: '/complaint/1' }
+            { id: 'complaints-list', title: 'All Complaints', type: 'item', url: '/complaints' },
+            { id: 'add-complaint', title: 'New Complaint', type: 'item', url: '/add-complaint' },
+            { id: 'complaint-detail', title: 'Complaint Details', type: 'item', url: '/complaint/1' }
           ]
         },
         { id: 'persons', title: 'Persons', type: 'item', url: '/persons' },

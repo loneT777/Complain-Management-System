@@ -7,6 +7,7 @@ const DashboardSales = lazy(() => import('../views/dashboard/DashSales/index'));
 const Complaints = lazy(() => import('../components/Complaints'));
 const Complaint = lazy(() => import('../components/Complaint'));
 const AddComplaint = lazy(() => import('../components/AddComplaint'));
+const EditComplaint = lazy(() => import('../components/EditComplaint'));
 const Persons = lazy(() => import('../components/Persons'));
 const Divisions = lazy(() => import('../components/Divisions'));
 const Roles = lazy(() => import('../components/Roles'));
@@ -37,6 +38,7 @@ const MainRoutes = {
         {path: 'complaints', element: <Complaints />},
         {path: 'add-complaint', element: <AddComplaint />},
         {path: 'complaint/:id', element: <Complaint />},
+        {path: 'edit-complaint/:id', element: <EditComplaint />},
         {path: 'persons', element: <Persons />},
         {path: 'divisions', element: <Divisions />},
         { path: 'roles', element: <Roles /> },

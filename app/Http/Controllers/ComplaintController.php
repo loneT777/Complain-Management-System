@@ -81,17 +81,26 @@ class ComplaintController extends Controller
         $validator = Validator::make($request->all(), [
             'title' => 'required|string|max:255',
             'description' => 'required|string',
-            'complainant_id' => 'required|exists:persons,id',
             'channel' => 'nullable|string',
             'priority_level' => 'nullable|string',
             'confidentiality_level' => 'nullable|string',
+            'complainant_name' => 'nullable|string',
+            'complainant_phone' => 'nullable|string',
+            'remark' => 'nullable|string',
+            'category_ids' => 'nullable|array',
+            'category_ids.*' => 'exists:categories,id',
         ]);
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $complaint->update($request->all());
+        $complaint->update($request->except('category_ids'));
+
+        // Sync categories if provided
+        if ($request->has('category_ids') && is_array($request->category_ids)) {
+            $complaint->categories()->sync($request->category_ids);
+        }
 
         return response()->json($complaint);
     }

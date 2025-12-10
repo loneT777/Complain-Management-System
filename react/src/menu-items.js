@@ -21,17 +21,22 @@ const menuItems = {
           iconname: 'description',
           children: [
             {
-              id: 'new-complaint',
+              id: 'complaints-list',
+              title: 'All Complaints',
+              type: 'item',
+              url: '/complaints'
+            },
+            {
+              id: 'add-complaint',
               title: 'New Complaint',
               type: 'item',
               url: '/add-complaint'
             },
             {
-              id: 'complaint-details',
+              id: 'complaint-detail',
               title: 'Complaint Details',
               type: 'item',
-              url: '/complaint/1',
-              breadcrumbs: false
+              url: '/complaint/1'
             }
           ]
         },

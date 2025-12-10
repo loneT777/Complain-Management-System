@@ -27,7 +27,7 @@ const Complaint = () => {
   };
 
   const handleEdit = () => {
-    navigate('/complaints', { state: { editComplaint: complaint } });
+    navigate(`/edit-complaint/${id}`);
   };
 
   const getPriorityBadge = (priority) => {
@@ -71,14 +71,6 @@ const Complaint = () => {
         <Col>
           <div className="d-flex justify-content-between align-items-center">
             <div className="d-flex align-items-center">
-              <Button
-                variant="link"
-                className="text-decoration-none p-0 me-3"
-                onClick={() => navigate('/complaints')}
-              >
-                <ArrowBack className="me-1" fontSize="small" /> Complaints
-              </Button>
-              <span className="mx-2">/</span>
               <h4 className="mb-0">Complaint Details - {complaint.reference_no}</h4>
             </div>
 
