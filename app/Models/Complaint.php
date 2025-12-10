@@ -50,4 +50,12 @@ class Complaint extends Model
     {
         return $this->belongsToMany(Category::class, 'complaint_categories');
     }
+
+    /**
+     * Get the attachments for this complaint
+     */
+    public function attachments()
+    {
+        return $this->hasMany(Attachment::class);
+    }
 }

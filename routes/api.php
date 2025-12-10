@@ -8,6 +8,7 @@ use App\Http\Controllers\PersonController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\ComplaintController;
+use App\Http\Controllers\AttachmentController;
 
 // CSRF Cookie
 Route::get('/sanctum/csrf-cookie', function (Request $request) {
@@ -28,10 +29,13 @@ Route::apiResource('persons', PersonController::class);
 Route::apiResource('categories', CategoryController::class);
 Route::apiResource('messages', MessageController::class);
 Route::apiResource('complaints', ComplaintController::class);
+Route::apiResource('attachments', AttachmentController::class);
 
 // Additional routes
 Route::get('/complaints/{complaintId}/messages', [MessageController::class, 'getByComplaint']);
 Route::get('/categories/{categoryId}/complaints', [CategoryController::class, 'getComplaints']);
+Route::get('/complaints/{complaintId}/attachments', [AttachmentController::class, 'getAttachmentsByComplaint']);
+Route::get('/attachments/{id}/download', [AttachmentController::class, 'download']);
 
 // Protected routes with authentication
 Route::middleware('auth:sanctum')->group(function () {

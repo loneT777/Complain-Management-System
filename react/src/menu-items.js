@@ -52,6 +52,14 @@ const menuItems = {
           icon: 'material-icons-two-tone',
           iconname: 'message',
           url: '/messages'
+        },
+        {
+          id: 'attachments',
+          title: 'Attachments',
+          type: 'item',
+          icon: 'material-icons-two-tone',
+          iconname: 'attach_file',
+          url: '/attachments'
         }
       ]
     }
