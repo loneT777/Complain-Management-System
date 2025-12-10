@@ -179,6 +179,7 @@ const Attachments = () => {
             const response = await axios.post('/api/attachments', formDataToSend, {
               headers: {
                 'Content-Type': 'multipart/form-data'
+                
               }
             });
             
