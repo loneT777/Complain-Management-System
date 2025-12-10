@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -14,18 +14,18 @@ import {
   Select,
   MenuItem,
   Typography
-} from "@mui/material";
-import { Close } from "@mui/icons-material";
-import axios from "axios";
+} from '@mui/material';
+import { Close } from '@mui/icons-material';
+import axios from 'axios';
 
 const AssignComplaintForm = ({ show, handleClose, complaint, onSaved }) => {
   const [divisions, setDivisions] = useState([]);
   const [persons, setPersons] = useState([]);
   const [formData, setFormData] = useState({
-    assignee_division_id: "",
-    assignee_user_id: "",
-    due_at: "",
-    remark: "",
+    assignee_division_id: '',
+    assignee_user_id: '',
+    due_at: '',
+    remark: ''
   });
   const [loadingPersons, setLoadingPersons] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -36,10 +36,10 @@ const AssignComplaintForm = ({ show, handleClose, complaint, onSaved }) => {
       fetchDivisions();
       fetchAllPersons();
       setFormData({
-        assignee_division_id: "",
-        assignee_user_id: "",
-        due_at: "",
-        remark: "",
+        assignee_division_id: '',
+        assignee_user_id: '',
+        due_at: '',
+        remark: ''
       });
       setErrors({});
     }
@@ -47,20 +47,20 @@ const AssignComplaintForm = ({ show, handleClose, complaint, onSaved }) => {
 
   const fetchDivisions = async () => {
     try {
-      const response = await axios.get("http://localhost:8000/api/divisions");
+      const response = await axios.get('http://localhost:8000/api/divisions');
       setDivisions(response.data.data || []);
     } catch (error) {
-      console.error("Failed to fetch divisions", error);
+      console.error('Failed to fetch divisions', error);
     }
   };
 
   const fetchAllPersons = async () => {
     setLoadingPersons(true);
     try {
-      const response = await axios.get("http://localhost:8000/api/persons");
+      const response = await axios.get('http://localhost:8000/api/persons');
       setPersons(response.data || []);
     } catch (error) {
-      console.error("Failed to fetch persons", error);
+      console.error('Failed to fetch persons', error);
       setPersons([]);
     } finally {
       setLoadingPersons(false);
@@ -72,9 +72,9 @@ const AssignComplaintForm = ({ show, handleClose, complaint, onSaved }) => {
     setFormData({
       ...formData,
       assignee_division_id: divisionId,
-      assignee_user_id: "",
+      assignee_user_id: ''
     });
-    
+
     if (errors.assignee_division_id) {
       setErrors({ ...errors, assignee_division_id: null });
     }
@@ -84,9 +84,9 @@ const AssignComplaintForm = ({ show, handleClose, complaint, onSaved }) => {
     const { name, value } = e.target;
     setFormData({
       ...formData,
-      [name]: value,
+      [name]: value
     });
-    
+
     if (errors[name]) {
       setErrors({ ...errors, [name]: null });
     }
@@ -96,22 +96,22 @@ const AssignComplaintForm = ({ show, handleClose, complaint, onSaved }) => {
     e.preventDefault();
     setSaving(true);
     setErrors({});
-    
+
     try {
-      await axios.post("http://localhost:8000/api/complaint_assignments", {
+      await axios.post('http://localhost:8000/api/complaint_assignments', {
         complaint_id: complaint.id,
         assignee_division_id: formData.assignee_division_id || null,
         assignee_user_id: formData.assignee_user_id || null,
         due_at: formData.due_at || null,
-        remark: formData.remark || "",
+        remark: formData.remark || ''
       });
       onSaved();
     } catch (error) {
-      console.error("Failed to save complaint assignment", error);
+      console.error('Failed to save complaint assignment', error);
       if (error.response && error.response.data && error.response.data.errors) {
         setErrors(error.response.data.errors);
       } else {
-        alert("Failed to save assignment. Please try again.");
+        alert('Failed to save assignment. Please try again.');
       }
     } finally {
       setSaving(false);
@@ -154,19 +154,9 @@ const AssignComplaintForm = ({ show, handleClose, complaint, onSaved }) => {
             )}
           </FormControl>
 
-          <FormControl 
-            fullWidth 
-            size="small" 
-            error={!!errors.assignee_user_id}
-            disabled={saving || loadingPersons}
-          >
+          <FormControl fullWidth size="small" error={!!errors.assignee_user_id} disabled={saving || loadingPersons}>
             <InputLabel>Person</InputLabel>
-            <Select
-              name="assignee_user_id"
-              value={formData.assignee_user_id}
-              onChange={handleChange}
-              label="Person"
-            >
+            <Select name="assignee_user_id" value={formData.assignee_user_id} onChange={handleChange} label="Person">
               <MenuItem value="">-- Select Person --</MenuItem>
               {persons.map((person) => (
                 <MenuItem key={person.id} value={person.id}>
@@ -221,13 +211,8 @@ const AssignComplaintForm = ({ show, handleClose, complaint, onSaved }) => {
         <Button onClick={handleClose} disabled={saving}>
           Cancel
         </Button>
-        <Button 
-          onClick={handleSubmit} 
-          variant="contained" 
-          color="primary"
-          disabled={saving}
-        >
-          {saving ? "Assigning..." : "Assign"}
+        <Button onClick={handleSubmit} variant="contained" color="primary" disabled={saving}>
+          {saving ? 'Assigning...' : 'Assign'}
         </Button>
       </DialogActions>
     </Dialog>
