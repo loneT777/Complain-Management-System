@@ -12,6 +12,9 @@ const Persons = lazy(() => import('../components/Persons'));
 const Divisions = lazy(() => import('../components/Divisions'));
 const Roles = lazy(() => import('../components/Roles'));
 const Categories = lazy(() => import('../components/Categories'));
+// Resolved imports from both branches
+const Messages = lazy(() => import('../components/Messages'));
+const Attachments = lazy(() => import('../components/Attachments'));
 const ComplaintAssignments = lazy(() => import('../components/ComplaintAssignments'));
 
 const MainRoutes = {
@@ -47,6 +50,8 @@ const MainRoutes = {
         { path: 'divisions', element: <Divisions /> },
         { path: 'roles', element: <Roles /> },
         { path: 'categories', element: <Categories /> },
+        { path: 'messages', element: <Messages /> },
+        { path: 'attachments', element: <Attachments /> },
 
         // Catch-all for undefined routes
         {

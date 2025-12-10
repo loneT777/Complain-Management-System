@@ -13,6 +13,7 @@
     "apexcharts": "^4.3.0",
     "axios": "^1.11.0",
     "bootstrap": "5.3.3",
+    "date-fns": "^4.1.0",
     "feather-icons-react": "^0.7.0",
     "lodash-es": "^4.17.21",
     "lucide-react": "^0.220.0",

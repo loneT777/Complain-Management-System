@@ -73,12 +73,20 @@ const menuItems = {
           url: '/categories'
         },
         {
-          id: 'complaints',
-          title: 'Complaints',
+          id: 'messages',
+          title: 'Messages',
           type: 'item',
           icon: 'material-icons-two-tone',
-          iconname: 'report',
-          url: '/complaints'
+          iconname: 'message',
+          url: '/messages'
+        },
+        {
+          id: 'attachments',
+          title: 'Attachments',
+          type: 'item',
+          icon: 'material-icons-two-tone',
+          iconname: 'attach_file',
+          url: '/attachments'
         },
         {
           id: 'complaint-assignments',

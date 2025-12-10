@@ -20,7 +20,9 @@ return new class extends Migration
             $table->unsignedBigInteger('user_id')->nullable();
             $table->timestamp('uploaded_at')->nullable();
             $table->string('file_name')->nullable();
+            $table->string('file_path')->nullable();
             $table->string('extension')->nullable();
+            $table->text('description')->nullable();
 
             $table->foreign('complaint_id')->references('id')->on('complaints')->onDelete('cascade');
             $table->foreign('complaint_log_id')->references('id')->on('complaint_logs')->onDelete('cascade');
