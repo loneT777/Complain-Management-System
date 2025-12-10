@@ -36,6 +36,7 @@ Route::get('/complaints/{complaintId}/messages', [MessageController::class, 'get
 Route::get('/categories/{categoryId}/complaints', [CategoryController::class, 'getComplaints']);
 Route::get('/complaints/{complaintId}/attachments', [AttachmentController::class, 'getAttachmentsByComplaint']);
 Route::get('/attachments/{id}/download', [AttachmentController::class, 'download']);
+Route::get('/attachments/{id}/view', [AttachmentController::class, 'view']);
 
 // Protected routes with authentication
 Route::middleware('auth:sanctum')->group(function () {

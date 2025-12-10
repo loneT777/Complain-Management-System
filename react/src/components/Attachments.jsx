@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Button, Form, Alert, Pagination, InputGroup } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Form, Alert, Pagination, InputGroup, Modal } from 'react-bootstrap';
 import { Add, Search, CloudUpload } from '@mui/icons-material';
 import AttachmentTable from './AttachmentTable';
 import AttachmentForm from './AttachmentForm';
@@ -10,6 +10,8 @@ const Attachments = () => {
   const [complaints, setComplaints] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [viewingAttachment, setViewingAttachment] = useState(null);
   const [editMode, setEditMode] = useState(false);
   const [formData, setFormData] = useState({
     id: null,
@@ -115,8 +117,8 @@ const Attachments = () => {
       return;
     }
 
-    if (!editMode && !submitData.file) {
-      setErrorMessage('Please select a file to upload');
+    if (!editMode && (!submitData.files || submitData.files.length === 0)) {
+      setErrorMessage('Please select at least one file to upload');
       return;
     }
 
@@ -130,13 +132,13 @@ const Attachments = () => {
         console.log('Updating attachment ID:', submitData.id);
         
         // Check if file is being replaced
-        if (submitData.file) {
+        if (submitData.files && submitData.files.length > 0) {
           // Use FormData for file upload
           const formDataToSend = new FormData();
           formDataToSend.append('complaint_id', submitData.complaint_id);
           formDataToSend.append('user_id', submitData.user_id);
           formDataToSend.append('description', submitData.description || '');
-          formDataToSend.append('file', submitData.file);
+          formDataToSend.append('file', submitData.files[0]);
           formDataToSend.append('_method', 'PUT');
 
           await axios.post(`/api/attachments/${submitData.id}`, formDataToSend, {
@@ -156,20 +158,50 @@ const Attachments = () => {
         }
         setSuccessMessage('Attachment updated successfully');
       } else {
-        const formDataToSend = new FormData();
-        formDataToSend.append('complaint_id', submitData.complaint_id);
-        formDataToSend.append('user_id', submitData.user_id);
-        formDataToSend.append('description', submitData.description || '');
-        formDataToSend.append('file', submitData.file);
+        // Upload multiple files to a single group
+        let uploadedCount = 0;
+        let groupId = null;
+        const errors = [];
 
-        const response = await axios.post('/api/attachments', formDataToSend, {
-          headers: {
-            'Content-Type': 'multipart/form-data'
+        for (const file of submitData.files) {
+          try {
+            const formDataToSend = new FormData();
+            formDataToSend.append('complaint_id', submitData.complaint_id);
+            formDataToSend.append('user_id', submitData.user_id);
+            formDataToSend.append('description', submitData.description || '');
+            formDataToSend.append('file', file);
+            
+            // Add to same group if this is not the first file
+            if (groupId) {
+              formDataToSend.append('group_id', groupId);
+            }
+
+            const response = await axios.post('/api/attachments', formDataToSend, {
+              headers: {
+                'Content-Type': 'multipart/form-data'
+              }
+            });
+            
+            // Store group_id from first upload
+            if (!groupId && response.data.data) {
+              groupId = response.data.data.id;
+            }
+            
+            uploadedCount++;
+          } catch (error) {
+            console.error(`Error uploading ${file.name}:`, error);
+            errors.push(`${file.name}: ${error.response?.data?.message || 'Upload failed'}`);
           }
-        });
+        }
+
+        if (uploadedCount > 0) {
+          setSuccessMessage(`Successfully uploaded ${uploadedCount} file(s) to attachment group ${groupId || ''}${errors.length > 0 ? `. ${errors.length} failed.` : ''}`);
+        }
         
-        console.log('Upload response:', response.data);
-        setSuccessMessage('Attachment uploaded successfully');
+        if (errors.length > 0 && uploadedCount === 0) {
+          setErrorMessage('All uploads failed: ' + errors.join(', '));
+          return;
+        }
       }
 
       handleCloseModal();
@@ -228,6 +260,30 @@ const Attachments = () => {
       console.error('Error downloading attachment:', error);
       setErrorMessage('Error downloading attachment: ' + (error.response?.data?.message || error.message));
     }
+  };
+
+  const handleView = (attachment) => {
+    setViewingAttachment(attachment);
+    setShowViewModal(true);
+  };
+
+  const handleCloseViewModal = () => {
+    setShowViewModal(false);
+    setViewingAttachment(null);
+  };
+
+  const getFilePreviewUrl = (attachment) => {
+    // For images, create preview URL using the API endpoint
+    const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp'];
+    if (imageExtensions.includes(attachment.extension?.toLowerCase())) {
+      return `/api/attachments/${attachment.id}/view`;
+    }
+    return null;
+  };
+
+  const getComplaintRef = (complaintId) => {
+    const complaint = complaints.find(c => c.id === complaintId);
+    return complaint ? complaint.reference_no : '-';
   };
 
   const handleChangePage = (newPage) => {
@@ -325,6 +381,7 @@ const Attachments = () => {
                 handleEdit={handleOpenModal}
                 handleDelete={handleDelete}
                 handleDownload={handleDownload}
+                handleView={handleView}
               />
 
               {/* Pagination */}
@@ -381,6 +438,70 @@ const Attachments = () => {
         handleSubmit={handleSaveAttachment}
         editMode={editMode}
       />
+
+      {/* View Attachment Modal */}
+      <Modal show={showViewModal} onHide={handleCloseViewModal} size="lg">
+        <Modal.Header closeButton>
+          <Modal.Title>View Attachment</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {viewingAttachment && (
+            <>
+              <div className="mb-3">
+                <strong>File Name:</strong> {viewingAttachment.file_name}
+              </div>
+              <div className="mb-3">
+                <strong>Complaint:</strong>{' '}
+                <span className="badge bg-secondary">{getComplaintRef(viewingAttachment.complaint_id)}</span>
+              </div>
+              <div className="mb-3">
+                <strong>File Type:</strong>{' '}
+                <span className="badge bg-info">{viewingAttachment.extension?.toUpperCase()}</span>
+              </div>
+              <div className="mb-3">
+                <strong>Uploaded:</strong>{' '}
+                {viewingAttachment.uploaded_at
+                  ? new Date(viewingAttachment.uploaded_at).toLocaleString()
+                  : '-'}
+              </div>
+              {viewingAttachment.description && (
+                <div className="mb-3">
+                  <strong>Description:</strong>
+                  <p className="mt-2 p-3 bg-light rounded">{viewingAttachment.description}</p>
+                </div>
+              )}
+              
+              {/* File Preview */}
+              {getFilePreviewUrl(viewingAttachment) ? (
+                <div className="mb-3">
+                  <strong>Preview:</strong>
+                  <div className="mt-2 text-center">
+                    <img
+                      src={getFilePreviewUrl(viewingAttachment)}
+                      alt={viewingAttachment.file_name}
+                      style={{ maxWidth: '100%', maxHeight: '500px', border: '1px solid #ddd', borderRadius: '4px' }}
+                    />
+                  </div>
+                </div>
+              ) : (
+                <Alert variant="info">
+                  Preview not available for this file type. Click download to view the file.
+                </Alert>
+              )}
+            </>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleCloseViewModal}>
+            Close
+          </Button>
+          {viewingAttachment && (
+            <Button variant="success" onClick={() => handleDownload(viewingAttachment)}>
+              Download
+            </Button>
+          )}
+        </Modal.Footer>
+      </Modal>
     </Container>
   );
 };

@@ -12,72 +12,34 @@ use Illuminate\Support\Str;
 class AttachmentController extends Controller
 {
     /**
-     * Display a listing of attachments grouped by complaint
+     * Display a listing of attachments
      */
     public function index(Request $request)
     {
         $perPage = $request->input('per_page', 10);
         $search = $request->input('search', '');
 
-        // Get complaints that have attachments
-        $query = Complaint::with(['attachments' => function($q) {
-            $q->orderBy('uploaded_at', 'desc');
-        }])->whereHas('attachments');
+        $query = Attachment::with(['complaint', 'user']);
 
         if ($search) {
             $query->where(function($q) use ($search) {
-                $q->where('reference_no', 'like', "%{$search}%")
-                  ->orWhere('title', 'like', "%{$search}%")
-                  ->orWhereHas('attachments', function($aq) use ($search) {
-                      $aq->where('file_name', 'like', "%{$search}%")
-                         ->orWhere('description', 'like', "%{$search}%");
+                $q->where('file_name', 'like', "%{$search}%")
+                  ->orWhereHas('complaint', function($cq) use ($search) {
+                      $cq->where('reference_no', 'like', "%{$search}%")
+                         ->orWhere('title', 'like', "%{$search}%");
                   });
             });
         }
 
-        $complaints = $query->orderBy('updated_at', 'desc')->paginate($perPage);
-
-        // Transform data to include complaint info with nested files
-        $transformedData = collect($complaints->items())->map(function ($complaint) {
-            $firstAttachment = $complaint->attachments->first();
-            
-            return [
-                'id' => $complaint->id,
-                'complaint_id' => $complaint->id,
-                'reference_no' => $complaint->reference_no,
-                'title' => $complaint->title,
-                'description' => $firstAttachment ? $firstAttachment->description : null,
-                'uploaded_at' => $firstAttachment ? $firstAttachment->uploaded_at : null,
-                'user_id' => $firstAttachment ? $firstAttachment->user_id : null,
-                'file_count' => $complaint->attachments->count(),
-                'files' => $complaint->attachments->map(function($attachment) {
-                    return [
-                        'id' => $attachment->id,
-                        'file_name' => $attachment->file_name,
-                        'file_path' => $attachment->file_path,
-                        'extension' => $attachment->extension,
-                        'description' => $attachment->description,
-                        'uploaded_at' => $attachment->uploaded_at,
-                    ];
-                }),
-                // For backward compatibility
-                'file_name' => $firstAttachment ? $firstAttachment->file_name : null,
-                'extension' => $firstAttachment ? $firstAttachment->extension : null,
-                'complaint' => [
-                    'id' => $complaint->id,
-                    'reference_no' => $complaint->reference_no,
-                    'title' => $complaint->title,
-                ]
-            ];
-        });
+        $attachments = $query->orderBy('uploaded_at', 'desc')->paginate($perPage);
 
         return response()->json([
-            'data' => $transformedData,
+            'data' => $attachments->items(),
             'pagination' => [
-                'current_page' => $complaints->currentPage(),
-                'last_page' => $complaints->lastPage(),
-                'per_page' => $complaints->perPage(),
-                'total' => $complaints->total(),
+                'current_page' => $attachments->currentPage(),
+                'last_page' => $attachments->lastPage(),
+                'per_page' => $attachments->perPage(),
+                'total' => $attachments->total(),
             ]
         ]);
     }

@@ -6,7 +6,7 @@ import axios from 'axios';
 const AttachmentForm = ({ show, handleClose, attachment, handleSubmit, editMode }) => {
   const [complaints, setComplaints] = useState([]);
   const [loadingComplaints, setLoadingComplaints] = useState(false);
-  const [selectedFile, setSelectedFile] = useState(null);
+  const [selectedFiles, setSelectedFiles] = useState([]);
   const [dragActive, setDragActive] = useState(false);
   const [validationError, setValidationError] = useState('');
   const [replaceFile, setReplaceFile] = useState(false);
@@ -24,7 +24,7 @@ const AttachmentForm = ({ show, handleClose, attachment, handleSubmit, editMode 
     if (show) {
       setValidationError('');
       setReplaceFile(false);
-      setSelectedFile(null);
+      setSelectedFiles([]);
       fetchComplaints();
       if (attachment && editMode) {
         setFormData({
@@ -63,30 +63,49 @@ const AttachmentForm = ({ show, handleClose, attachment, handleSubmit, editMode 
   };
 
   const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      // Validate file size (10MB)
-      if (file.size > 10 * 1024 * 1024) {
-        setValidationError('File size must not exceed 10MB');
-        return;
-      }
-      
-      // Validate file type
-      const allowedExtensions = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'jpg', 'jpeg', 'png', 'gif', 'zip', 'rar'];
-      const extension = file.name.split('.').pop().toLowerCase();
-      
-      if (!allowedExtensions.includes(extension)) {
-        setValidationError('Invalid file type. Allowed: PDF, DOC, DOCX, XLS, XLSX, JPG, PNG, GIF, ZIP, RAR');
+    const files = Array.from(e.target.files);
+    if (files.length > 0) {
+      const validFiles = [];
+      const errors = [];
+
+      files.forEach(file => {
+        // Validate file size (10MB)
+        if (file.size > 10 * 1024 * 1024) {
+          errors.push(`${file.name}: File size must not exceed 10MB`);
+          return;
+        }
+        
+        // Validate file type
+        const allowedExtensions = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'jpg', 'jpeg', 'png', 'gif', 'zip', 'rar'];
+        const extension = file.name.split('.').pop().toLowerCase();
+        
+        if (!allowedExtensions.includes(extension)) {
+          errors.push(`${file.name}: Invalid file type`);
+          return;
+        }
+        
+        validFiles.push(file);
+      });
+
+      if (errors.length > 0) {
+        setValidationError(errors.join(', '));
         return;
       }
       
       setValidationError('');
-      setSelectedFile(file);
-      setFormData(prev => ({
-        ...prev,
-        file_name: file.name,
-        extension: extension
-      }));
+      
+      if (editMode) {
+        // For edit mode, only allow single file
+        setSelectedFiles([validFiles[0]]);
+        setFormData(prev => ({
+          ...prev,
+          file_name: validFiles[0].name,
+          extension: validFiles[0].name.split('.').pop().toLowerCase()
+        }));
+      } else {
+        // For add mode, allow multiple files
+        setSelectedFiles(validFiles);
+      }
     }
   };
 
@@ -113,31 +132,49 @@ const AttachmentForm = ({ show, handleClose, attachment, handleSubmit, editMode 
     e.stopPropagation();
     setDragActive(false);
     
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      const file = e.dataTransfer.files[0];
-      
-      // Validate file size (10MB)
-      if (file.size > 10 * 1024 * 1024) {
-        setValidationError('File size must not exceed 10MB');
-        return;
-      }
-      
-      // Validate file type
-      const allowedExtensions = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'jpg', 'jpeg', 'png', 'gif', 'zip', 'rar'];
-      const extension = file.name.split('.').pop().toLowerCase();
-      
-      if (!allowedExtensions.includes(extension)) {
-        setValidationError('Invalid file type. Allowed: PDF, DOC, DOCX, XLS, XLSX, JPG, PNG, GIF, ZIP, RAR');
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      const files = Array.from(e.dataTransfer.files);
+      const validFiles = [];
+      const errors = [];
+
+      files.forEach(file => {
+        // Validate file size (10MB)
+        if (file.size > 10 * 1024 * 1024) {
+          errors.push(`${file.name}: File size must not exceed 10MB`);
+          return;
+        }
+        
+        // Validate file type
+        const allowedExtensions = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'jpg', 'jpeg', 'png', 'gif', 'zip', 'rar'];
+        const extension = file.name.split('.').pop().toLowerCase();
+        
+        if (!allowedExtensions.includes(extension)) {
+          errors.push(`${file.name}: Invalid file type`);
+          return;
+        }
+        
+        validFiles.push(file);
+      });
+
+      if (errors.length > 0) {
+        setValidationError(errors.join(', '));
         return;
       }
       
       setValidationError('');
-      setSelectedFile(file);
-      setFormData(prev => ({
-        ...prev,
-        file_name: file.name,
-        extension: extension
-      }));
+      
+      if (editMode) {
+        // For edit mode, only allow single file
+        setSelectedFiles([validFiles[0]]);
+        setFormData(prev => ({
+          ...prev,
+          file_name: validFiles[0].name,
+          extension: validFiles[0].name.split('.').pop().toLowerCase()
+        }));
+      } else {
+        // For add mode, allow multiple files
+        setSelectedFiles(validFiles);
+      }
     }
   };
 
@@ -157,17 +194,21 @@ const AttachmentForm = ({ show, handleClose, attachment, handleSubmit, editMode 
     }
     
     // Validate file selection for new uploads
-    if (!editMode && !selectedFile) {
-      setValidationError('Please select a file to upload');
+    if (!editMode && selectedFiles.length === 0) {
+      setValidationError('Please select at least one file to upload');
       return;
     }
     
     const submitData = {
       ...formData,
-      file: selectedFile
+      files: selectedFiles
     };
     
     handleSubmit(submitData);
+  };
+
+  const removeFile = (index) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
   };
 
   return (
@@ -246,6 +287,7 @@ const AttachmentForm = ({ show, handleClose, attachment, handleSubmit, editMode 
                   type="file"
                   onChange={handleFileChange}
                   accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.zip,.rar"
+                  multiple
                   style={{ display: 'none' }}
                 />
               </div>
@@ -321,11 +363,28 @@ const AttachmentForm = ({ show, handleClose, attachment, handleSubmit, editMode 
             </>
           )}
 
-          {selectedFile && (
+          {selectedFiles.length > 0 && (
             <Alert variant="info">
-              <strong>Selected File:</strong> {selectedFile.name}<br />
-              <strong>Size:</strong> {(selectedFile.size / 1024).toFixed(2)} KB<br />
-              <strong>Type:</strong> {selectedFile.type || 'Unknown'}
+              <strong>Selected Files ({selectedFiles.length}):</strong>
+              <ul className="mb-0 mt-2">
+                {selectedFiles.map((file, index) => (
+                  <li key={index} className="d-flex justify-content-between align-items-center">
+                    <span>
+                      {file.name} - {(file.size / 1024).toFixed(2)} KB
+                    </span>
+                    {!editMode && (
+                      <Button
+                        variant="link"
+                        size="sm"
+                        className="text-danger p-0"
+                        onClick={() => removeFile(index)}
+                      >
+                        Remove
+                      </Button>
+                    )}
+                  </li>
+                ))}
+              </ul>
             </Alert>
           )}
         </Form>
