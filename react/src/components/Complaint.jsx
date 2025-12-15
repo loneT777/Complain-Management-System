@@ -201,11 +201,6 @@ const Complaint = () => {
   const handleQuickComment = async () => {
     if (!newComment.trim()) return;
     
-    if (newComment.trim().length < 10) {
-      alert('Comment must be at least 10 characters long');
-      return;
-    }
-    
     try {
       await axios.post('http://localhost:8000/api/messages', {
         complaint_id: parseInt(id),
@@ -227,11 +222,6 @@ const Complaint = () => {
 
   const handleQuickReply = async (parentId) => {
     if (!replyText.trim()) return;
-    
-    if (replyText.trim().length < 10) {
-      alert('Reply must be at least 10 characters long');
-      return;
-    }
     
     try {
       await axios.post('http://localhost:8000/api/messages', {
@@ -469,53 +459,62 @@ const Complaint = () => {
                   <div className="py-4">
                     {/* Comment Input Box */}
                     <div className="fb-comment-box mb-4">
-                      <div className="d-flex gap-2">
+                      <div className="d-flex gap-3">
                         <div className="fb-avatar">
-                          <AccountCircle style={{ fontSize: 40, color: '#1877f2' }} />
+                          <AccountCircle style={{ fontSize: 42, color: '#1877f2' }} />
                         </div>
                         <div className="flex-grow-1">
                           <InputGroup>
                             <Form.Control
                               as="textarea"
                               rows={2}
-                              placeholder="Write a comment (minimum 10 characters)..."
+                              placeholder="💭 What's on your mind? Share your thoughts..."
                               value={newComment}
                               onChange={(e) => setNewComment(e.target.value)}
                               className="fb-comment-input"
-                              style={{ resize: 'none', borderRadius: '20px', backgroundColor: '#f0f2f5' }}
+                              style={{ 
+                                resize: 'none', 
+                                borderRadius: '20px', 
+                                backgroundColor: '#f0f2f5',
+                                border: '2px solid transparent'
+                              }}
                               onKeyPress={(e) => {
-                                if (e.key === 'Enter' && e.ctrlKey && newComment.trim().length >= 10) {
+                                if (e.key === 'Enter' && e.ctrlKey) {
                                   handleQuickComment();
                                 }
                               }}
                             />
                           </InputGroup>
                           {newComment && (
-                            <>
-                              <div className="d-flex justify-content-between align-items-center mt-2">
-                                <small className={`${newComment.trim().length < 10 ? 'text-danger' : 'text-muted'}`}>
-                                  {newComment.trim().length}/10 characters minimum
-                                </small>
-                                <div className="d-flex gap-2">
-                                  <Button
-                                    size="sm"
-                                    variant="light"
-                                    onClick={() => setNewComment('')}
-                                  >
-                                    Cancel
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    style={{ backgroundColor: '#1877f2', borderColor: '#1877f2' }}
-                                    onClick={handleQuickComment}
-                                    disabled={newComment.trim().length < 10}
-                                  >
-                                    <Send fontSize="small" className="me-1" />
-                                    Post
-                                  </Button>
-                                </div>
+                            <div className="d-flex justify-content-between align-items-center mt-2">
+                              <small className="text-muted" style={{ fontSize: '11px' }}>
+                                💡 Press Ctrl+Enter to post quickly
+                              </small>
+                              <div className="d-flex gap-2">
+                                <Button
+                                  size="sm"
+                                  variant="outline-secondary"
+                                  onClick={() => setNewComment('')}
+                                  style={{ borderRadius: '20px' }}
+                                >
+                                  Cancel
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  style={{ 
+                                    backgroundColor: '#1877f2', 
+                                    borderColor: '#1877f2',
+                                    borderRadius: '20px',
+                                    fontWeight: '600',
+                                    padding: '6px 20px'
+                                  }}
+                                  onClick={handleQuickComment}
+                                >
+                                  <Send fontSize="small" className="me-1" />
+                                  Post Comment
+                                </Button>
                               </div>
-                            </>
+                            </div>
                           )}
                         </div>
                       </div>
@@ -543,60 +542,87 @@ const Complaint = () => {
                                 <div className="flex-grow-1">
                                   <div className="fb-comment-content">
                                     <div className="fb-comment-bubble">
-                                      <div className="d-flex justify-content-between align-items-start">
-                                        <strong className="fb-comment-author">
-                                          {msg.sender?.full_name || msg.sender_name || 'System'}
-                                        </strong>
-                                        {msg.type && (
-                                          <Badge 
-                                            bg={msg.type === 'initial' ? 'primary' : msg.type === 'escalation' ? 'danger' : 'secondary'} 
-                                            className="ms-2"
-                                            style={{ fontSize: '10px' }}
-                                          >
-                                            {msg.type}
-                                          </Badge>
-                                        )}
+                                      <div className="d-flex justify-content-between align-items-start mb-1">
+                                        <div className="d-flex align-items-center gap-2">
+                                          <strong className="fb-comment-author">
+                                            {msg.sender?.full_name || msg.sender_name || 'System'}
+                                          </strong>
+                                          {msg.type && (
+                                            <Badge 
+                                              bg={msg.type === 'initial' ? 'primary' : msg.type === 'escalation' ? 'danger' : 'success'} 
+                                              style={{ 
+                                                fontSize: '9px',
+                                                padding: '3px 8px',
+                                                borderRadius: '10px',
+                                                fontWeight: '600',
+                                                letterSpacing: '0.3px'
+                                              }}
+                                            >
+                                              {msg.type === 'initial' ? '📝 Initial' : msg.type === 'escalation' ? '⚠️ Escalated' : '💬 Reply'}
+                                            </Badge>
+                                          )}
+                                        </div>
                                       </div>
                                       {isEditing ? (
                                         <div className="mt-2">
                                           <Form.Control
                                             as="textarea"
-                                            rows={2}
+                                            rows={3}
                                             value={editText}
                                             onChange={(e) => setEditText(e.target.value)}
                                             autoFocus
+                                            style={{
+                                              borderRadius: '12px',
+                                              border: '2px solid #1877f2',
+                                              padding: '10px'
+                                            }}
                                           />
                                           <div className="d-flex gap-2 mt-2">
-                                            <Button size="sm" variant="light" onClick={cancelEditing}>
+                                            <Button 
+                                              size="sm" 
+                                              variant="outline-secondary" 
+                                              onClick={cancelEditing}
+                                              style={{ borderRadius: '16px' }}
+                                            >
                                               Cancel
                                             </Button>
-                                            <Button size="sm" variant="primary" onClick={() => handleQuickEdit(msg.id)}>
-                                              Save
+                                            <Button 
+                                              size="sm" 
+                                              onClick={() => handleQuickEdit(msg.id)}
+                                              style={{
+                                                backgroundColor: '#1877f2',
+                                                borderColor: '#1877f2',
+                                                borderRadius: '16px',
+                                                fontWeight: '600'
+                                              }}
+                                            >
+                                              ✓ Save Changes
                                             </Button>
                                           </div>
                                         </div>
                                       ) : (
-                                        <p className="mb-0 mt-1">{msg.message}</p>
+                                        <p className="mb-0 mt-1" style={{ lineHeight: '1.6' }}>{msg.message}</p>
                                       )}
                                     </div>
                                     
                                     {/* Action Buttons */}
                                     <div className="fb-comment-actions">
-                                      <small className="text-muted me-3">
-                                        {new Date(msg.created_at).toLocaleString('en-US', {
+                                      <small className="text-muted" style={{ fontWeight: '500', fontSize: '11px' }}>
+                                        🕒 {new Date(msg.created_at).toLocaleString('en-US', {
                                           month: 'short',
                                           day: 'numeric',
                                           hour: 'numeric',
                                           minute: '2-digit'
                                         })}
                                       </small>
+                                      <span className="text-muted mx-1">•</span>
                                       <Button
                                         variant="link"
                                         size="sm"
                                         className="fb-action-btn"
                                         onClick={() => setReplyingTo(msg.id)}
                                       >
-                                        Reply
+                                        💬 Reply
                                       </Button>
                                       <Button
                                         variant="link"
@@ -604,7 +630,7 @@ const Complaint = () => {
                                         className="fb-action-btn"
                                         onClick={() => startEditing(msg)}
                                       >
-                                        Edit
+                                        ✏️ Edit
                                       </Button>
                                       <Button
                                         variant="link"
@@ -612,7 +638,7 @@ const Complaint = () => {
                                         className="fb-action-btn text-danger"
                                         onClick={() => handleDeleteMessage(msg.id)}
                                       >
-                                        Delete
+                                        🗑️ Delete
                                       </Button>
                                     </div>
 
@@ -627,37 +653,31 @@ const Complaint = () => {
                                             <Form.Control
                                               as="textarea"
                                               rows={2}
-                                              placeholder="Write a reply (minimum 10 characters)..."
+                                              placeholder="Write a reply..."
                                               value={replyText}
                                               onChange={(e) => setReplyText(e.target.value)}
                                               autoFocus
                                               style={{ resize: 'none', borderRadius: '18px', backgroundColor: '#f0f2f5' }}
                                             />
                                           </InputGroup>
-                                          <div className="d-flex justify-content-between align-items-center mt-2">
-                                            <small className={`${replyText.trim().length < 10 ? 'text-danger' : 'text-muted'}`}>
-                                              {replyText.trim().length}/10 characters minimum
-                                            </small>
-                                            <div className="d-flex gap-2">
-                                              <Button
-                                                size="sm"
-                                                variant="light"
-                                                onClick={() => {
-                                                  setReplyingTo(null);
-                                                  setReplyText('');
-                                                }}
-                                              >
-                                                Cancel
-                                              </Button>
-                                              <Button
-                                                size="sm"
-                                                style={{ backgroundColor: '#1877f2', borderColor: '#1877f2' }}
-                                                onClick={() => handleQuickReply(msg.id)}
-                                                disabled={replyText.trim().length < 10}
-                                              >
-                                                <Send fontSize="small" />
-                                              </Button>
-                                            </div>
+                                          <div className="d-flex gap-2 mt-2">
+                                            <Button
+                                              size="sm"
+                                              variant="light"
+                                              onClick={() => {
+                                                setReplyingTo(null);
+                                                setReplyText('');
+                                              }}
+                                            >
+                                              Cancel
+                                            </Button>
+                                            <Button
+                                              size="sm"
+                                              style={{ backgroundColor: '#1877f2', borderColor: '#1877f2' }}
+                                              onClick={() => handleQuickReply(msg.id)}
+                                            >
+                                              <Send fontSize="small" />
+                                            </Button>
                                           </div>
                                         </div>
                                       </div>
@@ -673,8 +693,8 @@ const Complaint = () => {
                                             className="fb-show-replies"
                                             onClick={() => toggleReplies(msg.id)}
                                           >
-                                            <Reply fontSize="small" className="me-1" />
-                                            {replies.length} {replies.length === 1 ? 'reply' : 'replies'}
+                                            <Reply fontSize="small" className="me-2" />
+                                            View {replies.length} {replies.length === 1 ? 'reply' : 'replies'}
                                           </Button>
                                         )}
                                         
@@ -683,10 +703,11 @@ const Complaint = () => {
                                             <Button
                                               variant="link"
                                               size="sm"
-                                              className="fb-show-replies mb-2"
+                                              className="fb-show-replies mb-3"
                                               onClick={() => toggleReplies(msg.id)}
+                                              style={{ backgroundColor: 'transparent' }}
                                             >
-                                              Hide replies
+                                              ⬆️ Hide {replies.length} {replies.length === 1 ? 'reply' : 'replies'}
                                             </Button>
                                             {replies.map((reply) => (
                                               <div key={reply.id} className="d-flex gap-2 mb-2">
@@ -698,10 +719,10 @@ const Complaint = () => {
                                                     <strong className="fb-comment-author-small">
                                                       {reply.sender?.full_name || reply.sender_name || 'System'}
                                                     </strong>
-                                                    <p className="mb-0">{reply.message}</p>
+                                                    <p className="mb-0" style={{ lineHeight: '1.6' }}>{reply.message}</p>
                                                   </div>
-                                                  <div className="fb-comment-actions">
-                                                    <small className="text-muted me-2">
+                                                  <div className="fb-comment-actions" style={{ paddingLeft: '8px', marginTop: '4px' }}>
+                                                    <small className="text-muted" style={{ fontWeight: '500', fontSize: '10px' }}>
                                                       {new Date(reply.created_at).toLocaleString('en-US', {
                                                         month: 'short',
                                                         day: 'numeric',
@@ -709,13 +730,15 @@ const Complaint = () => {
                                                         minute: '2-digit'
                                                       })}
                                                     </small>
+                                                    <span className="text-muted mx-1">•</span>
                                                     <Button
                                                       variant="link"
                                                       size="sm"
                                                       className="fb-action-btn text-danger"
                                                       onClick={() => handleDeleteMessage(reply.id)}
+                                                      style={{ padding: '2px 6px !important' }}
                                                     >
-                                                      Delete
+                                                      🗑️ Delete
                                                     </Button>
                                                   </div>
                                                 </div>
@@ -733,9 +756,30 @@ const Complaint = () => {
                         })}
                       </div>
                     ) : (
-                      <div className="text-center text-muted py-5">
-                        <Message style={{ fontSize: 64, opacity: 0.2 }} />
-                        <p className="mt-3">No comments yet. Be the first to comment!</p>
+                      <div className="text-center py-5" style={{ 
+                        background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
+                        borderRadius: '16px',
+                        padding: '40px'
+                      }}>
+                        <div style={{ 
+                          background: 'linear-gradient(135deg, #1877f2 0%, #0d6efd 100%)',
+                          width: '80px',
+                          height: '80px',
+                          borderRadius: '50%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          margin: '0 auto 20px',
+                          boxShadow: '0 8px 24px rgba(24, 119, 242, 0.3)'
+                        }}>
+                          <Message style={{ fontSize: 40, color: '#fff' }} />
+                        </div>
+                        <h5 style={{ color: '#1c1e21', fontWeight: '700', marginBottom: '8px' }}>
+                          No comments yet
+                        </h5>
+                        <p className="text-muted" style={{ fontSize: '14px' }}>
+                          💬 Be the first to share your thoughts and start the conversation!
+                        </p>
                       </div>
                     )}
                   </div>
