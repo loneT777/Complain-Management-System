@@ -32,10 +32,12 @@ class ComplaintController extends Controller
         $validator = Validator::make($request->all(), [
             'title' => 'required|string|max:255',
             'description' => 'required|string',
-            'complainant_id' => 'required|exists:persons,id',
             'channel' => 'nullable|string',
             'priority_level' => 'nullable|string',
             'confidentiality_level' => 'nullable|string',
+            'complainant_name' => 'nullable|string',
+            'complainant_phone' => 'nullable|string',
+            'remark' => 'nullable|string',
             'category_ids' => 'nullable|array',
             'category_ids.*' => 'exists:categories,id',
         ]);
@@ -47,12 +49,14 @@ class ComplaintController extends Controller
         // Generate unique reference number
         $referenceNo = 'CMP-' . date('Ymd') . '-' . str_pad(Complaint::count() + 1, 4, '0', STR_PAD_LEFT);
 
-        $complaint = Complaint::create(array_merge($request->all(), [
+        $complaint = Complaint::create(array_merge($request->except('category_ids'), [
             'reference_no' => $referenceNo,
+            'received_at' => now(),
+            'complainant_id' => 1 // Default complainant ID for now
         ]));
 
         // Attach categories if provided
-        if ($request->has('category_ids')) {
+        if ($request->has('category_ids') && is_array($request->category_ids)) {
             $complaint->categories()->attach($request->category_ids);
         }
 
@@ -68,11 +72,8 @@ class ComplaintController extends Controller
     public function show($id)
     {
         try {
-            $complaint = Complaint::with(['complainant', 'lastStatus', 'complaintAssignments'])
-                ->findOrFail($id);
+            $complaint = Complaint::with(['categories'])->findOrFail($id);
             return response()->json($complaint);
-        } catch (ModelNotFoundException $e) {
-            return response()->json(['message' => 'Complaint not found'], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }

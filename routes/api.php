@@ -38,6 +38,9 @@ Route::get('/public/categories', [CategoryController::class, 'publicIndex']);
 Route::get('/public/messages', [MessageController::class, 'publicIndex']);
 Route::get('/public/complaints', [ComplaintController::class, 'publicIndex']);
 
+// Complaints CRUD - temporarily public for development
+Route::apiResource('complaints', ComplaintController::class);
+Route::apiResource('persons', PersonController::class);
 
 // -----------------
 // Protected Routes
@@ -51,10 +54,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // These lines handle index, store, show, update, and destroy for each resource.
     Route::apiResource('roles', RoleController::class);
     Route::apiResource('divisions', DivisionController::class);
-    Route::apiResource('persons', PersonController::class);
     Route::apiResource('categories', CategoryController::class);
     Route::apiResource('messages', MessageController::class);
-    Route::apiResource('complaints', ComplaintController::class);
     Route::apiResource('attachments', AttachmentController::class);
     Route::apiResource('complaint_assignments', ComplaintAssignmentController::class);
 
