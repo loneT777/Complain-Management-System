@@ -39,13 +39,16 @@ const Attachments = () => {
   const fetchAttachments = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('/api/attachments', {
+      const response = await axios.get('/api/public/attachments', {
         params: {
           page: page,
           per_page: rowsPerPage,
           search: searchQuery
         }
       });
+      
+      console.log('API Response:', response.data);
+      console.log('Attachments data:', response.data.data);
       
       setAttachments(response.data.data || []);
       setTotalRows(response.data.pagination?.total || 0);
@@ -141,14 +144,14 @@ const Attachments = () => {
           formDataToSend.append('file', submitData.files[0]);
           formDataToSend.append('_method', 'PUT');
 
-          await axios.post(`/api/attachments/${submitData.id}`, formDataToSend, {
+          await axios.post(`/api/public/attachments/${submitData.id}`, formDataToSend, {
             headers: {
               'Content-Type': 'multipart/form-data'
             }
           });
         } else {
           // Update only metadata
-          await axios.put(`/api/attachments/${submitData.id}`, {
+          await axios.put(`/api/public/attachments/${submitData.id}`, {
             complaint_id: submitData.complaint_id,
             file_name: submitData.file_name,
             extension: submitData.extension,
@@ -176,7 +179,7 @@ const Attachments = () => {
               formDataToSend.append('group_id', groupId);
             }
 
-            const response = await axios.post('/api/attachments', formDataToSend, {
+            const response = await axios.post('/api/public/attachments', formDataToSend, {
               headers: {
                 'Content-Type': 'multipart/form-data'
                 
@@ -232,7 +235,7 @@ const Attachments = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this attachment?')) {
       try {
-        await axios.delete(`/api/attachments/${id}`);
+        await axios.delete(`/api/public/attachments/${id}`);
         setSuccessMessage('Attachment deleted successfully');
         fetchAttachments();
       } catch (error) {
@@ -244,7 +247,7 @@ const Attachments = () => {
 
   const handleDownload = async (attachment) => {
     try {
-      const response = await axios.get(`/api/attachments/${attachment.id}/download`, {
+      const response = await axios.get(`/api/public/attachments/${attachment.id}/download`, {
         responseType: 'blob'
       });
       
@@ -277,7 +280,7 @@ const Attachments = () => {
     // For images, create preview URL using the API endpoint
     const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp'];
     if (imageExtensions.includes(attachment.extension?.toLowerCase())) {
-      return `/api/attachments/${attachment.id}/view`;
+      return `/api/public/attachments/${attachment.id}/view`;
     }
     return null;
   };
