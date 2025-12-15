@@ -38,9 +38,11 @@ const Complaint = () => {
     setLoadingMessages(true);
     try {
       const response = await axios.get(`http://localhost:8000/api/complaints/${id}/messages`);
-      setMessages(response.data);
+      const messagesData = response.data.data || response.data || [];
+      setMessages(Array.isArray(messagesData) ? messagesData : []);
     } catch (error) {
       console.error('Error fetching messages:', error);
+      setMessages([]);
     } finally {
       setLoadingMessages(false);
     }
@@ -50,9 +52,11 @@ const Complaint = () => {
     setLoadingAttachments(true);
     try {
       const response = await axios.get(`http://localhost:8000/api/complaints/${id}/attachments`);
-      setAttachments(response.data);
+      const attachmentsData = response.data.data || response.data || [];
+      setAttachments(Array.isArray(attachmentsData) ? attachmentsData : []);
     } catch (error) {
       console.error('Error fetching attachments:', error);
+      setAttachments([]);
     } finally {
       setLoadingAttachments(false);
     }
@@ -91,6 +95,28 @@ const Complaint = () => {
       Urgent: 'danger'
     };
     return <Badge bg={variants[priority] || 'secondary'}>{priority || 'N/A'}</Badge>;
+  };
+
+  const getMessageTypeBadge = (type) => {
+    const typeConfig = {
+      'initial': { bg: 'primary', label: 'Initial Complaint', icon: '📝' },
+      'reply': { bg: 'success', label: 'Reply', icon: '💬' },
+      'update': { bg: 'info', label: 'Update', icon: '🔄' },
+      'resolution': { bg: 'warning', label: 'Resolution', icon: '✅' },
+      'closed': { bg: 'secondary', label: 'Closed', icon: '🔒' },
+      'escalation': { bg: 'danger', label: 'Escalation', icon: '⚠️' },
+      'internal_note': { bg: 'dark', label: 'Internal Note', icon: '📌' },
+      'follow_up': { bg: 'info', label: 'Follow-up', icon: '🔔' }
+    };
+
+    const config = typeConfig[type?.toLowerCase()] || { bg: 'light', label: type || 'Message', icon: '💬' };
+    
+    return (
+      <Badge bg={config.bg} className="me-2">
+        <span className="me-1">{config.icon}</span>
+        {config.label}
+      </Badge>
+    );
   };
 
   if (loading) {
@@ -204,12 +230,18 @@ const Complaint = () => {
                         </Alert>
                         <div className="messages-list">
                           {messages.map((msg, index) => (
-                            <Card key={msg.id} className="mb-3 shadow-sm">
+                            <Card key={msg.id} className="mb-3 shadow-sm" style={{ borderLeft: `4px solid ${
+                              msg.type === 'initial' ? '#0d6efd' : 
+                              msg.type === 'reply' ? '#198754' : 
+                              msg.type === 'update' ? '#0dcaf0' : 
+                              msg.type === 'escalation' ? '#dc3545' : '#6c757d'
+                            }` }}>
                               <Card.Body>
                                 <div className="d-flex justify-content-between align-items-start mb-2">
-                                  <div className="d-flex align-items-center">
+                                  <div className="d-flex align-items-center flex-wrap">
                                     <Person className="me-2 text-primary" />
-                                    <strong>{msg.sender?.full_name || msg.sender_name || 'System'}</strong>
+                                    <strong className="me-2">{msg.sender?.full_name || msg.sender_name || 'System'}</strong>
+                                    {msg.type && getMessageTypeBadge(msg.type)}
                                   </div>
                                   <Badge bg="secondary" className="d-flex align-items-center">
                                     <AccessTime fontSize="small" className="me-1" />
@@ -218,8 +250,11 @@ const Complaint = () => {
                                 </div>
                                 <div className="ms-4">
                                   <p className="mb-2">{msg.message}</p>
-                                  {msg.message_type && (
-                                    <Badge bg="light" text="dark">{msg.message_type}</Badge>
+                                  {msg.parent_id && (
+                                    <small className="text-muted">
+                                      <i className="bi bi-reply-fill me-1"></i>
+                                      Reply to message #{msg.parent_id}
+                                    </small>
                                   )}
                                 </div>
                               </Card.Body>

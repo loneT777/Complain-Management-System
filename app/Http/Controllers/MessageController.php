@@ -226,9 +226,8 @@ class MessageController extends Controller
     public function getByComplaint($complaintId)
     {
         try {
-            $messages = Message::with(['parent', 'replies'])
+            $messages = Message::with(['parent'])
                 ->where('complaint_id', $complaintId)
-                ->whereNull('parent_id') // Only get top-level messages
                 ->orderBy('created_at', 'asc')
                 ->get();
 

@@ -40,7 +40,7 @@ const Categories = () => {
   const fetchCategories = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('/api/categories', {
+      const response = await axios.get('http://localhost:8000/api/categories', {
         params: {
           page: page,
           per_page: rowsPerPage,
@@ -62,8 +62,8 @@ const Categories = () => {
 
   const fetchDivisions = async () => {
     try {
-      const response = await axios.get('/api/public/divisions');
-      setDivisions(response.data.data || []);
+      const response = await axios.get('http://localhost:8000/api/divisions');
+      setDivisions(response.data.data || response.data || []);
     } catch (error) {
       console.error('Error fetching divisions:', error);
       setDivisions([]);
@@ -128,10 +128,10 @@ const Categories = () => {
       };
 
       if (editMode) {
-        await axios.put(`/api/categories/${formData.id}`, submitData);
+        await axios.put(`http://localhost:8000/api/categories/${formData.id}`, submitData);
         setSuccessMessage('Category updated successfully');
       } else {
-        await axios.post('/api/categories', submitData);
+        await axios.post('http://localhost:8000/api/categories', submitData);
         setSuccessMessage('Category created successfully');
       }
 
@@ -146,7 +146,7 @@ const Categories = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this category?')) {
       try {
-        await axios.delete(`/api/categories/${id}`);
+        await axios.delete(`http://localhost:8000/api/categories/${id}`);
         setSuccessMessage('Category deleted successfully');
         fetchCategories();
       } catch (error) {

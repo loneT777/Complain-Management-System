@@ -54,7 +54,7 @@ const Messages = () => {
   const fetchMessages = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('/api/messages', {
+      const response = await axios.get('http://localhost:8000/api/messages', {
         params: {
           page: page,
           per_page: rowsPerPage,
@@ -130,10 +130,10 @@ const Messages = () => {
       };
 
       if (editMode) {
-        await axios.put(`/api/messages/${formData.id}`, submitData);
+        await axios.put(`http://localhost:8000/api/messages/${formData.id}`, submitData);
         setSuccessMessage('Message updated successfully');
       } else {
-        await axios.post('/api/messages', submitData);
+        await axios.post('http://localhost:8000/api/messages', submitData);
         setSuccessMessage('Message created successfully');
       }
 
@@ -159,7 +159,7 @@ const Messages = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this message?')) {
       try {
-        await axios.delete(`/api/messages/${id}`);
+        await axios.delete(`http://localhost:8000/api/messages/${id}`);
         setSuccessMessage('Message deleted successfully');
         fetchMessages();
       } catch (error) {

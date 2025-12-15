@@ -27,7 +27,7 @@ const MessageForm = ({ show, handleClose, message, handleChange, handleSubmit, e
   const fetchComplaints = async () => {
     setLoadingComplaints(true);
     try {
-      const response = await axios.get('/api/complaints', {
+      const response = await axios.get('http://localhost:8000/api/complaints', {
         params: { per_page: 100 }
       });
       console.log('Complaints loaded:', response.data);
@@ -44,8 +44,8 @@ const MessageForm = ({ show, handleClose, message, handleChange, handleSubmit, e
   const fetchParentMessages = async (complaintId) => {
     setLoadingParentMessages(true);
     try {
-      const response = await axios.get(`/api/complaints/${complaintId}/messages`);
-      setParentMessages(response.data.data || []);
+      const response = await axios.get(`http://localhost:8000/api/complaints/${complaintId}/messages`);
+      setParentMessages(response.data.data || response.data || []);
     } catch (error) {
       console.error('Error fetching parent messages:', error);
       setParentMessages([]);
