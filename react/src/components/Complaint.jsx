@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Container, Row, Col, Card, Button, Badge, Spinner, Tab, Tabs } from 'react-bootstrap';
-import { ArrowBack, Edit } from '@mui/icons-material';
+import { Container, Row, Col, Card, Button, Badge, Spinner, Tab, Tabs, Alert, Table } from 'react-bootstrap';
+import { ArrowBack, Edit, AttachFile, Message, Person, AccessTime, Download, Visibility } from '@mui/icons-material';
 import axios from 'axios';
 
 const Complaint = () => {
@@ -9,9 +9,17 @@ const Complaint = () => {
   const navigate = useNavigate();
   const [complaint, setComplaint] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [messages, setMessages] = useState([]);
+  const [attachments, setAttachments] = useState([]);
+  const [loadingMessages, setLoadingMessages] = useState(false);
+  const [loadingAttachments, setLoadingAttachments] = useState(false);
 
   useEffect(() => {
-    if (id) fetchComplaint();
+    if (id) {
+      fetchComplaint();
+      fetchMessages();
+      fetchAttachments();
+    }
   }, [id]);
 
   const fetchComplaint = async () => {
@@ -24,6 +32,51 @@ const Complaint = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchMessages = async () => {
+    setLoadingMessages(true);
+    try {
+      const response = await axios.get(`http://localhost:8000/api/complaints/${id}/messages`);
+      setMessages(response.data);
+    } catch (error) {
+      console.error('Error fetching messages:', error);
+    } finally {
+      setLoadingMessages(false);
+    }
+  };
+
+  const fetchAttachments = async () => {
+    setLoadingAttachments(true);
+    try {
+      const response = await axios.get(`http://localhost:8000/api/complaints/${id}/attachments`);
+      setAttachments(response.data);
+    } catch (error) {
+      console.error('Error fetching attachments:', error);
+    } finally {
+      setLoadingAttachments(false);
+    }
+  };
+
+  const handleDownload = async (attachmentId, fileName) => {
+    try {
+      const response = await axios.get(`http://localhost:8000/api/attachments/${attachmentId}/download`, {
+        responseType: 'blob'
+      });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', fileName);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (error) {
+      console.error('Error downloading file:', error);
+    }
+  };
+
+  const handleView = (attachmentId) => {
+    window.open(`http://localhost:8000/api/attachments/${attachmentId}/view`, '_blank');
   };
 
   const handleEdit = () => {
@@ -136,30 +189,128 @@ const Complaint = () => {
           <Card className="mb-4">
             <Card.Body>
               <Tabs defaultActiveKey="messages">
-                <Tab eventKey="messages" title="Messages">
-                  <div className="py-4 text-muted text-center">
-                    {complaint.messages?.length ? (
-                      complaint.messages.map(msg => (
-                        <div key={msg.id} className="mb-3 p-3 border rounded text-start">
-                          <p>{msg.message}</p>
-                          <small>{new Date(msg.created_at).toLocaleString()}</small>
+                <Tab eventKey="messages" title={`Messages (${messages.length})`}>
+                  <div className="py-4">
+                    {loadingMessages ? (
+                      <div className="text-center">
+                        <Spinner animation="border" size="sm" />
+                        <p className="text-muted mt-2">Loading messages...</p>
+                      </div>
+                    ) : messages.length > 0 ? (
+                      <>
+                        <Alert variant="info" className="mb-3">
+                          <Message className="me-2" />
+                          <strong>Total Messages:</strong> {messages.length}
+                        </Alert>
+                        <div className="messages-list">
+                          {messages.map((msg, index) => (
+                            <Card key={msg.id} className="mb-3 shadow-sm">
+                              <Card.Body>
+                                <div className="d-flex justify-content-between align-items-start mb-2">
+                                  <div className="d-flex align-items-center">
+                                    <Person className="me-2 text-primary" />
+                                    <strong>{msg.sender?.full_name || msg.sender_name || 'System'}</strong>
+                                  </div>
+                                  <Badge bg="secondary" className="d-flex align-items-center">
+                                    <AccessTime fontSize="small" className="me-1" />
+                                    {new Date(msg.created_at).toLocaleString()}
+                                  </Badge>
+                                </div>
+                                <div className="ms-4">
+                                  <p className="mb-2">{msg.message}</p>
+                                  {msg.message_type && (
+                                    <Badge bg="light" text="dark">{msg.message_type}</Badge>
+                                  )}
+                                </div>
+                              </Card.Body>
+                            </Card>
+                          ))}
                         </div>
-                      ))
+                      </>
                     ) : (
-                      <p>No messages yet</p>
+                      <div className="text-center text-muted py-4">
+                        <Message style={{ fontSize: 48, opacity: 0.3 }} />
+                        <p className="mt-3">No messages yet</p>
+                      </div>
                     )}
                   </div>
                 </Tab>
 
-                <Tab eventKey="attachments" title="Attachments">
-                  <div className="py-4 text-muted text-center">
-                    {complaint.attachments?.length ? (
-                      <ul className="list-unstyled">
-                        {complaint.attachments.map(att => (
-                          <li key={att.id}>📎 {att.file_name}</li>
-                        ))}
-                      </ul>
-                    ) : <p>No attachments</p>}
+                <Tab eventKey="attachments" title={`Attachments (${attachments.length})`}>
+                  <div className="py-4">
+                    {loadingAttachments ? (
+                      <div className="text-center">
+                        <Spinner animation="border" size="sm" />
+                        <p className="text-muted mt-2">Loading attachments...</p>
+                      </div>
+                    ) : attachments.length > 0 ? (
+                      <>
+                        <Alert variant="info" className="mb-3">
+                          <AttachFile className="me-2" />
+                          <strong>Total Attachments:</strong> {attachments.length} file(s)
+                        </Alert>
+                        <Table hover responsive className="mb-0">
+                          <thead>
+                            <tr>
+                              <th>#</th>
+                              <th>File Name</th>
+                              <th>Type</th>
+                              <th>Size</th>
+                              <th>Uploaded</th>
+                              <th>Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {attachments.map((att, index) => (
+                              <tr key={att.id}>
+                                <td>{index + 1}</td>
+                                <td>
+                                  <div className="d-flex align-items-center">
+                                    <AttachFile className="me-2 text-muted" fontSize="small" />
+                                    <strong>{att.file_name}</strong>
+                                  </div>
+                                  {att.description && (
+                                    <small className="text-muted d-block ms-4">{att.description}</small>
+                                  )}
+                                </td>
+                                <td>
+                                  <Badge bg="light" text="dark">{att.file_type || 'N/A'}</Badge>
+                                </td>
+                                <td>{att.file_size ? `${(att.file_size / 1024).toFixed(2)} KB` : 'N/A'}</td>
+                                <td>
+                                  <small>{new Date(att.created_at).toLocaleDateString()}</small>
+                                </td>
+                                <td>
+                                  <div className="d-flex gap-2">
+                                    <Button
+                                      size="sm"
+                                      variant="outline-primary"
+                                      onClick={() => handleView(att.id)}
+                                      title="View"
+                                    >
+                                      <Visibility fontSize="small" />
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="outline-success"
+                                      onClick={() => handleDownload(att.id, att.file_name)}
+                                      title="Download"
+                                    >
+                                      <Download fontSize="small" />
+                                    </Button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </Table>
+                      </>
+                    ) : (
+                      <div className="text-center text-muted py-4">
+                        <AttachFile style={{ fontSize: 48, opacity: 0.3 }} />
+                        <p className="mt-3">No attachments</p>
+                      </div>
+                    )}
                   </div>
                 </Tab>
 
