@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Container, Row, Col, Card, Button, Badge, Spinner, Tab, Tabs, Alert, Table } from 'react-bootstrap';
-import { ArrowBack, Edit, AttachFile, Message, Person, AccessTime, Download, Visibility } from '@mui/icons-material';
+import { Container, Row, Col, Card, Button, Badge, Spinner, Tab, Tabs, Alert, Table, Form, InputGroup } from 'react-bootstrap';
+import { ArrowBack, Edit, AttachFile, Message, Person, AccessTime, Download, Visibility, Add, Delete, Reply, Send, MoreVert, AccountCircle } from '@mui/icons-material';
 import axios from 'axios';
+import MessageForm from './MessageForm';
+import AttachmentForm from './AttachmentForm';
+import './Complaint.css';
 
 const Complaint = () => {
   const { id } = useParams();
@@ -13,6 +16,36 @@ const Complaint = () => {
   const [attachments, setAttachments] = useState([]);
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [loadingAttachments, setLoadingAttachments] = useState(false);
+  
+  // Message modal states
+  const [showMessageModal, setShowMessageModal] = useState(false);
+  const [currentMessage, setCurrentMessage] = useState({
+    id: null,
+    complaint_id: id,
+    message: '',
+    type: 'reply',
+    parent_id: null,
+    sender_name: ''
+  });
+  const [editingMessage, setEditingMessage] = useState(false);
+  
+  // Quick comment states
+  const [newComment, setNewComment] = useState('');
+  const [replyingTo, setReplyingTo] = useState(null);
+  const [replyText, setReplyText] = useState('');
+  const [editingId, setEditingId] = useState(null);
+  const [editText, setEditText] = useState('');
+  const [showReplies, setShowReplies] = useState({});
+  
+  // Attachment modal states
+  const [showAttachmentModal, setShowAttachmentModal] = useState(false);
+  const [currentAttachment, setCurrentAttachment] = useState({
+    id: null,
+    complaint_id: id,
+    file_name: '',
+    description: ''
+  });
+  const [editingAttachment, setEditingAttachment] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -85,6 +118,223 @@ const Complaint = () => {
 
   const handleEdit = () => {
     navigate(`/edit-complaint/${id}`);
+  };
+
+  // Message handlers
+  const handleAddMessage = () => {
+    setCurrentMessage({
+      id: null,
+      complaint_id: id,
+      message: '',
+      type: 'reply',
+      parent_id: null,
+      sender_name: ''
+    });
+    setEditingMessage(false);
+    setShowMessageModal(true);
+  };
+
+  const handleReplyMessage = (parentMessage) => {
+    setCurrentMessage({
+      id: null,
+      complaint_id: id,
+      message: '',
+      type: 'reply',
+      parent_id: parentMessage.id,
+      sender_name: ''
+    });
+    setEditingMessage(false);
+    setShowMessageModal(true);
+  };
+
+  const handleEditMessage = (message) => {
+    setCurrentMessage({
+      id: message.id,
+      complaint_id: message.complaint_id,
+      message: message.message,
+      type: message.type,
+      parent_id: message.parent_id,
+      sender_name: message.sender_name
+    });
+    setEditingMessage(true);
+    setShowMessageModal(true);
+  };
+
+  const handleDeleteMessage = async (messageId) => {
+    if (window.confirm('Are you sure you want to delete this message?')) {
+      try {
+        await axios.delete(`http://localhost:8000/api/messages/${messageId}`);
+        fetchMessages();
+      } catch (error) {
+        console.error('Error deleting message:', error);
+        alert('Failed to delete message');
+      }
+    }
+  };
+
+  const handleMessageChange = (e) => {
+    const { name, value } = e.target;
+    setCurrentMessage(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleMessageSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      if (editingMessage) {
+        await axios.put(`http://localhost:8000/api/messages/${currentMessage.id}`, currentMessage);
+      } else {
+        await axios.post('http://localhost:8000/api/messages', currentMessage);
+      }
+      setShowMessageModal(false);
+      fetchMessages();
+    } catch (error) {
+      console.error('Error saving message:', error);
+      alert('Failed to save message');
+      throw error;
+    }
+  };
+
+  // Quick comment handlers
+  const handleQuickComment = async () => {
+    if (!newComment.trim()) return;
+    
+    if (newComment.trim().length < 10) {
+      alert('Comment must be at least 10 characters long');
+      return;
+    }
+    
+    try {
+      await axios.post('http://localhost:8000/api/messages', {
+        complaint_id: parseInt(id),
+        message: newComment.trim(),
+        type: 'reply',
+        user_id: 1 // Default user ID - should be replaced with actual logged-in user
+      });
+      setNewComment('');
+      fetchMessages();
+    } catch (error) {
+      console.error('Error posting comment:', error);
+      console.error('Error details:', error.response?.data);
+      const errorMsg = error.response?.data?.errors 
+        ? Object.values(error.response.data.errors).flat().join(', ')
+        : error.response?.data?.message || error.message;
+      alert('Failed to post comment: ' + errorMsg);
+    }
+  };
+
+  const handleQuickReply = async (parentId) => {
+    if (!replyText.trim()) return;
+    
+    if (replyText.trim().length < 10) {
+      alert('Reply must be at least 10 characters long');
+      return;
+    }
+    
+    try {
+      await axios.post('http://localhost:8000/api/messages', {
+        complaint_id: parseInt(id),
+        message: replyText.trim(),
+        type: 'reply',
+        parent_id: parentId,
+        user_id: 1 // Default user ID - should be replaced with actual logged-in user
+      });
+      setReplyText('');
+      setReplyingTo(null);
+      fetchMessages();
+    } catch (error) {
+      console.error('Error posting reply:', error);
+      console.error('Error details:', error.response?.data);
+      const errorMsg = error.response?.data?.errors 
+        ? Object.values(error.response.data.errors).flat().join(', ')
+        : error.response?.data?.message || error.message;
+      alert('Failed to post reply: ' + errorMsg);
+    }
+  };
+
+  const handleQuickEdit = async (messageId) => {
+    if (!editText.trim()) return;
+    
+    try {
+      const message = messages.find(m => m.id === messageId);
+      await axios.put(`http://localhost:8000/api/messages/${messageId}`, {
+        ...message,
+        message: editText
+      });
+      setEditingId(null);
+      setEditText('');
+      fetchMessages();
+    } catch (error) {
+      console.error('Error editing message:', error);
+      alert('Failed to edit message');
+    }
+  };
+
+  const startEditing = (message) => {
+    setEditingId(message.id);
+    setEditText(message.message);
+  };
+
+  const cancelEditing = () => {
+    setEditingId(null);
+    setEditText('');
+  };
+
+  const toggleReplies = (messageId) => {
+    setShowReplies(prev => ({
+      ...prev,
+      [messageId]: !prev[messageId]
+    }));
+  };
+
+  const getMessageReplies = (parentId) => {
+    return messages.filter(msg => msg.parent_id === parentId);
+  };
+
+  const getTopLevelMessages = () => {
+    return messages.filter(msg => !msg.parent_id);
+  };
+
+  // Attachment handlers
+  const handleAddAttachment = () => {
+    setCurrentAttachment({
+      id: null,
+      complaint_id: id,
+      file_name: '',
+      description: ''
+    });
+    setEditingAttachment(false);
+    setShowAttachmentModal(true);
+  };
+
+  const handleDeleteAttachment = async (attachmentId) => {
+    if (window.confirm('Are you sure you want to delete this attachment?')) {
+      try {
+        await axios.delete(`http://localhost:8000/api/public/attachments/${attachmentId}`);
+        fetchAttachments();
+      } catch (error) {
+        console.error('Error deleting attachment:', error);
+        alert('Failed to delete attachment');
+      }
+    }
+  };
+
+  const handleAttachmentSubmit = async (formData) => {
+    try {
+      await axios.post('http://localhost:8000/api/public/attachments', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      setShowAttachmentModal(false);
+      fetchAttachments();
+    } catch (error) {
+      console.error('Error uploading attachment:', error);
+      alert('Failed to upload attachment');
+      throw error;
+    }
   };
 
   const getPriorityBadge = (priority) => {
@@ -215,57 +465,277 @@ const Complaint = () => {
           <Card className="mb-4">
             <Card.Body>
               <Tabs defaultActiveKey="messages">
-                <Tab eventKey="messages" title={`Messages (${messages.length})`}>
+                <Tab eventKey="messages" title={`Comments (${messages.length})`}>
                   <div className="py-4">
+                    {/* Comment Input Box */}
+                    <div className="fb-comment-box mb-4">
+                      <div className="d-flex gap-2">
+                        <div className="fb-avatar">
+                          <AccountCircle style={{ fontSize: 40, color: '#1877f2' }} />
+                        </div>
+                        <div className="flex-grow-1">
+                          <InputGroup>
+                            <Form.Control
+                              as="textarea"
+                              rows={2}
+                              placeholder="Write a comment (minimum 10 characters)..."
+                              value={newComment}
+                              onChange={(e) => setNewComment(e.target.value)}
+                              className="fb-comment-input"
+                              style={{ resize: 'none', borderRadius: '20px', backgroundColor: '#f0f2f5' }}
+                              onKeyPress={(e) => {
+                                if (e.key === 'Enter' && e.ctrlKey && newComment.trim().length >= 10) {
+                                  handleQuickComment();
+                                }
+                              }}
+                            />
+                          </InputGroup>
+                          {newComment && (
+                            <>
+                              <div className="d-flex justify-content-between align-items-center mt-2">
+                                <small className={`${newComment.trim().length < 10 ? 'text-danger' : 'text-muted'}`}>
+                                  {newComment.trim().length}/10 characters minimum
+                                </small>
+                                <div className="d-flex gap-2">
+                                  <Button
+                                    size="sm"
+                                    variant="light"
+                                    onClick={() => setNewComment('')}
+                                  >
+                                    Cancel
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    style={{ backgroundColor: '#1877f2', borderColor: '#1877f2' }}
+                                    onClick={handleQuickComment}
+                                    disabled={newComment.trim().length < 10}
+                                  >
+                                    <Send fontSize="small" className="me-1" />
+                                    Post
+                                  </Button>
+                                </div>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Comments List */}
                     {loadingMessages ? (
-                      <div className="text-center">
-                        <Spinner animation="border" size="sm" />
-                        <p className="text-muted mt-2">Loading messages...</p>
+                      <div className="text-center py-4">
+                        <Spinner animation="border" size="sm" style={{ color: '#1877f2' }} />
+                        <p className="text-muted mt-2">Loading comments...</p>
                       </div>
                     ) : messages.length > 0 ? (
-                      <>
-                        <Alert variant="info" className="mb-3">
-                          <Message className="me-2" />
-                          <strong>Total Messages:</strong> {messages.length}
-                        </Alert>
-                        <div className="messages-list">
-                          {messages.map((msg, index) => (
-                            <Card key={msg.id} className="mb-3 shadow-sm" style={{ borderLeft: `4px solid ${
-                              msg.type === 'initial' ? '#0d6efd' : 
-                              msg.type === 'reply' ? '#198754' : 
-                              msg.type === 'update' ? '#0dcaf0' : 
-                              msg.type === 'escalation' ? '#dc3545' : '#6c757d'
-                            }` }}>
-                              <Card.Body>
-                                <div className="d-flex justify-content-between align-items-start mb-2">
-                                  <div className="d-flex align-items-center flex-wrap">
-                                    <Person className="me-2 text-primary" />
-                                    <strong className="me-2">{msg.sender?.full_name || msg.sender_name || 'System'}</strong>
-                                    {msg.type && getMessageTypeBadge(msg.type)}
+                      <div className="fb-comments-list">
+                        {getTopLevelMessages().map((msg) => {
+                          const replies = getMessageReplies(msg.id);
+                          const isEditing = editingId === msg.id;
+                          
+                          return (
+                            <div key={msg.id} className="fb-comment-item mb-3">
+                              {/* Main Comment */}
+                              <div className="d-flex gap-2">
+                                <div className="fb-avatar">
+                                  <AccountCircle style={{ fontSize: 40, color: '#65676b' }} />
+                                </div>
+                                <div className="flex-grow-1">
+                                  <div className="fb-comment-content">
+                                    <div className="fb-comment-bubble">
+                                      <div className="d-flex justify-content-between align-items-start">
+                                        <strong className="fb-comment-author">
+                                          {msg.sender?.full_name || msg.sender_name || 'System'}
+                                        </strong>
+                                        {msg.type && (
+                                          <Badge 
+                                            bg={msg.type === 'initial' ? 'primary' : msg.type === 'escalation' ? 'danger' : 'secondary'} 
+                                            className="ms-2"
+                                            style={{ fontSize: '10px' }}
+                                          >
+                                            {msg.type}
+                                          </Badge>
+                                        )}
+                                      </div>
+                                      {isEditing ? (
+                                        <div className="mt-2">
+                                          <Form.Control
+                                            as="textarea"
+                                            rows={2}
+                                            value={editText}
+                                            onChange={(e) => setEditText(e.target.value)}
+                                            autoFocus
+                                          />
+                                          <div className="d-flex gap-2 mt-2">
+                                            <Button size="sm" variant="light" onClick={cancelEditing}>
+                                              Cancel
+                                            </Button>
+                                            <Button size="sm" variant="primary" onClick={() => handleQuickEdit(msg.id)}>
+                                              Save
+                                            </Button>
+                                          </div>
+                                        </div>
+                                      ) : (
+                                        <p className="mb-0 mt-1">{msg.message}</p>
+                                      )}
+                                    </div>
+                                    
+                                    {/* Action Buttons */}
+                                    <div className="fb-comment-actions">
+                                      <small className="text-muted me-3">
+                                        {new Date(msg.created_at).toLocaleString('en-US', {
+                                          month: 'short',
+                                          day: 'numeric',
+                                          hour: 'numeric',
+                                          minute: '2-digit'
+                                        })}
+                                      </small>
+                                      <Button
+                                        variant="link"
+                                        size="sm"
+                                        className="fb-action-btn"
+                                        onClick={() => setReplyingTo(msg.id)}
+                                      >
+                                        Reply
+                                      </Button>
+                                      <Button
+                                        variant="link"
+                                        size="sm"
+                                        className="fb-action-btn"
+                                        onClick={() => startEditing(msg)}
+                                      >
+                                        Edit
+                                      </Button>
+                                      <Button
+                                        variant="link"
+                                        size="sm"
+                                        className="fb-action-btn text-danger"
+                                        onClick={() => handleDeleteMessage(msg.id)}
+                                      >
+                                        Delete
+                                      </Button>
+                                    </div>
+
+                                    {/* Reply Input */}
+                                    {replyingTo === msg.id && (
+                                      <div className="d-flex gap-2 mt-2">
+                                        <div className="fb-avatar-small">
+                                          <AccountCircle style={{ fontSize: 32, color: '#1877f2' }} />
+                                        </div>
+                                        <div className="flex-grow-1">
+                                          <InputGroup>
+                                            <Form.Control
+                                              as="textarea"
+                                              rows={2}
+                                              placeholder="Write a reply (minimum 10 characters)..."
+                                              value={replyText}
+                                              onChange={(e) => setReplyText(e.target.value)}
+                                              autoFocus
+                                              style={{ resize: 'none', borderRadius: '18px', backgroundColor: '#f0f2f5' }}
+                                            />
+                                          </InputGroup>
+                                          <div className="d-flex justify-content-between align-items-center mt-2">
+                                            <small className={`${replyText.trim().length < 10 ? 'text-danger' : 'text-muted'}`}>
+                                              {replyText.trim().length}/10 characters minimum
+                                            </small>
+                                            <div className="d-flex gap-2">
+                                              <Button
+                                                size="sm"
+                                                variant="light"
+                                                onClick={() => {
+                                                  setReplyingTo(null);
+                                                  setReplyText('');
+                                                }}
+                                              >
+                                                Cancel
+                                              </Button>
+                                              <Button
+                                                size="sm"
+                                                style={{ backgroundColor: '#1877f2', borderColor: '#1877f2' }}
+                                                onClick={() => handleQuickReply(msg.id)}
+                                                disabled={replyText.trim().length < 10}
+                                              >
+                                                <Send fontSize="small" />
+                                              </Button>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    )}
+
+                                    {/* Replies Section */}
+                                    {replies.length > 0 && (
+                                      <div className="fb-replies mt-3">
+                                        {!showReplies[msg.id] && (
+                                          <Button
+                                            variant="link"
+                                            size="sm"
+                                            className="fb-show-replies"
+                                            onClick={() => toggleReplies(msg.id)}
+                                          >
+                                            <Reply fontSize="small" className="me-1" />
+                                            {replies.length} {replies.length === 1 ? 'reply' : 'replies'}
+                                          </Button>
+                                        )}
+                                        
+                                        {showReplies[msg.id] && (
+                                          <>
+                                            <Button
+                                              variant="link"
+                                              size="sm"
+                                              className="fb-show-replies mb-2"
+                                              onClick={() => toggleReplies(msg.id)}
+                                            >
+                                              Hide replies
+                                            </Button>
+                                            {replies.map((reply) => (
+                                              <div key={reply.id} className="d-flex gap-2 mb-2">
+                                                <div className="fb-avatar-small">
+                                                  <AccountCircle style={{ fontSize: 32, color: '#65676b' }} />
+                                                </div>
+                                                <div className="flex-grow-1">
+                                                  <div className="fb-comment-bubble-small">
+                                                    <strong className="fb-comment-author-small">
+                                                      {reply.sender?.full_name || reply.sender_name || 'System'}
+                                                    </strong>
+                                                    <p className="mb-0">{reply.message}</p>
+                                                  </div>
+                                                  <div className="fb-comment-actions">
+                                                    <small className="text-muted me-2">
+                                                      {new Date(reply.created_at).toLocaleString('en-US', {
+                                                        month: 'short',
+                                                        day: 'numeric',
+                                                        hour: 'numeric',
+                                                        minute: '2-digit'
+                                                      })}
+                                                    </small>
+                                                    <Button
+                                                      variant="link"
+                                                      size="sm"
+                                                      className="fb-action-btn text-danger"
+                                                      onClick={() => handleDeleteMessage(reply.id)}
+                                                    >
+                                                      Delete
+                                                    </Button>
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            ))}
+                                          </>
+                                        )}
+                                      </div>
+                                    )}
                                   </div>
-                                  <Badge bg="secondary" className="d-flex align-items-center">
-                                    <AccessTime fontSize="small" className="me-1" />
-                                    {new Date(msg.created_at).toLocaleString()}
-                                  </Badge>
                                 </div>
-                                <div className="ms-4">
-                                  <p className="mb-2">{msg.message}</p>
-                                  {msg.parent_id && (
-                                    <small className="text-muted">
-                                      <i className="bi bi-reply-fill me-1"></i>
-                                      Reply to message #{msg.parent_id}
-                                    </small>
-                                  )}
-                                </div>
-                              </Card.Body>
-                            </Card>
-                          ))}
-                        </div>
-                      </>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
                     ) : (
-                      <div className="text-center text-muted py-4">
-                        <Message style={{ fontSize: 48, opacity: 0.3 }} />
-                        <p className="mt-3">No messages yet</p>
+                      <div className="text-center text-muted py-5">
+                        <Message style={{ fontSize: 64, opacity: 0.2 }} />
+                        <p className="mt-3">No comments yet. Be the first to comment!</p>
                       </div>
                     )}
                   </div>
@@ -273,6 +743,17 @@ const Complaint = () => {
 
                 <Tab eventKey="attachments" title={`Attachments (${attachments.length})`}>
                   <div className="py-4">
+                    <div className="d-flex justify-content-between align-items-center mb-3">
+                      <h5 className="mb-0">Complaint Attachments</h5>
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        onClick={handleAddAttachment}
+                      >
+                        <Add fontSize="small" className="me-1" />
+                        Upload Files
+                      </Button>
+                    </div>
                     {loadingAttachments ? (
                       <div className="text-center">
                         <Spinner animation="border" size="sm" />
@@ -332,6 +813,14 @@ const Complaint = () => {
                                       title="Download"
                                     >
                                       <Download fontSize="small" />
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="outline-danger"
+                                      onClick={() => handleDeleteAttachment(att.id)}
+                                      title="Delete"
+                                    >
+                                      <Delete fontSize="small" />
                                     </Button>
                                   </div>
                                 </td>
@@ -412,6 +901,25 @@ const Complaint = () => {
           )}
         </Col>
       </Row>
+
+      {/* Message Modal */}
+      <MessageForm
+        show={showMessageModal}
+        handleClose={() => setShowMessageModal(false)}
+        message={currentMessage}
+        handleChange={handleMessageChange}
+        handleSubmit={handleMessageSubmit}
+        editMode={editingMessage}
+      />
+
+      {/* Attachment Modal */}
+      <AttachmentForm
+        show={showAttachmentModal}
+        handleClose={() => setShowAttachmentModal(false)}
+        attachment={currentAttachment}
+        handleSubmit={handleAttachmentSubmit}
+        editMode={editingAttachment}
+      />
     </Container>
   );
 };
