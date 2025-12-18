@@ -12,21 +12,26 @@ class ComplaintAssignmentController extends Controller
      */
     public function index(Request $request)
     {
-        $query = ComplaintAssignment::query();
+        try {
+            $query = ComplaintAssignment::query();
 
-        // Filter by complaint_id if provided
-        if ($request->has('complaint_id')) {
-            $query->where('complaint_id', $request->input('complaint_id'));
+            // Filter by complaint_id if provided
+            if ($request->has('complaint_id')) {
+                $query->where('complaint_id', $request->input('complaint_id'));
+            }
+
+            $assignments = $query->with([
+                'complaint',
+                'assigneeDivision',
+                'assigneeUser',
+                'assignerUser'
+            ])->get();
+
+            return response()->json($assignments);
+        } catch (\Exception $e) {
+            \Log::error('Error fetching complaint assignments: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to fetch assignments', 'message' => $e->getMessage()], 500);
         }
-
-        $assignments = $query->with([
-            'complaint',
-            'assigneeDivision',
-            'assigneeUser',
-            'assignerUser'
-        ])->get();
-
-        return response()->json($assignments);
     }
 
     /**

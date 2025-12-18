@@ -29,27 +29,25 @@ const AttachmentTable = ({ attachments, complaints, loading, handleEdit, handleD
     return '📎';
   };
 
-  // Group attachments by complaint_id
-  const groupedAttachments = attachments.reduce((groups, attachment) => {
-    const key = attachment.complaint_id || attachment.id;
+  // Data is already grouped by complaint from API
+  // Just format it for display and add complaint_id to each file
+  const groupedArray = attachments.map((attachment) => {
+    const filesWithComplaint = (attachment.files || []).map(file => ({
+      ...file,
+      complaint_id: attachment.id,
+      reference_no: attachment.reference_no
+    }));
     
-    if (!groups[key]) {
-      groups[key] = {
-        complaint_id: attachment.complaint_id || attachment.id,
-        uploaded_at: attachment.uploaded_at,
-        description: attachment.description,
-        user_id: attachment.user_id,
-        reference_no: attachment.reference_no,
-        files: attachment.files || [attachment]
-      };
-    }
-    return groups;
-  }, {});
-
-  const groupedArray = Object.entries(groupedAttachments).map(([key, group]) => ({
-    key,
-    ...group
-  }));
+    return {
+      key: attachment.id,
+      complaint_id: attachment.id,
+      uploaded_at: attachment.uploaded_at,
+      description: attachment.description,
+      user_id: attachment.user_id,
+      reference_no: attachment.reference_no,
+      files: filesWithComplaint
+    };
+  });
 
   const toggleGroup = (key) => {
     setExpandedGroups(prev => ({

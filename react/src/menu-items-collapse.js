@@ -19,8 +19,9 @@ const menuItems = {
         { id: 'persons', title: 'Persons', type: 'item', url: '/persons' },
         { id: 'divisions', title: 'Divisions', type: 'item', url: '/divisions' },
         { id: 'roles', title: 'Roles', type: 'item', url: '/roles' },
-        { id: 'categories', title: 'Categories', type: 'item', url: '/categories' },
-        { id: 'messages', title: 'Messages', type: 'item', url: '/messages' }
+        { id: 'categories', title: 'Categories', type: 'item', url: '/categories' }
+        // { id: 'messages', title: 'Messages', type: 'item', url: '/messages' },
+        // { id: 'attachments', title: 'Attachments', type: 'item', url: '/attachments' }
       ]
     }
   ]

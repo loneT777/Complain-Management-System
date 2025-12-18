@@ -51,7 +51,7 @@ const AttachmentForm = ({ show, handleClose, attachment, handleSubmit, editMode 
   const fetchComplaints = async () => {
     setLoadingComplaints(true);
     try {
-      const response = await axios.get('/api/complaints', {
+      const response = await axios.get('http://localhost:8000/api/complaints', {
         params: { per_page: 100 }
       });
       setComplaints(response.data.data || []);

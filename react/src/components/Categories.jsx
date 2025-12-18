@@ -29,7 +29,13 @@ const Categories = () => {
   const fetchCategories = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('http://localhost:8000/api/categories');
+      const response = await axios.get('http://localhost:8000/api/categories', {
+        params: {
+          page: page,
+          per_page: rowsPerPage,
+          search: searchQuery
+        }
+      });
       setCategories(response.data.data || []);
     } catch (error) {
       console.error('Error fetching categories:', error);
@@ -41,8 +47,8 @@ const Categories = () => {
 
   const fetchDivisions = async () => {
     try {
-      const response = await axios.get('http://localhost:8000/api/public/divisions');
-      setDivisions(response.data.data || []);
+      const response = await axios.get('http://localhost:8000/api/divisions');
+      setDivisions(response.data.data || response.data || []);
     } catch (error) {
       console.error('Error fetching divisions:', error);
       setDivisions([]);
@@ -122,7 +128,18 @@ const Categories = () => {
     }
   };
 
-
+  const handleDelete = async (id) => {
+    if (window.confirm('Are you sure you want to delete this category?')) {
+      try {
+        await axios.delete(`http://localhost:8000/api/categories/${id}`);
+        setSuccessMessage('Category deleted successfully');
+        fetchCategories();
+      } catch (error) {
+        console.error('Error deleting category:', error);
+        setErrorMessage(error.response?.data?.message || 'Error deleting category');
+      }
+    }
+  };
 
   return (
     <Container fluid className="p-4">
@@ -156,6 +173,7 @@ const Categories = () => {
                 divisions={divisions}
                 loading={loading}
                 handleEdit={handleOpenModal}
+                handleDelete={handleDelete}
               />
             </Card.Body>
           </Card>

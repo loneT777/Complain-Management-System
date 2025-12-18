@@ -72,22 +72,22 @@ const menuItems = {
           iconname: 'category',
           url: '/categories'
         },
-        {
-          id: 'messages',
-          title: 'Messages',
-          type: 'item',
-          icon: 'material-icons-two-tone',
-          iconname: 'message',
-          url: '/messages'
-        },
-        {
-          id: 'attachments',
-          title: 'Attachments',
-          type: 'item',
-          icon: 'material-icons-two-tone',
-          iconname: 'attach_file',
-          url: '/attachments'
-        },
+        // {
+        //   id: 'messages',
+        //   title: 'Messages',
+        //   type: 'item',
+        //   icon: 'material-icons-two-tone',
+        //   iconname: 'message',
+        //   url: '/messages'
+        // },
+        // {
+        //   id: 'attachments',
+        //   title: 'Attachments',
+        //   type: 'item',
+        //   icon: 'material-icons-two-tone',
+        //   iconname: 'attach_file',
+        //   url: '/attachments'
+        // },
         {
           id: 'complaint-assignments',
           title: 'Complaint Assignments',

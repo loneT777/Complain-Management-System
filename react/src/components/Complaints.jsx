@@ -44,18 +44,24 @@ const Complaints = () => {
       const assignmentsMap = {};
       await Promise.all(
         complaintIds.map(async (complaintId) => {
-          const res = await axios.get('http://localhost:8000/api/complaint_assignments', {
-            params: { complaint_id: complaintId }
-          });
-          if (res.data && res.data.length > 0) {
-            // For simplicity take the first assignment (if multiple)
-            assignmentsMap[complaintId] = res.data[0];
+          try {
+            const res = await axios.get('http://localhost:8000/api/complaint_assignments', {
+              params: { complaint_id: complaintId }
+            });
+            if (res.data && res.data.length > 0) {
+              // For simplicity take the first assignment (if multiple)
+              assignmentsMap[complaintId] = res.data[0];
+            }
+          } catch (err) {
+            // Silently ignore assignment fetch errors for individual complaints
+            console.warn(`Could not fetch assignments for complaint ${complaintId}`);
           }
         })
       );
       setAssignments(assignmentsMap);
     } catch (error) {
       console.error('Error fetching complaint assignments:', error);
+      setAssignments({});
     }
   };
 
