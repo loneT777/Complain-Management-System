@@ -57,7 +57,7 @@ const MessageForm = ({ show, handleClose, message, handleChange, handleSubmit, e
   const handleLocalSubmit = async (e) => {
     e.preventDefault();
     setValidationErrors({});
-    
+
     // Client-side validation
     const errors = {};
     if (!message.complaint_id) {
@@ -88,18 +88,18 @@ const MessageForm = ({ show, handleClose, message, handleChange, handleSubmit, e
 
   const getMessageTypeLabel = (type) => {
     const types = {
-      'initial': 'Initial Complaint',
-      'reply': 'Reply',
-      'update': 'Update',
-      'resolution': 'Resolution',
-      'escalation': 'Escalation',
-      'internal': 'Internal Note'
+      initial: 'Initial Complaint',
+      reply: 'Reply',
+      update: 'Update',
+      resolution: 'Resolution',
+      escalation: 'Escalation',
+      internal: 'Internal Note'
     };
     return types[type] || type;
   };
 
   return (
-    <Modal show={show} onHide={handleClose} size="lg">
+    <Modal show={show} onHide={handleClose} size="lg" backdrop="static" keyboard={false}>
       <Modal.Header closeButton>
         <Modal.Title>{editMode ? 'Edit Message' : 'Add Message'}</Modal.Title>
       </Modal.Header>
@@ -107,7 +107,9 @@ const MessageForm = ({ show, handleClose, message, handleChange, handleSubmit, e
         <Form onSubmit={handleLocalSubmit}>
           {/* Complaint Selection */}
           <Form.Group className="mb-3">
-            <Form.Label>Complaint <span className="text-danger">*</span></Form.Label>
+            <Form.Label>
+              Complaint <span className="text-danger">*</span>
+            </Form.Label>
             {loadingComplaints ? (
               <div className="text-center py-2">
                 <Spinner animation="border" size="sm" /> Loading complaints...
@@ -134,18 +136,16 @@ const MessageForm = ({ show, handleClose, message, handleChange, handleSubmit, e
                     {validationErrors.complaint_id[0] || validationErrors.complaint_id}
                   </Form.Control.Feedback>
                 )}
-                {!editMode && (
-                  <Form.Text className="text-muted">
-                    Select the complaint this message relates to
-                  </Form.Text>
-                )}
+                {!editMode && <Form.Text className="text-muted">Select the complaint this message relates to</Form.Text>}
               </>
             )}
           </Form.Group>
 
           {/* Message Content */}
           <Form.Group className="mb-3">
-            <Form.Label>Message <span className="text-danger">*</span></Form.Label>
+            <Form.Label>
+              Message <span className="text-danger">*</span>
+            </Form.Label>
             <Form.Control
               as="textarea"
               rows={5}
@@ -159,9 +159,7 @@ const MessageForm = ({ show, handleClose, message, handleChange, handleSubmit, e
               isInvalid={!!validationErrors.message}
             />
             {validationErrors.message && (
-              <Form.Control.Feedback type="invalid">
-                {validationErrors.message[0] || validationErrors.message}
-              </Form.Control.Feedback>
+              <Form.Control.Feedback type="invalid">{validationErrors.message[0] || validationErrors.message}</Form.Control.Feedback>
             )}
             <Form.Text className="text-muted">
               {message.message ? `${message.message.length}/1000 characters` : '0/1000 characters'}
@@ -173,12 +171,7 @@ const MessageForm = ({ show, handleClose, message, handleChange, handleSubmit, e
             <Col md={6}>
               <Form.Group className="mb-3">
                 <Form.Label>Type</Form.Label>
-                <Form.Select
-                  name="type"
-                  value={message.type || ''}
-                  onChange={handleChange}
-                  isInvalid={!!validationErrors.type}
-                >
+                <Form.Select name="type" value={message.type || ''} onChange={handleChange} isInvalid={!!validationErrors.type}>
                   <option value="">Select type (optional)</option>
                   <option value="initial">Initial Complaint</option>
                   <option value="reply">Reply</option>
@@ -188,9 +181,7 @@ const MessageForm = ({ show, handleClose, message, handleChange, handleSubmit, e
                   <option value="internal">Internal Note</option>
                 </Form.Select>
                 {validationErrors.type && (
-                  <Form.Control.Feedback type="invalid">
-                    {validationErrors.type[0] || validationErrors.type}
-                  </Form.Control.Feedback>
+                  <Form.Control.Feedback type="invalid">{validationErrors.type[0] || validationErrors.type}</Form.Control.Feedback>
                 )}
               </Form.Group>
             </Col>
@@ -225,11 +216,11 @@ const MessageForm = ({ show, handleClose, message, handleChange, handleSubmit, e
                       </Form.Control.Feedback>
                     )}
                     <Form.Text className="text-muted">
-                      {!message.complaint_id 
+                      {!message.complaint_id
                         ? 'Select a complaint first'
                         : parentMessages.length === 0
-                        ? 'No messages available for this complaint'
-                        : 'Optional - select to reply to an existing message'}
+                          ? 'No messages available for this complaint'
+                          : 'Optional - select to reply to an existing message'}
                     </Form.Text>
                   </>
                 )}
@@ -243,9 +234,7 @@ const MessageForm = ({ show, handleClose, message, handleChange, handleSubmit, e
               <strong>Please correct the following errors:</strong>
               <ul className="mb-0 mt-2">
                 {Object.entries(validationErrors).map(([field, errors]) => (
-                  <li key={field}>
-                    {Array.isArray(errors) ? errors.join(', ') : errors}
-                  </li>
+                  <li key={field}>{Array.isArray(errors) ? errors.join(', ') : errors}</li>
                 ))}
               </ul>
             </Alert>

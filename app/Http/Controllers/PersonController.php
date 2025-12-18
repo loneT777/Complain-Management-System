@@ -36,7 +36,7 @@ class PersonController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'full_name' => 'required|string|max:200',
-            'nic' => 'required|string|max:12|unique:people,nic',
+            'nic' => 'required|string|max:12|unique:persons,nic',
             'title' => 'nullable|string|max:20',
             'code' => 'nullable|string|max:50',
             'office_phone' => 'nullable|string|max:15',
@@ -80,7 +80,7 @@ class PersonController extends Controller
 
         $validator = Validator::make($request->all(), [
             'full_name' => 'required|string|max:200',
-            'nic' => 'required|string|max:12|unique:people,nic,' . $id,
+            'nic' => 'required|string|max:12|unique:persons,nic,' . $id,
             'title' => 'nullable|string|max:20',
             'code' => 'nullable|string|max:50',
             'office_phone' => 'nullable|string|max:15',

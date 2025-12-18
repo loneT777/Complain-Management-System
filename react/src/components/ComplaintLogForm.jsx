@@ -56,10 +56,10 @@ const ComplaintLogForm = ({ show, onClose, complaintId, log, onSuccess }) => {
 
       if (log) {
         // Update existing log
-        await axios.put(`http://localhost:8000/api/complaint-logs/${log.id}`, payload);
+        await axios.put(`http://localhost:8000/api/complaint_logs/${log.id}`, payload);
       } else {
         // Create new log
-        await axios.post('http://localhost:8000/api/complaint-logs', {
+        await axios.post('http://localhost:8000/api/complaint_logs', {
           ...payload,
           complaint_id: complaintId
         });
@@ -75,7 +75,7 @@ const ComplaintLogForm = ({ show, onClose, complaintId, log, onSuccess }) => {
   };
 
   return (
-    <Modal show={show} onHide={onClose} size="lg">
+    <Modal show={show} onHide={onClose} size="lg" backdrop="static" keyboard={false}>
       <Modal.Header closeButton>
         <Modal.Title>{log ? 'Edit Complaint Log' : 'Add Complaint Log'}</Modal.Title>
       </Modal.Header>

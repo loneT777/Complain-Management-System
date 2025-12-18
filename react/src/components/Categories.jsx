@@ -29,14 +29,8 @@ const Categories = () => {
   const fetchCategories = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('http://localhost:8000/api/categories', {
-        params: {
-          page: page,
-          per_page: rowsPerPage,
-          search: searchQuery
-        }
-      });
-      setCategories(response.data.data || []);
+      const response = await axios.get('http://localhost:8000/api/categories');
+      setCategories(response.data.data || response.data || []);
     } catch (error) {
       console.error('Error fetching categories:', error);
       setErrorMessage('Failed to load categories');
@@ -148,10 +142,7 @@ const Categories = () => {
           <Card>
             <Card.Header className="d-flex justify-content-between align-items-center">
               <h4 className="mb-0">Categories</h4>
-              <Button
-                style={{ backgroundColor: '#3a4c4a', borderColor: '#3a4c4a' }}
-                onClick={() => handleOpenModal()}
-              >
+              <Button style={{ backgroundColor: '#3a4c4a', borderColor: '#3a4c4a' }} onClick={() => handleOpenModal()}>
                 <Add className="me-1" /> Add Category
               </Button>
             </Card.Header>

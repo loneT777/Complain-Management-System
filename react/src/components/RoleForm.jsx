@@ -3,7 +3,7 @@ import { Modal, Button, Form, Row, Col } from 'react-bootstrap';
 
 const RoleForm = ({ show, handleClose, role, handleChange, handleSubmit, editMode }) => {
   return (
-    <Modal show={show} onHide={handleClose} size="md" centered>
+    <Modal show={show} onHide={handleClose} size="md" centered backdrop="static" keyboard={false}>
       <Modal.Header closeButton>
         <Modal.Title>{editMode ? 'Edit Role' : 'Add New Role'}</Modal.Title>
       </Modal.Header>
@@ -44,10 +44,7 @@ const RoleForm = ({ show, handleClose, role, handleChange, handleSubmit, editMod
           <Button variant="secondary" onClick={handleClose}>
             Cancel
           </Button>
-          <Button 
-            type="submit" 
-            style={{ backgroundColor: '#3a4c4a', borderColor: '#3a4c4a' }}
-          >
+          <Button type="submit" style={{ backgroundColor: '#3a4c4a', borderColor: '#3a4c4a' }}>
             {editMode ? 'Update' : 'Create'}
           </Button>
         </Modal.Footer>

@@ -23,6 +23,8 @@ class ComplaintAssignment extends Model
         'due_at' => 'datetime',
     ];
 
+    protected $with = ['assigneeDivision', 'assigneeUser', 'assignerUser', 'lastStatus', 'complaint'];
+
     public function complaint()
     {
         return $this->belongsTo(Complaint::class);

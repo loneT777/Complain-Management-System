@@ -1,10 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Card, Button, Badge, Spinner, Tab, Tabs, Alert, Table, Form, InputGroup } from 'react-bootstrap';
-import { ArrowBack, Edit, AttachFile, Message, Person, AccessTime, Download, Visibility, Add, Delete, Reply, Send, MoreVert, AccountCircle } from '@mui/icons-material';
+import {
+  ArrowBack,
+  Edit,
+  AttachFile,
+  Message,
+  Person,
+  AccessTime,
+  Download,
+  Visibility,
+  Add,
+  Delete,
+  Reply,
+  Send,
+  MoreVert,
+  AccountCircle
+} from '@mui/icons-material';
 import axios from 'axios';
 import MessageForm from './MessageForm';
 import AttachmentForm from './AttachmentForm';
+import AssignComplaintForm from './AssignComplaintForm';
+import ComplaintLogForm from './ComplaintLogForm';
 import './Complaint.css';
 
 const Complaint = () => {
@@ -16,7 +33,7 @@ const Complaint = () => {
   const [attachments, setAttachments] = useState([]);
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [loadingAttachments, setLoadingAttachments] = useState(false);
-  
+
   // Message modal states
   const [showMessageModal, setShowMessageModal] = useState(false);
   const [currentMessage, setCurrentMessage] = useState({
@@ -28,7 +45,7 @@ const Complaint = () => {
     sender_name: ''
   });
   const [editingMessage, setEditingMessage] = useState(false);
-  
+
   // Quick comment states
   const [newComment, setNewComment] = useState('');
   const [replyingTo, setReplyingTo] = useState(null);
@@ -36,7 +53,7 @@ const Complaint = () => {
   const [editingId, setEditingId] = useState(null);
   const [editText, setEditText] = useState('');
   const [showReplies, setShowReplies] = useState({});
-  
+
   // Attachment modal states
   const [showAttachmentModal, setShowAttachmentModal] = useState(false);
   const [currentAttachment, setCurrentAttachment] = useState({
@@ -47,11 +64,25 @@ const Complaint = () => {
   });
   const [editingAttachment, setEditingAttachment] = useState(false);
 
+  // Assignment modal states
+  const [showAssignForm, setShowAssignForm] = useState(false);
+  const [editingAssignment, setEditingAssignment] = useState(null);
+  const [assignments, setAssignments] = useState([]);
+  const [loadingAssignments, setLoadingAssignments] = useState(false);
+
+  // Log modal states
+  const [showLogForm, setShowLogForm] = useState(false);
+  const [editingLog, setEditingLog] = useState(null);
+  const [logs, setLogs] = useState([]);
+  const [loadingLogs, setLoadingLogs] = useState(false);
+
   useEffect(() => {
     if (id) {
       fetchComplaint();
       fetchMessages();
       fetchAttachments();
+      fetchAssignments();
+      fetchLogs();
     }
   }, [id]);
 
@@ -92,6 +123,36 @@ const Complaint = () => {
       setAttachments([]);
     } finally {
       setLoadingAttachments(false);
+    }
+  };
+
+  const fetchAssignments = async () => {
+    setLoadingAssignments(true);
+    try {
+      const response = await axios.get(`http://localhost:8000/api/complaints/${id}/assignments`);
+      console.log('Assignments response:', response.data);
+
+      // Handle both wrapped and unwrapped responses
+      const data = response.data.assignments || response.data.data || response.data || [];
+      setAssignments(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error('Error fetching assignments:', error);
+      setAssignments([]);
+    } finally {
+      setLoadingAssignments(false);
+    }
+  };
+
+  const fetchLogs = async () => {
+    setLoadingLogs(true);
+    try {
+      const response = await axios.get(`http://localhost:8000/api/complaints/${id}/logs`);
+      setLogs(response.data.data || response.data || []);
+    } catch (error) {
+      console.error('Error fetching logs:', error);
+      setLogs([]);
+    } finally {
+      setLoadingLogs(false);
     }
   };
 
@@ -174,7 +235,7 @@ const Complaint = () => {
 
   const handleMessageChange = (e) => {
     const { name, value } = e.target;
-    setCurrentMessage(prev => ({
+    setCurrentMessage((prev) => ({
       ...prev,
       [name]: value
     }));
@@ -200,7 +261,7 @@ const Complaint = () => {
   // Quick comment handlers
   const handleQuickComment = async () => {
     if (!newComment.trim()) return;
-    
+
     try {
       await axios.post('http://localhost:8000/api/messages', {
         complaint_id: parseInt(id),
@@ -213,7 +274,7 @@ const Complaint = () => {
     } catch (error) {
       console.error('Error posting comment:', error);
       console.error('Error details:', error.response?.data);
-      const errorMsg = error.response?.data?.errors 
+      const errorMsg = error.response?.data?.errors
         ? Object.values(error.response.data.errors).flat().join(', ')
         : error.response?.data?.message || error.message;
       alert('Failed to post comment: ' + errorMsg);
@@ -222,7 +283,7 @@ const Complaint = () => {
 
   const handleQuickReply = async (parentId) => {
     if (!replyText.trim()) return;
-    
+
     try {
       await axios.post('http://localhost:8000/api/messages', {
         complaint_id: parseInt(id),
@@ -237,7 +298,7 @@ const Complaint = () => {
     } catch (error) {
       console.error('Error posting reply:', error);
       console.error('Error details:', error.response?.data);
-      const errorMsg = error.response?.data?.errors 
+      const errorMsg = error.response?.data?.errors
         ? Object.values(error.response.data.errors).flat().join(', ')
         : error.response?.data?.message || error.message;
       alert('Failed to post reply: ' + errorMsg);
@@ -246,9 +307,9 @@ const Complaint = () => {
 
   const handleQuickEdit = async (messageId) => {
     if (!editText.trim()) return;
-    
+
     try {
-      const message = messages.find(m => m.id === messageId);
+      const message = messages.find((m) => m.id === messageId);
       await axios.put(`http://localhost:8000/api/messages/${messageId}`, {
         ...message,
         message: editText
@@ -273,18 +334,18 @@ const Complaint = () => {
   };
 
   const toggleReplies = (messageId) => {
-    setShowReplies(prev => ({
+    setShowReplies((prev) => ({
       ...prev,
       [messageId]: !prev[messageId]
     }));
   };
 
   const getMessageReplies = (parentId) => {
-    return messages.filter(msg => msg.parent_id === parentId);
+    return messages.filter((msg) => msg.parent_id === parentId);
   };
 
   const getTopLevelMessages = () => {
-    return messages.filter(msg => !msg.parent_id);
+    return messages.filter((msg) => !msg.parent_id);
   };
 
   // Attachment handlers
@@ -339,18 +400,18 @@ const Complaint = () => {
 
   const getMessageTypeBadge = (type) => {
     const typeConfig = {
-      'initial': { bg: 'primary', label: 'Initial Complaint', icon: '📝' },
-      'reply': { bg: 'success', label: 'Reply', icon: '💬' },
-      'update': { bg: 'info', label: 'Update', icon: '🔄' },
-      'resolution': { bg: 'warning', label: 'Resolution', icon: '✅' },
-      'closed': { bg: 'secondary', label: 'Closed', icon: '🔒' },
-      'escalation': { bg: 'danger', label: 'Escalation', icon: '⚠️' },
-      'internal_note': { bg: 'dark', label: 'Internal Note', icon: '📌' },
-      'follow_up': { bg: 'info', label: 'Follow-up', icon: '🔔' }
+      initial: { bg: 'primary', label: 'Initial Complaint', icon: '📝' },
+      reply: { bg: 'success', label: 'Reply', icon: '💬' },
+      update: { bg: 'info', label: 'Update', icon: '🔄' },
+      resolution: { bg: 'warning', label: 'Resolution', icon: '✅' },
+      closed: { bg: 'secondary', label: 'Closed', icon: '🔒' },
+      escalation: { bg: 'danger', label: 'Escalation', icon: '⚠️' },
+      internal_note: { bg: 'dark', label: 'Internal Note', icon: '📌' },
+      follow_up: { bg: 'info', label: 'Follow-up', icon: '🔔' }
     };
 
     const config = typeConfig[type?.toLowerCase()] || { bg: 'light', label: type || 'Message', icon: '💬' };
-    
+
     return (
       <Badge bg={config.bg} className="me-2">
         <span className="me-1">{config.icon}</span>
@@ -376,8 +437,7 @@ const Complaint = () => {
         <Card>
           <Card.Body>
             <p className="text-muted text-center">Complaint not found</p>
-            <div className="text-center">
-            </div>
+            <div className="text-center"></div>
           </Card.Body>
         </Card>
       </Container>
@@ -394,11 +454,7 @@ const Complaint = () => {
             </div>
 
             <div>
-              <Button
-                style={{ backgroundColor: '#3a4c4a', borderColor: '#3a4c4a' }}
-                size="sm"
-                onClick={handleEdit}
-              >
+              <Button style={{ backgroundColor: '#3a4c4a', borderColor: '#3a4c4a' }} size="sm" onClick={handleEdit}>
                 <Edit fontSize="small" className="me-1" /> Edit
               </Button>
             </div>
@@ -411,7 +467,9 @@ const Complaint = () => {
         <Col lg={8}>
           {/* Complaint Info */}
           <Card className="mb-4">
-            <Card.Header><h5 className="mb-0">Complaint Information</h5></Card.Header>
+            <Card.Header>
+              <h5 className="mb-0">Complaint Information</h5>
+            </Card.Header>
             <Card.Body>
               <Row className="mb-3">
                 <Col md={6}>
@@ -425,7 +483,10 @@ const Complaint = () => {
               </Row>
 
               <Row className="mb-3">
-                <Col><strong>Title:</strong><p>{complaint.title}</p></Col>
+                <Col>
+                  <strong>Title:</strong>
+                  <p>{complaint.title}</p>
+                </Col>
               </Row>
 
               <Row className="mb-3">
@@ -436,17 +497,34 @@ const Complaint = () => {
               </Row>
 
               <Row className="mb-3">
-                <Col md={6}><strong>Channel:</strong><p>{complaint.channel || 'N/A'}</p></Col>
-                <Col md={6}><strong>Priority:</strong><p>{getPriorityBadge(complaint.priority_level)}</p></Col>
+                <Col md={6}>
+                  <strong>Channel:</strong>
+                  <p>{complaint.channel || 'N/A'}</p>
+                </Col>
+                <Col md={6}>
+                  <strong>Priority:</strong>
+                  <p>{getPriorityBadge(complaint.priority_level)}</p>
+                </Col>
               </Row>
 
               <Row className="mb-3">
-                <Col md={6}><strong>Confidentiality:</strong><p>{complaint.confidentiality_level || 'N/A'}</p></Col>
-                <Col md={6}><strong>Due Date:</strong><p>{complaint.due_at ? new Date(complaint.due_at).toLocaleDateString() : 'N/A'}</p></Col>
+                <Col md={6}>
+                  <strong>Confidentiality:</strong>
+                  <p>{complaint.confidentiality_level || 'N/A'}</p>
+                </Col>
+                <Col md={6}>
+                  <strong>Due Date:</strong>
+                  <p>{complaint.due_at ? new Date(complaint.due_at).toLocaleDateString() : 'N/A'}</p>
+                </Col>
               </Row>
 
               {complaint.remark && (
-                <Row><Col><strong>Remarks:</strong><p className="text-muted">{complaint.remark}</p></Col></Row>
+                <Row>
+                  <Col>
+                    <strong>Remarks:</strong>
+                    <p className="text-muted">{complaint.remark}</p>
+                  </Col>
+                </Row>
               )}
             </Card.Body>
           </Card>
@@ -472,9 +550,9 @@ const Complaint = () => {
                               value={newComment}
                               onChange={(e) => setNewComment(e.target.value)}
                               className="fb-comment-input"
-                              style={{ 
-                                resize: 'none', 
-                                borderRadius: '20px', 
+                              style={{
+                                resize: 'none',
+                                borderRadius: '20px',
                                 backgroundColor: '#f0f2f5',
                                 border: '2px solid transparent'
                               }}
@@ -501,8 +579,8 @@ const Complaint = () => {
                                 </Button>
                                 <Button
                                   size="sm"
-                                  style={{ 
-                                    backgroundColor: '#1877f2', 
+                                  style={{
+                                    backgroundColor: '#1877f2',
                                     borderColor: '#1877f2',
                                     borderRadius: '20px',
                                     fontWeight: '600',
@@ -531,7 +609,7 @@ const Complaint = () => {
                         {getTopLevelMessages().map((msg) => {
                           const replies = getMessageReplies(msg.id);
                           const isEditing = editingId === msg.id;
-                          
+
                           return (
                             <div key={msg.id} className="fb-comment-item mb-3">
                               {/* Main Comment */}
@@ -548,9 +626,9 @@ const Complaint = () => {
                                             {msg.sender?.full_name || msg.sender_name || 'System'}
                                           </strong>
                                           {msg.type && (
-                                            <Badge 
-                                              bg={msg.type === 'initial' ? 'primary' : msg.type === 'escalation' ? 'danger' : 'success'} 
-                                              style={{ 
+                                            <Badge
+                                              bg={msg.type === 'initial' ? 'primary' : msg.type === 'escalation' ? 'danger' : 'success'}
+                                              style={{
                                                 fontSize: '9px',
                                                 padding: '3px 8px',
                                                 borderRadius: '10px',
@@ -558,7 +636,11 @@ const Complaint = () => {
                                                 letterSpacing: '0.3px'
                                               }}
                                             >
-                                              {msg.type === 'initial' ? '📝 Initial' : msg.type === 'escalation' ? '⚠️ Escalated' : '💬 Reply'}
+                                              {msg.type === 'initial'
+                                                ? '📝 Initial'
+                                                : msg.type === 'escalation'
+                                                  ? '⚠️ Escalated'
+                                                  : '💬 Reply'}
                                             </Badge>
                                           )}
                                         </div>
@@ -578,16 +660,16 @@ const Complaint = () => {
                                             }}
                                           />
                                           <div className="d-flex gap-2 mt-2">
-                                            <Button 
-                                              size="sm" 
-                                              variant="outline-secondary" 
+                                            <Button
+                                              size="sm"
+                                              variant="outline-secondary"
                                               onClick={cancelEditing}
                                               style={{ borderRadius: '16px' }}
                                             >
                                               Cancel
                                             </Button>
-                                            <Button 
-                                              size="sm" 
+                                            <Button
+                                              size="sm"
                                               onClick={() => handleQuickEdit(msg.id)}
                                               style={{
                                                 backgroundColor: '#1877f2',
@@ -601,14 +683,17 @@ const Complaint = () => {
                                           </div>
                                         </div>
                                       ) : (
-                                        <p className="mb-0 mt-1" style={{ lineHeight: '1.6' }}>{msg.message}</p>
+                                        <p className="mb-0 mt-1" style={{ lineHeight: '1.6' }}>
+                                          {msg.message}
+                                        </p>
                                       )}
                                     </div>
-                                    
+
                                     {/* Action Buttons */}
                                     <div className="fb-comment-actions">
                                       <small className="text-muted" style={{ fontWeight: '500', fontSize: '11px' }}>
-                                        🕒 {new Date(msg.created_at).toLocaleString('en-US', {
+                                        🕒{' '}
+                                        {new Date(msg.created_at).toLocaleString('en-US', {
                                           month: 'short',
                                           day: 'numeric',
                                           hour: 'numeric',
@@ -616,20 +701,10 @@ const Complaint = () => {
                                         })}
                                       </small>
                                       <span className="text-muted mx-1">•</span>
-                                      <Button
-                                        variant="link"
-                                        size="sm"
-                                        className="fb-action-btn"
-                                        onClick={() => setReplyingTo(msg.id)}
-                                      >
+                                      <Button variant="link" size="sm" className="fb-action-btn" onClick={() => setReplyingTo(msg.id)}>
                                         💬 Reply
                                       </Button>
-                                      <Button
-                                        variant="link"
-                                        size="sm"
-                                        className="fb-action-btn"
-                                        onClick={() => startEditing(msg)}
-                                      >
+                                      <Button variant="link" size="sm" className="fb-action-btn" onClick={() => startEditing(msg)}>
                                         ✏️ Edit
                                       </Button>
                                       <Button
@@ -697,7 +772,7 @@ const Complaint = () => {
                                             View {replies.length} {replies.length === 1 ? 'reply' : 'replies'}
                                           </Button>
                                         )}
-                                        
+
                                         {showReplies[msg.id] && (
                                           <>
                                             <Button
@@ -719,7 +794,9 @@ const Complaint = () => {
                                                     <strong className="fb-comment-author-small">
                                                       {reply.sender?.full_name || reply.sender_name || 'System'}
                                                     </strong>
-                                                    <p className="mb-0" style={{ lineHeight: '1.6' }}>{reply.message}</p>
+                                                    <p className="mb-0" style={{ lineHeight: '1.6' }}>
+                                                      {reply.message}
+                                                    </p>
                                                   </div>
                                                   <div className="fb-comment-actions" style={{ paddingLeft: '8px', marginTop: '4px' }}>
                                                     <small className="text-muted" style={{ fontWeight: '500', fontSize: '10px' }}>
@@ -756,27 +833,30 @@ const Complaint = () => {
                         })}
                       </div>
                     ) : (
-                      <div className="text-center py-5" style={{ 
-                        background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
-                        borderRadius: '16px',
-                        padding: '40px'
-                      }}>
-                        <div style={{ 
-                          background: 'linear-gradient(135deg, #1877f2 0%, #0d6efd 100%)',
-                          width: '80px',
-                          height: '80px',
-                          borderRadius: '50%',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          margin: '0 auto 20px',
-                          boxShadow: '0 8px 24px rgba(24, 119, 242, 0.3)'
-                        }}>
+                      <div
+                        className="text-center py-5"
+                        style={{
+                          background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
+                          borderRadius: '16px',
+                          padding: '40px'
+                        }}
+                      >
+                        <div
+                          style={{
+                            background: 'linear-gradient(135deg, #1877f2 0%, #0d6efd 100%)',
+                            width: '80px',
+                            height: '80px',
+                            borderRadius: '50%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            margin: '0 auto 20px',
+                            boxShadow: '0 8px 24px rgba(24, 119, 242, 0.3)'
+                          }}
+                        >
                           <Message style={{ fontSize: 40, color: '#fff' }} />
                         </div>
-                        <h5 style={{ color: '#1c1e21', fontWeight: '700', marginBottom: '8px' }}>
-                          No comments yet
-                        </h5>
+                        <h5 style={{ color: '#1c1e21', fontWeight: '700', marginBottom: '8px' }}>No comments yet</h5>
                         <p className="text-muted" style={{ fontSize: '14px' }}>
                           💬 Be the first to share your thoughts and start the conversation!
                         </p>
@@ -789,11 +869,7 @@ const Complaint = () => {
                   <div className="py-4">
                     <div className="d-flex justify-content-between align-items-center mb-3">
                       <h5 className="mb-0">Complaint Attachments</h5>
-                      <Button
-                        variant="primary"
-                        size="sm"
-                        onClick={handleAddAttachment}
-                      >
+                      <Button variant="primary" size="sm" onClick={handleAddAttachment}>
                         <Add fontSize="small" className="me-1" />
                         Upload Files
                       </Button>
@@ -829,12 +905,12 @@ const Complaint = () => {
                                     <AttachFile className="me-2 text-muted" fontSize="small" />
                                     <strong>{att.file_name}</strong>
                                   </div>
-                                  {att.description && (
-                                    <small className="text-muted d-block ms-4">{att.description}</small>
-                                  )}
+                                  {att.description && <small className="text-muted d-block ms-4">{att.description}</small>}
                                 </td>
                                 <td>
-                                  <Badge bg="light" text="dark">{att.file_type || 'N/A'}</Badge>
+                                  <Badge bg="light" text="dark">
+                                    {att.file_type || 'N/A'}
+                                  </Badge>
                                 </td>
                                 <td>{att.file_size ? `${(att.file_size / 1024).toFixed(2)} KB` : 'N/A'}</td>
                                 <td>
@@ -842,12 +918,7 @@ const Complaint = () => {
                                 </td>
                                 <td>
                                   <div className="d-flex gap-2">
-                                    <Button
-                                      size="sm"
-                                      variant="outline-primary"
-                                      onClick={() => handleView(att.id)}
-                                      title="View"
-                                    >
+                                    <Button size="sm" variant="outline-primary" onClick={() => handleView(att.id)} title="View">
                                       <Visibility fontSize="small" />
                                     </Button>
                                     <Button
@@ -882,17 +953,184 @@ const Complaint = () => {
                   </div>
                 </Tab>
 
-                <Tab eventKey="logs" title="Activity Log">
-                  <div className="py-4 text-muted text-center">
-                    {complaint.logs?.length ? (
-                      complaint.logs.map(log => (
-                        <div key={log.id} className="mb-3 p-3 border rounded text-start">
-                          <strong>{log.action}</strong>
-                          <br />
-                          <small>{new Date(log.created_at).toLocaleString()}</small>
+                <Tab eventKey="assignments" title={`Complaint Assignment (${assignments.length})`}>
+                  <div className="py-4">
+                    <div className="d-flex justify-content-between align-items-center mb-3">
+                      <h5 className="mb-0">Assignments</h5>
+                      <Button
+                        variant="success"
+                        size="sm"
+                        onClick={() => {
+                          setEditingAssignment(null);
+                          setShowAssignForm(true);
+                        }}
+                      >
+                        <Add fontSize="small" className="me-1" />
+                        Add Assignment
+                      </Button>
+                    </div>
+
+                    {loadingAssignments ? (
+                      <div className="text-center py-4">
+                        <Spinner animation="border" size="sm" />
+                      </div>
+                    ) : assignments.length > 0 ? (
+                      <div
+                        style={{
+                          border: '1px solid #e0e0e0',
+                          borderRadius: '8px',
+                          overflow: 'hidden'
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: 'grid',
+                            gridTemplateColumns: '200px 200px 150px 120px 100px',
+                            gap: '10px',
+                            padding: '12px 15px',
+                            backgroundColor: '#f5f5f5',
+                            fontWeight: '600',
+                            borderBottom: '2px solid #ddd'
+                          }}
+                        >
+                          <div>Division</div>
+                          <div>Officer</div>
+                          <div>Due Date</div>
+                          <div>Status</div>
+                          <div>Action</div>
                         </div>
-                      ))
-                    ) : <p>No logs yet</p>}
+
+                        {assignments.map((assign, idx) => (
+                          <div
+                            key={assign.id}
+                            style={{
+                              display: 'grid',
+                              gridTemplateColumns: '200px 200px 150px 120px 100px',
+                              gap: '10px',
+                              padding: '12px 15px',
+                              borderBottom: idx < assignments.length - 1 ? '1px solid #f0f0f0' : 'none',
+                              alignItems: 'center'
+                            }}
+                          >
+                            <div title={JSON.stringify(assign.assigneeDivision)}>
+                              {assign.assigneeDivision?.name ||
+                                assign.division?.name ||
+                                (assign.assignee_division_id ? `Division #${assign.assignee_division_id}` : '-')}
+                            </div>
+                            <div title={JSON.stringify(assign.assigneeUser)}>
+                              {assign.assigneeUser?.full_name ||
+                                assign.assignee?.full_name ||
+                                (assign.assignee_user_id ? `Person #${assign.assignee_user_id}` : '-')}
+                            </div>
+                            <div>{assign.due_at ? new Date(assign.due_at).toLocaleDateString() : '-'}</div>
+                            <div>
+                              <Badge bg={idx === 0 ? 'success' : 'secondary'}>{idx === 0 ? 'Current' : 'Reassigned'}</Badge>
+                            </div>
+                            <div>
+                              <Button
+                                size="sm"
+                                variant="outline-primary"
+                                onClick={() => {
+                                  setEditingAssignment(assign);
+                                  setShowAssignForm(true);
+                                }}
+                              >
+                                <Edit fontSize="small" />
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center text-muted py-4">
+                        <Person style={{ fontSize: 48, opacity: 0.3 }} />
+                        <p className="mt-3">No assignments yet</p>
+                      </div>
+                    )}
+                  </div>
+                </Tab>
+
+                <Tab eventKey="logs" title={`Complaint Log (${logs.length})`}>
+                  <div className="py-4">
+                    <div className="d-flex justify-content-between align-items-center mb-3">
+                      <h5 className="mb-0">Complaint Logs</h5>
+                      <Button
+                        variant="info"
+                        size="sm"
+                        onClick={() => {
+                          setEditingLog(null);
+                          setShowLogForm(true);
+                        }}
+                      >
+                        <Add fontSize="small" className="me-1" />
+                        Add Log Entry
+                      </Button>
+                    </div>
+
+                    {loadingLogs ? (
+                      <div className="text-center py-4">
+                        <Spinner animation="border" size="sm" />
+                      </div>
+                    ) : logs.length > 0 ? (
+                      <div
+                        style={{
+                          border: '1px solid #e0e0e0',
+                          borderRadius: '8px',
+                          overflow: 'hidden'
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: 'grid',
+                            gridTemplateColumns: '100px 1fr 140px',
+                            gap: '15px',
+                            padding: '12px 15px',
+                            backgroundColor: '#f5f5f5',
+                            fontWeight: '600',
+                            borderBottom: '2px solid #ddd'
+                          }}
+                        >
+                          <div>Action</div>
+                          <div>Remark</div>
+                          <div>Updated At</div>
+                        </div>
+
+                        {logs.map((log, idx) => (
+                          <div
+                            key={log.id}
+                            style={{
+                              display: 'grid',
+                              gridTemplateColumns: '100px 1fr 140px',
+                              gap: '15px',
+                              padding: '12px 15px',
+                              borderBottom: idx < logs.length - 1 ? '1px solid #f0f0f0' : 'none',
+                              alignItems: 'flex-start'
+                            }}
+                          >
+                            <div style={{ fontWeight: '500', minWidth: '100px' }}>{log.action || '-'}</div>
+                            <div
+                              style={{
+                                color: '#666',
+                                wordWrap: 'break-word',
+                                overflowWrap: 'break-word',
+                                whiteSpace: 'pre-wrap',
+                                minWidth: '0'
+                              }}
+                            >
+                              {log.remark || '-'}
+                            </div>
+                            <div style={{ fontSize: '12px', color: '#999', minWidth: '140px' }}>
+                              {new Date(log.updated_at).toLocaleString()}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center text-muted py-4">
+                        <AccessTime style={{ fontSize: 48, opacity: 0.3 }} />
+                        <p className="mt-3">No logs yet</p>
+                      </div>
+                    )}
                   </div>
                 </Tab>
               </Tabs>
@@ -904,26 +1142,52 @@ const Complaint = () => {
         <Col lg={4}>
           {/* Complainant */}
           <Card className="mb-4">
-            <Card.Header><h5 className="mb-0">Complainant Details</h5></Card.Header>
+            <Card.Header>
+              <h5 className="mb-0">Complainant Details</h5>
+            </Card.Header>
             <Card.Body>
-              <p><strong>Name:</strong> {complaint.complainant_name || complaint.complainant?.full_name || 'N/A'}</p>
-              <p><strong>Phone:</strong> {complaint.complainant_phone || complaint.complainant?.office_phone || 'N/A'}</p>
+              <p>
+                <strong>Name:</strong> {complaint.complainant_name || complaint.complainant?.full_name || 'N/A'}
+              </p>
+              <p>
+                <strong>Phone:</strong> {complaint.complainant_phone || complaint.complainant?.office_phone || 'N/A'}
+              </p>
 
-              {complaint.complainant?.email && <p><strong>Email:</strong> {complaint.complainant.email}</p>}
-              {complaint.complainant?.address && <p><strong>Address:</strong> {complaint.complainant.address}</p>}
+              {complaint.complainant?.email && (
+                <p>
+                  <strong>Email:</strong> {complaint.complainant.email}
+                </p>
+              )}
+              {complaint.complainant?.address && (
+                <p>
+                  <strong>Address:</strong> {complaint.complainant.address}
+                </p>
+              )}
             </Card.Body>
           </Card>
 
           {/* Timeline */}
           <Card className="mb-4">
-            <Card.Header><h5 className="mb-0">Timeline</h5></Card.Header>
+            <Card.Header>
+              <h5 className="mb-0">Timeline</h5>
+            </Card.Header>
             <Card.Body>
-              <p><strong>Created:</strong> {new Date(complaint.created_at).toLocaleString()}</p>
-              {complaint.received_at && <p><strong>Received:</strong> {new Date(complaint.received_at).toLocaleString()}</p>}
-              <p><strong>Updated:</strong> {new Date(complaint.updated_at).toLocaleString()}</p>
+              <p>
+                <strong>Created:</strong> {new Date(complaint.created_at).toLocaleString()}
+              </p>
+              {complaint.received_at && (
+                <p>
+                  <strong>Received:</strong> {new Date(complaint.received_at).toLocaleString()}
+                </p>
+              )}
+              <p>
+                <strong>Updated:</strong> {new Date(complaint.updated_at).toLocaleString()}
+              </p>
 
               {complaint.user_received && (
-                <p><strong>Received By:</strong> {complaint.user_received.full_name}</p>
+                <p>
+                  <strong>Received By:</strong> {complaint.user_received.full_name}
+                </p>
               )}
             </Card.Body>
           </Card>
@@ -931,12 +1195,18 @@ const Complaint = () => {
           {/* Assignments */}
           {complaint.assignments?.length > 0 && (
             <Card className="mb-4">
-              <Card.Header><h5 className="mb-0">Assignments</h5></Card.Header>
+              <Card.Header>
+                <h5 className="mb-0">Assignments</h5>
+              </Card.Header>
               <Card.Body>
-                {complaint.assignments.map(assign => (
+                {complaint.assignments.map((assign) => (
                   <div key={assign.id} className="mb-3 pb-3 border-bottom">
-                    <p><strong>Assignee:</strong> {assign.assignee_user?.full_name}</p>
-                    <p><strong>Division:</strong> {assign.assignee_division?.name}</p>
+                    <p>
+                      <strong>Assignee:</strong> {assign.assignee_user?.full_name}
+                    </p>
+                    <p>
+                      <strong>Division:</strong> {assign.assignee_division?.name}
+                    </p>
                     <small>Due: {assign.due_at ? new Date(assign.due_at).toLocaleDateString() : 'N/A'}</small>
                   </div>
                 ))}
@@ -963,6 +1233,30 @@ const Complaint = () => {
         attachment={currentAttachment}
         handleSubmit={handleAttachmentSubmit}
         editMode={editingAttachment}
+      />
+
+      {/* Assignment Form Modal */}
+      <AssignComplaintForm
+        show={showAssignForm}
+        onClose={() => setShowAssignForm(false)}
+        complaintId={id}
+        assignment={editingAssignment}
+        onSuccess={() => {
+          setShowAssignForm(false);
+          fetchAssignments();
+        }}
+      />
+
+      {/* Log Form Modal */}
+      <ComplaintLogForm
+        show={showLogForm}
+        onClose={() => setShowLogForm(false)}
+        complaintId={id}
+        log={editingLog}
+        onSuccess={() => {
+          setShowLogForm(false);
+          fetchLogs();
+        }}
       />
     </Container>
   );

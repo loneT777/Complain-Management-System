@@ -39,6 +39,46 @@ class ComplaintAssignmentController extends Controller
     }
 
     /**
+     * Get assignments for a specific complaint
+     */
+    public function getByComplaint($complaintId)
+    {
+        try {
+            $assignments = ComplaintAssignment::where('complaint_id', $complaintId)
+                ->with(['assigneeDivision', 'assigneeUser', 'assignerUser', 'lastStatus', 'complaint'])
+                ->orderBy('created_at', 'desc')
+                ->get()
+                ->makeVisible(['assigneeDivision', 'assigneeUser', 'assignerUser', 'lastStatus', 'complaint']);
+
+            return response()->json([
+                'data' => $assignments,
+                'assignments' => $assignments->map(function ($assign) {
+                    return [
+                        'id' => $assign->id,
+                        'complaint_id' => $assign->complaint_id,
+                        'assignee_division_id' => $assign->assignee_division_id,
+                        'assignee_user_id' => $assign->assignee_user_id,
+                        'assigner_user_id' => $assign->assigner_user_id,
+                        'last_status_id' => $assign->last_status_id,
+                        'due_at' => $assign->due_at,
+                        'remark' => $assign->remark,
+                        'created_at' => $assign->created_at,
+                        'updated_at' => $assign->updated_at,
+                        'assigneeDivision' => $assign->assigneeDivision,
+                        'assigneeUser' => $assign->assigneeUser,
+                        'assignerUser' => $assign->assignerUser,
+                        'lastStatus' => $assign->lastStatus,
+                        'complaint' => $assign->complaint,
+                    ];
+                }),
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error fetching complaint assignments: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to fetch assignments', 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
      * Store a newly created complaint assignment
      */
     public function store(Request $request)

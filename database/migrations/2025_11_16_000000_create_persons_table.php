@@ -35,8 +35,9 @@ return new class extends Migration
             $table->unsignedBigInteger('user_id')->nullable();
             $table->timestamps();
 
-            $table->foreign('division_id')->references('id')->on('divisions')->onDelete('set null');
-            $table->foreign('session_id')->references('id')->on('sessions')->onDelete('set null');
+            // Foreign keys will be added by separate migration after tables are created
+            // $table->foreign('division_id')->references('id')->on('divisions')->onDelete('set null');
+            // $table->foreign('session_id')->references('id')->on('sessions')->onDelete('set null');
         });
     }
 
