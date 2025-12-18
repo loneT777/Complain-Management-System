@@ -7,6 +7,7 @@ import PersonForm from './PersonForm';
 
 const Persons = () => {
   const [persons, setPersons] = useState([]);
+  const [divisions, setDivisions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editMode, setEditMode] = useState(false);
@@ -20,11 +21,13 @@ const Persons = () => {
     address: '',
     type: '',
     designation: '',
-    remark: ''
+    remark: '',
+    division_id: ''
   });
 
   useEffect(() => {
     fetchPersons();
+    fetchDivisions();
   }, []);
 
   const fetchPersons = async () => {
@@ -36,6 +39,15 @@ const Persons = () => {
       console.error('Error fetching persons:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchDivisions = async () => {
+    try {
+      const response = await axios.get('http://localhost:8000/api/public/divisions');
+      setDivisions(response.data.data || []);
+    } catch (error) {
+      console.error('Error fetching divisions:', error);
     }
   };
 
@@ -55,7 +67,8 @@ const Persons = () => {
         address: '',
         type: '',
         designation: '',
-        remark: ''
+        remark: '',
+        division_id: ''
       });
     }
     setShowModal(true);
@@ -73,7 +86,8 @@ const Persons = () => {
       address: '',
       type: '',
       designation: '',
-      remark: ''
+      remark: '',
+      division_id: ''
     });
   };
 
@@ -144,6 +158,7 @@ const Persons = () => {
         handleChange={handleChange}
         handleSubmit={handleSubmit}
         editMode={editMode}
+        divisions={divisions}
       />
     </Container>
   );

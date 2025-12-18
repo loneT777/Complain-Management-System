@@ -18,7 +18,6 @@ const CategoryForm = ({ show, handleClose, category, handleChange, handleSubmit,
                   name="code"
                   value={category.code}
                   onChange={handleChange}
-                  placeholder="e.g., CAT001"
                 />
               </Form.Group>
             </Col>

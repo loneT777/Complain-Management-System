@@ -1,7 +1,7 @@
 import React from 'react';
 import { Modal, Button, Form, Row, Col } from 'react-bootstrap';
 
-const PersonForm = ({ show, handleClose, person, handleChange, handleSubmit, editMode }) => {
+const PersonForm = ({ show, handleClose, person, handleChange, handleSubmit, editMode, divisions }) => {
   return (
     <Modal show={show} onHide={handleClose} size="lg">
       <Modal.Header closeButton>
@@ -105,7 +105,7 @@ const PersonForm = ({ show, handleClose, person, handleChange, handleSubmit, edi
           </Form.Group>
 
           <Row>
-            <Col md={6}>
+            <Col md={4}>
               <Form.Group className="mb-3">
                 <Form.Label>Type</Form.Label>
                 <Form.Control
@@ -117,7 +117,7 @@ const PersonForm = ({ show, handleClose, person, handleChange, handleSubmit, edi
                 />
               </Form.Group>
             </Col>
-            <Col md={6}>
+            <Col md={4}>
               <Form.Group className="mb-3">
                 <Form.Label>Designation</Form.Label>
                 <Form.Control
@@ -127,6 +127,23 @@ const PersonForm = ({ show, handleClose, person, handleChange, handleSubmit, edi
                   onChange={handleChange}
                   placeholder="Enter designation"
                 />
+              </Form.Group>
+            </Col>
+            <Col md={4}>
+              <Form.Group className="mb-3">
+                <Form.Label>Division</Form.Label>
+                <Form.Select
+                  name="division_id"
+                  value={person.division_id || ''}
+                  onChange={handleChange}
+                >
+                  <option value="">Select Division</option>
+                  {divisions && divisions.map((division) => (
+                    <option key={division.id} value={division.id}>
+                      {division.name}
+                    </option>
+                  ))}
+                </Form.Select>
               </Form.Group>
             </Col>
           </Row>
