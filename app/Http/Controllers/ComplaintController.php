@@ -3,21 +3,43 @@
 namespace App\Http\Controllers;
 
 use App\Models\Complaint;
+use App\Models\ComplaintLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class ComplaintController extends Controller
 {
     /**
-     * Display a paginated listing of complaints with relationships.
+     * Display a paginated listing of complaints with relationships and filtering.
      */
-    public function index()
+    public function index(Request $request)
     {
         try {
-            $complaints = Complaint::with(['complainant', 'lastStatus'])
-                ->orderBy('created_at', 'desc')
-                ->paginate(10);
+            $query = Complaint::with(['complainant', 'lastStatus']);
+            
+            // Apply filters if provided
+            if ($request->has('status_id')) {
+                $query->where('last_status_id', $request->status_id);
+            }
+            
+            if ($request->has('priority_level')) {
+                $query->where('priority_level', $request->priority_level);
+            }
+            
+            if ($request->has('date_from')) {
+                $query->whereDate('created_at', '>=', $request->date_from);
+            }
+            
+            if ($request->has('date_to')) {
+                $query->whereDate('created_at', '<=', $request->date_to);
+            }
+            
+            $complaints = $query->orderBy('created_at', 'desc')
+                ->paginate($request->input('per_page', 10));
+                
             return response()->json($complaints);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
@@ -46,24 +68,42 @@ class ComplaintController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        // Generate unique reference number
-        $referenceNo = 'CMP-' . date('Ymd') . '-' . str_pad(Complaint::count() + 1, 4, '0', STR_PAD_LEFT);
+        // Generate unique reference number in a thread-safe way
+        $referenceNo = 'CMP-' . date('Ymd') . '-' . str_pad(mt_rand(1, 9999), 4, '0', STR_PAD_LEFT);
 
-        $complaint = Complaint::create(array_merge($request->except('category_ids'), [
-            'reference_no' => $referenceNo,
-            'received_at' => now(),
-            'complainant_id' => 1 // Default complainant ID for now
-        ]));
+        try {
+            DB::beginTransaction();
+            
+            $complaint = Complaint::create(array_merge($request->except('category_ids'), [
+                'reference_no' => $referenceNo,
+                'received_at' => now(),
+                'complainant_id' => Auth::id() ?? 1 // Use authenticated user ID or default to 1
+            ]));
 
-        // Attach categories if provided
-        if ($request->has('category_ids') && is_array($request->category_ids)) {
-            $complaint->categories()->attach($request->category_ids);
+            // Attach categories if provided
+            if ($request->has('category_ids') && is_array($request->category_ids)) {
+                $complaint->categories()->attach($request->category_ids);
+            }
+
+            // Log complaint creation
+            ComplaintLog::create([
+                'complaint_id' => $complaint->id,
+                'action' => 'Created',
+                'remark' => 'Complaint created: ' . $complaint->title
+            ]);
+            
+            DB::commit();
+            
+            return response()->json([
+                'message' => 'Complaint created successfully',
+                'data' => $complaint->load(['categories', 'complainant', 'lastStatus'])
+            ], 201);
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Failed to create complaint: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to create complaint: ' . $e->getMessage()], 500);
         }
-
-        return response()->json([
-            'message' => 'Complaint created successfully',
-            'data' => $complaint
-        ], 201);
     }
 
     /**
@@ -72,7 +112,20 @@ class ComplaintController extends Controller
     public function show($id)
     {
         try {
-            $complaint = Complaint::with(['categories'])->findOrFail($id);
+            $complaint = Complaint::with([
+                'complainant',
+                'lastStatus',
+                'categories',
+                'assignments' => function($query) {
+                    $query->with(['assigneeDivision', 'assigneeUser', 'lastStatus'])
+                          ->orderBy('created_at', 'desc');
+                },
+                'logs' => function($query) {
+                    $query->with(['assignee', 'status'])
+                          ->orderBy('created_at', 'desc');
+                }
+            ])->findOrFail($id);
+            
             return response()->json($complaint);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
@@ -104,6 +157,9 @@ class ComplaintController extends Controller
                 return response()->json(['errors' => $validator->errors()], 422);
             }
 
+            // Get original values for logging
+            $originalValues = $complaint->getOriginal();
+            
             // Update complaint fields, excluding category_ids which is handled separately
             $complaint->update($request->except(['category_ids', 'complainant_name', 'complainant_phone']));
 
@@ -124,14 +180,31 @@ class ComplaintController extends Controller
                 $complaint->categories()->sync($request->category_ids);
             }
 
+            // Log the update with details of what changed
+            $changes = [];
+            foreach ($request->all() as $key => $value) {
+                if ($key !== 'category_ids' && isset($originalValues[$key]) && $originalValues[$key] != $value) {
+                    $changes[] = "$key: {$originalValues[$key]} → $value";
+                }
+            }
+            
+            if (!empty($changes) || $request->has('category_ids')) {
+                ComplaintLog::create([
+                    'complaint_id' => $complaint->id,
+                    'action' => 'Updated',
+                    'remark' => 'Complaint updated. Changes: ' . implode(', ', $changes)
+                ]);
+            }
+
             return response()->json([
                 'message' => 'Complaint updated successfully',
-                'data' => $complaint
+                'data' => $complaint->load(['categories', 'complainant', 'lastStatus'])
             ]);
         } catch (ModelNotFoundException $e) {
             return response()->json(['message' => 'Complaint not found'], 404);
         } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
+            \Log::error('Failed to update complaint: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to update complaint: ' . $e->getMessage()], 500);
         }
     }
 
@@ -141,14 +214,29 @@ class ComplaintController extends Controller
     public function destroy($id)
     {
         try {
+            DB::beginTransaction();
+            
             $complaint = Complaint::findOrFail($id);
+            
+            // Log the deletion before actually deleting
+            ComplaintLog::create([
+                'complaint_id' => $complaint->id,
+                'action' => 'Deleted',
+                'remark' => 'Complaint deleted: ' . $complaint->title
+            ]);
+            
             $complaint->delete();
-
+            
+            DB::commit();
+            
             return response()->json(['message' => 'Complaint deleted successfully']);
         } catch (ModelNotFoundException $e) {
+            DB::rollBack();
             return response()->json(['message' => 'Complaint not found'], 404);
         } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
+            DB::rollBack();
+            \Log::error('Failed to delete complaint: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to delete complaint: ' . $e->getMessage()], 500);
         }
     }
 }

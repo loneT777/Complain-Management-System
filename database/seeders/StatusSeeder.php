@@ -14,6 +14,7 @@ class StatusSeeder extends Seeder
     public function run(): void
     {
         Status::firstOrCreate(['code' => 'open'], ['name' => 'Open']);
+        Status::firstOrCreate(['code' => 'assigned'], ['name' => 'Assigned']);
         Status::firstOrCreate(['code' => 'in_progress'], ['name' => 'In Progress']);
         Status::firstOrCreate(['code' => 'resolved'], ['name' => 'Resolved']);
         Status::firstOrCreate(['code' => 'closed'], ['name' => 'Closed']);

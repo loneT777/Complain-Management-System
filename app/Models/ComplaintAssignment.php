@@ -42,4 +42,9 @@ class ComplaintAssignment extends Model
     {
         return $this->belongsTo(Person::class, 'assigner_user_id');
     }
+
+    public function lastStatus()
+    {
+        return $this->belongsTo(Status::class, 'last_status_id');
+    }
 }

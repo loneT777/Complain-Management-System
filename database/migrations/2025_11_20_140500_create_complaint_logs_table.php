@@ -27,7 +27,7 @@ return new class extends Migration
             $table->foreign('complaint_id')->references('id')->on('complaints')->onDelete('cascade');
             $table->foreign('complaint_assignment_id')->references('id')->on('complaint_assignments')->onDelete('set null');
             $table->foreign('status_id')->references('id')->on('status')->onDelete('set null');
-            $table->foreign('assignee_id')->references('id')->on('users')->onDelete('set null');
+            $table->foreign('assignee_id')->references('id')->on('persons')->onDelete('set null');
         });
     }
 
