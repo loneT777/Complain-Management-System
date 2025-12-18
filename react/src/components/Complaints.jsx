@@ -103,9 +103,10 @@ const Complaints = () => {
       {showAssignModal && selectedComplaint && (
         <AssignComplaintForm
           show={showAssignModal}
-          handleClose={handleAssignFormClose}
-          complaint={selectedComplaint}
-          onSaved={handleAssignmentSaved}
+          onClose={handleAssignFormClose}
+          complaintId={selectedComplaint.id}
+          assignment={assignments[selectedComplaint.id] || null}
+          onSuccess={handleAssignmentSaved}
         />
       )}
     </Container>

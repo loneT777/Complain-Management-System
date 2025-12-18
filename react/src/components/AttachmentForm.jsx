@@ -68,22 +68,22 @@ const AttachmentForm = ({ show, handleClose, attachment, handleSubmit, editMode 
       const validFiles = [];
       const errors = [];
 
-      files.forEach(file => {
+      files.forEach((file) => {
         // Validate file size (10MB)
         if (file.size > 10 * 1024 * 1024) {
           errors.push(`${file.name}: File size must not exceed 10MB`);
           return;
         }
-        
+
         // Validate file type
         const allowedExtensions = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'jpg', 'jpeg', 'png', 'gif', 'zip', 'rar'];
         const extension = file.name.split('.').pop().toLowerCase();
-        
+
         if (!allowedExtensions.includes(extension)) {
           errors.push(`${file.name}: Invalid file type`);
           return;
         }
-        
+
         validFiles.push(file);
       });
 
@@ -91,13 +91,13 @@ const AttachmentForm = ({ show, handleClose, attachment, handleSubmit, editMode 
         setValidationError(errors.join(', '));
         return;
       }
-      
+
       setValidationError('');
-      
+
       if (editMode) {
         // For edit mode, only allow single file
         setSelectedFiles([validFiles[0]]);
-        setFormData(prev => ({
+        setFormData((prev) => ({
           ...prev,
           file_name: validFiles[0].name,
           extension: validFiles[0].name.split('.').pop().toLowerCase()
@@ -111,7 +111,7 @@ const AttachmentForm = ({ show, handleClose, attachment, handleSubmit, editMode 
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       [name]: value
     }));
@@ -120,9 +120,9 @@ const AttachmentForm = ({ show, handleClose, attachment, handleSubmit, editMode 
   const handleDrag = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    if (e.type === "dragenter" || e.type === "dragover") {
+    if (e.type === 'dragenter' || e.type === 'dragover') {
       setDragActive(true);
-    } else if (e.type === "dragleave") {
+    } else if (e.type === 'dragleave') {
       setDragActive(false);
     }
   };
@@ -131,28 +131,28 @@ const AttachmentForm = ({ show, handleClose, attachment, handleSubmit, editMode 
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
-    
+
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       const files = Array.from(e.dataTransfer.files);
       const validFiles = [];
       const errors = [];
 
-      files.forEach(file => {
+      files.forEach((file) => {
         // Validate file size (10MB)
         if (file.size > 10 * 1024 * 1024) {
           errors.push(`${file.name}: File size must not exceed 10MB`);
           return;
         }
-        
+
         // Validate file type
         const allowedExtensions = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'jpg', 'jpeg', 'png', 'gif', 'zip', 'rar'];
         const extension = file.name.split('.').pop().toLowerCase();
-        
+
         if (!allowedExtensions.includes(extension)) {
           errors.push(`${file.name}: Invalid file type`);
           return;
         }
-        
+
         validFiles.push(file);
       });
 
@@ -160,13 +160,13 @@ const AttachmentForm = ({ show, handleClose, attachment, handleSubmit, editMode 
         setValidationError(errors.join(', '));
         return;
       }
-      
+
       setValidationError('');
-      
+
       if (editMode) {
         // For edit mode, only allow single file
         setSelectedFiles([validFiles[0]]);
-        setFormData(prev => ({
+        setFormData((prev) => ({
           ...prev,
           file_name: validFiles[0].name,
           extension: validFiles[0].name.split('.').pop().toLowerCase()
@@ -184,35 +184,35 @@ const AttachmentForm = ({ show, handleClose, attachment, handleSubmit, editMode 
 
   const handleLocalSubmit = (e) => {
     e.preventDefault();
-    
+
     setValidationError('');
-    
+
     // Validate complaint selection
     if (!formData.complaint_id) {
       setValidationError('Please select a complaint');
       return;
     }
-    
+
     // Validate file selection for new uploads
     if (!editMode && selectedFiles.length === 0) {
       setValidationError('Please select at least one file to upload');
       return;
     }
-    
+
     const submitData = {
       ...formData,
       files: selectedFiles
     };
-    
+
     handleSubmit(submitData);
   };
 
   const removeFile = (index) => {
-    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+    setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
   return (
-    <Modal show={show} onHide={handleClose} size="lg">
+    <Modal show={show} onHide={handleClose} size="lg" backdrop="static" keyboard={false}>
       <Modal.Header closeButton>
         <Modal.Title>{editMode ? 'Edit Attachment' : 'Add Attachment'}</Modal.Title>
       </Modal.Header>
@@ -222,22 +222,18 @@ const AttachmentForm = ({ show, handleClose, attachment, handleSubmit, editMode 
             {validationError}
           </Alert>
         )}
-        
+
         <Form onSubmit={handleLocalSubmit}>
           <Form.Group className="mb-3">
-            <Form.Label>Complaint <span className="text-danger">*</span></Form.Label>
+            <Form.Label>
+              Complaint <span className="text-danger">*</span>
+            </Form.Label>
             {loadingComplaints ? (
               <div className="text-center py-2">
                 <Spinner animation="border" size="sm" /> Loading complaints...
               </div>
             ) : (
-              <Form.Select
-                name="complaint_id"
-                value={formData.complaint_id}
-                onChange={handleChange}
-                required
-                disabled={editMode}
-              >
+              <Form.Select name="complaint_id" value={formData.complaint_id} onChange={handleChange} required disabled={editMode}>
                 <option value="">Select a complaint</option>
                 {complaints.map((complaint) => (
                   <option key={complaint.id} value={complaint.id}>
@@ -265,7 +261,7 @@ const AttachmentForm = ({ show, handleClose, attachment, handleSubmit, editMode 
               <Form.Label>Attachments (Optional)</Form.Label>
               <div
                 className={`border rounded p-4 text-center ${dragActive ? 'border-primary bg-light' : 'border-secondary'}`}
-                style={{ 
+                style={{
                   borderStyle: 'dashed',
                   borderWidth: '2px',
                   cursor: 'pointer',
@@ -279,9 +275,7 @@ const AttachmentForm = ({ show, handleClose, attachment, handleSubmit, editMode 
               >
                 <CloudUpload style={{ fontSize: '48px', color: '#6c757d', marginBottom: '10px' }} />
                 <h5 className="mb-2">Drag & drop files here or click to browse</h5>
-                <p className="text-muted mb-0">
-                  Allowed file types: PDF, Word, Excel, and images (Max size: 5MB each)
-                </p>
+                <p className="text-muted mb-0">Allowed file types: PDF, Word, Excel, and images (Max size: 5MB each)</p>
                 <Form.Control
                   ref={fileInputRef}
                   type="file"
@@ -305,11 +299,7 @@ const AttachmentForm = ({ show, handleClose, attachment, handleSubmit, editMode 
                       <br />
                       <small className="text-muted">Type: {formData.extension?.toUpperCase()}</small>
                     </div>
-                    <Button
-                      variant="outline-danger"
-                      size="sm"
-                      onClick={() => setReplaceFile(true)}
-                    >
+                    <Button variant="outline-danger" size="sm" onClick={() => setReplaceFile(true)}>
                       Replace File
                     </Button>
                   </div>
@@ -318,10 +308,12 @@ const AttachmentForm = ({ show, handleClose, attachment, handleSubmit, editMode 
 
               {replaceFile && (
                 <Form.Group className="mb-3">
-                  <Form.Label>New File <span className="text-danger">*</span></Form.Label>
+                  <Form.Label>
+                    New File <span className="text-danger">*</span>
+                  </Form.Label>
                   <div
                     className={`border rounded p-4 text-center ${dragActive ? 'border-primary bg-light' : 'border-secondary'}`}
-                    style={{ 
+                    style={{
                       borderStyle: 'dashed',
                       borderWidth: '2px',
                       cursor: 'pointer',
@@ -335,9 +327,7 @@ const AttachmentForm = ({ show, handleClose, attachment, handleSubmit, editMode 
                   >
                     <CloudUpload style={{ fontSize: '48px', color: '#6c757d', marginBottom: '10px' }} />
                     <h5 className="mb-2">Drag & drop new file here or click to browse</h5>
-                    <p className="text-muted mb-0">
-                      Allowed file types: PDF, Word, Excel, and images (Max size: 10MB)
-                    </p>
+                    <p className="text-muted mb-0">Allowed file types: PDF, Word, Excel, and images (Max size: 10MB)</p>
                     <Form.Control
                       ref={fileInputRef}
                       type="file"
@@ -373,12 +363,7 @@ const AttachmentForm = ({ show, handleClose, attachment, handleSubmit, editMode 
                       {file.name} - {(file.size / 1024).toFixed(2)} KB
                     </span>
                     {!editMode && (
-                      <Button
-                        variant="link"
-                        size="sm"
-                        className="text-danger p-0"
-                        onClick={() => removeFile(index)}
-                      >
+                      <Button variant="link" size="sm" className="text-danger p-0" onClick={() => removeFile(index)}>
                         Remove
                       </Button>
                     )}

@@ -139,8 +139,14 @@ const AssignComplaintForm = ({ show, onClose, complaintId, assignment, onSuccess
           ...payload
         });
       }
+
+      // Close modal first, then call success callback
       onClose();
-      onSuccess();
+
+      // Call onSuccess to refresh data
+      if (onSuccess) {
+        onSuccess();
+      }
     } catch (error) {
       console.error('Failed to save complaint assignment', error);
       if (error.response && error.response.data && error.response.data.errors) {
@@ -154,11 +160,20 @@ const AssignComplaintForm = ({ show, onClose, complaintId, assignment, onSuccess
   };
 
   return (
-    <Dialog open={show} onClose={onClose} maxWidth="sm" fullWidth>
+    <Dialog
+      open={show}
+      onClose={onClose}
+      maxWidth="sm"
+      fullWidth
+      disableEscapeKeyDown={saving}
+      PaperProps={{
+        sx: { pointerEvents: saving ? 'none' : 'auto' }
+      }}
+    >
       <DialogTitle>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           {assignmentId ? 'Update Assignment' : 'Add Assignment'}
-          <IconButton size="small" onClick={onClose} disabled={saving}>
+          <IconButton size="small" onClick={onClose} sx={{ opacity: saving ? 0.5 : 1 }}>
             <Close />
           </IconButton>
         </Box>
@@ -254,10 +269,10 @@ const AssignComplaintForm = ({ show, onClose, complaintId, assignment, onSuccess
       </DialogContent>
 
       <DialogActions>
-        <Button onClick={onClose} disabled={saving}>
+        <Button onClick={onClose} disabled={saving} color="inherit">
           Cancel
         </Button>
-        <Button onClick={handleSubmit} variant="contained" color="primary" disabled={saving}>
+        <Button onClick={handleSubmit} variant="contained" color="primary" disabled={saving} autoFocus>
           {saving ? (assignmentId ? 'Updating...' : 'Assigning...') : assignmentId ? 'Update' : 'Assign'}
         </Button>
       </DialogActions>

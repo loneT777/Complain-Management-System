@@ -3,14 +3,16 @@ import { Modal, Button, Form } from 'react-bootstrap';
 
 const DivisionForm = ({ show, handleClose, division, handleChange, handleSubmit, editMode }) => {
   return (
-    <Modal show={show} onHide={handleClose}>
+    <Modal show={show} onHide={handleClose} backdrop="static" keyboard={false}>
       <Modal.Header closeButton>
         <Modal.Title>{editMode ? 'Edit Division' : 'Add Division'}</Modal.Title>
       </Modal.Header>
       <Modal.Body>
         <Form onSubmit={handleSubmit}>
           <Form.Group className="mb-3">
-            <Form.Label>Division Name <span className="text-danger">*</span></Form.Label>
+            <Form.Label>
+              Division Name <span className="text-danger">*</span>
+            </Form.Label>
             <Form.Control
               type="text"
               name="name"
@@ -23,13 +25,7 @@ const DivisionForm = ({ show, handleClose, division, handleChange, handleSubmit,
 
           <Form.Group className="mb-3">
             <Form.Label>Code</Form.Label>
-            <Form.Control
-              type="text"
-              name="code"
-              value={division.code}
-              onChange={handleChange}
-              placeholder="Enter code"
-            />
+            <Form.Control type="text" name="code" value={division.code} onChange={handleChange} placeholder="Enter code" />
           </Form.Group>
 
           <Form.Group className="mb-3">
