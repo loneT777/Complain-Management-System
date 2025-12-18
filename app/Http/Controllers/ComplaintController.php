@@ -160,9 +160,22 @@ class ComplaintController extends Controller
             // Get original values for logging
             $originalValues = $complaint->getOriginal();
             
-            $complaint->update($request->all());
+            // Update complaint fields, excluding category_ids which is handled separately
+            $complaint->update($request->except(['category_ids', 'complainant_name', 'complainant_phone']));
 
-            // Sync categories if provided
+            // Handle complainant fields separately if provided
+            if ($request->has('complainant_name')) {
+                $complaint->complainant_name = $request->complainant_name;
+            }
+            if ($request->has('complainant_phone')) {
+                $complaint->complainant_phone = $request->complainant_phone;
+            }
+            if ($request->has('remark')) {
+                $complaint->remark = $request->remark;
+            }
+            $complaint->save();
+
+            // Sync categories if provided - this will add new ones and remove old ones
             if ($request->has('category_ids')) {
                 $complaint->categories()->sync($request->category_ids);
             }

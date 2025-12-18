@@ -21,6 +21,7 @@ class Person extends Model
         'address',
         'type',
         'designation',
-        'remark'
+        'remark',
+        'division_id'
     ];
 }
