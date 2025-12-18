@@ -41,6 +41,10 @@ Route::get('/public/complaints', [ComplaintController::class, 'publicIndex']);
 // Complaints CRUD - temporarily public for development
 Route::apiResource('complaints', ComplaintController::class);
 Route::apiResource('persons', PersonController::class);
+Route::apiResource('categories', CategoryController::class);
+
+// Get complaints belonging to a specific category
+Route::get('/categories/{categoryId}/complaints', [CategoryController::class, 'getComplaints']);
 
 // -----------------
 // Protected Routes
@@ -54,7 +58,6 @@ Route::middleware('auth:sanctum')->group(function () {
     // These lines handle index, store, show, update, and destroy for each resource.
     Route::apiResource('roles', RoleController::class);
     Route::apiResource('divisions', DivisionController::class);
-    Route::apiResource('categories', CategoryController::class);
     Route::apiResource('messages', MessageController::class);
     Route::apiResource('attachments', AttachmentController::class);
     Route::apiResource('complaint_assignments', ComplaintAssignmentController::class);
@@ -64,9 +67,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Get messages related to a specific complaint
     Route::get('/complaints/{complaintId}/messages', [MessageController::class, 'getByComplaint']);
-
-    // Get complaints belonging to a specific category
-    Route::get('/categories/{categoryId}/complaints', [CategoryController::class, 'getComplaints']);
 
     // Get attachments for a specific complaint
     Route::get('/complaints/{complaintId}/attachments', [AttachmentController::class, 'getAttachmentsByComplaint']);

@@ -1,8 +1,8 @@
 import React from 'react';
 import { Table, Button, Spinner, Badge } from 'react-bootstrap';
-import { Edit, Delete, Message } from '@mui/icons-material';
+import { Edit } from '@mui/icons-material';
 
-const CategoryTable = ({ categories, divisions, loading, handleEdit, handleDelete, handleViewComplaints }) => {
+const CategoryTable = ({ categories, divisions, loading, handleEdit }) => {
   if (loading) {
     return (
       <div className="text-center py-5">
@@ -32,7 +32,7 @@ const CategoryTable = ({ categories, divisions, loading, handleEdit, handleDelet
             <th>Category Name</th>
             <th>Description</th>
             <th>Division</th>
-            <th className="text-center" style={{ width: '200px' }}>Actions</th>
+            <th className="text-center" style={{ width: '100px' }}>Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -53,30 +53,12 @@ const CategoryTable = ({ categories, divisions, loading, handleEdit, handleDelet
                 <td>{getDivisionName(category.division_id)}</td>
                 <td className="text-center">
                   <Button
-                    variant="info"
-                    size="sm"
-                    className="me-1"
-                    onClick={() => handleViewComplaints && handleViewComplaints(category.id)}
-                    title="View Complaints"
-                  >
-                    <Message fontSize="small" />
-                  </Button>
-                  <Button
                     variant="primary"
                     size="sm"
-                    className="me-1"
                     onClick={() => handleEdit(category)}
                     title="Edit"
                   >
                     <Edit fontSize="small" />
-                  </Button>
-                  <Button
-                    variant="danger"
-                    size="sm"
-                    onClick={() => handleDelete(category.id)}
-                    title="Delete"
-                  >
-                    <Delete fontSize="small" />
                   </Button>
                 </td>
               </tr>

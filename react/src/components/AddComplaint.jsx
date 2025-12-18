@@ -28,8 +28,11 @@ const AddComplaint = () => {
   const fetchCategories = async () => {
     try {
       const response = await axios.get('http://localhost:8000/api/public/categories');
+      console.log('Categories response:', response.data);
       if (response.data.success) {
         setCategories(response.data.data);
+      } else if (Array.isArray(response.data)) {
+        setCategories(response.data);
       }
     } catch (error) {
       console.error('Error fetching categories:', error);
@@ -169,13 +172,14 @@ const AddComplaint = () => {
                       </div>
 
                       <Form.Select
+                        value=""
                         onChange={(e) => {
-                          if (e.target.value) {
-                            handleCategoryToggle(parseInt(e.target.value));
-                            e.target.value = '';
+                          const value = e.target.value;
+                          console.log('Selected category:', value);
+                          if (value) {
+                            handleCategoryToggle(parseInt(value));
                           }
                         }}
-                        defaultValue=""
                       >
                         <option value="">Select a category to add...</option>
                         {categories
