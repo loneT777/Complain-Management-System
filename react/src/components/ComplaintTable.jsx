@@ -2,7 +2,7 @@ import React from 'react';
 import { Table, Spinner, Button } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 
-const ComplaintTable = ({ complaints, loading }) => {
+const ComplaintTable = ({ complaints, loading, assignments = {}, onAssign }) => {
   const navigate = useNavigate();
 
   const handleView = (complaint) => {
@@ -30,11 +30,11 @@ const ComplaintTable = ({ complaints, loading }) => {
   // If you want priority badges later, keep this placeholder
   const getPriorityBadge = (priority) => {
     const variants = {
-      high: "danger",
-      medium: "warning",
-      low: "success"
+      high: 'danger',
+      medium: 'warning',
+      low: 'success'
     };
-    return variants[priority] || "secondary";
+    return variants[priority] || 'secondary';
   };
 
   return (
@@ -57,35 +57,37 @@ const ComplaintTable = ({ complaints, loading }) => {
             <td>{complaint.description}</td>
 
             <td>
-              {complaint.assignments && complaint.assignments.length > 0 ? (
-                <div>
-                  <div><strong>Division:</strong> {complaint.assignments[0].assignee_division?.name || '-'}</div>
-                  <div><strong>Person:</strong> {complaint.assignments[0].assignee_user?.full_name || '-'}</div>
-                  <div><strong>Due:</strong> {complaint.assignments[0].due_at
-                    ? new Date(complaint.assignments[0].due_at).toLocaleDateString()
-                    : '-'}</div>
-                  <div><strong>Remark:</strong> {complaint.assignments[0].remark || '-'}</div>
-                </div>
-              ) : (
-                <div className="text-muted">No Assignment</div>
-              )}
+              {(() => {
+                const assignment = complaint.assignments?.[0] || assignments[complaint.id];
+                if (assignment) {
+                  return (
+                    <div>
+                      <div>
+                        <strong>Division:</strong> {assignment.assignee_division?.name || '-'}
+                      </div>
+                      <div>
+                        <strong>Person:</strong> {assignment.assignee_user?.full_name || '-'}
+                      </div>
+                      <div>
+                        <strong>Due:</strong> {assignment.due_at ? new Date(assignment.due_at).toLocaleDateString() : '-'}
+                      </div>
+                      <div>
+                        <strong>Remark:</strong> {assignment.remark || '-'}
+                      </div>
+                    </div>
+                  );
+                }
+                return <div className="text-muted">No Assignment</div>;
+              })()}
             </td>
 
             <td>
               <div className="d-flex flex-column gap-2">
-                <Button
-                  style={{ backgroundColor: '#05443cff', borderColor: '#05443cff' }}
-                  size="sm"
-                  onClick={() => handleView(complaint)}
-                >
+                <Button style={{ backgroundColor: '#05443cff', borderColor: '#05443cff' }} size="sm" onClick={() => handleView(complaint)}>
                   View
                 </Button>
 
-                <Button
-                  style={{ backgroundColor: '#011e1bff', borderColor: '#011e1bff' }}
-                  size="sm"
-                  onClick={() => alert('Assign functionality to be implemented')}
-                >
+                <Button style={{ backgroundColor: '#011e1bff', borderColor: '#011e1bff' }} size="sm" onClick={() => onAssign(complaint)}>
                   Assign
                 </Button>
               </div>

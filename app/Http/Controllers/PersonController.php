@@ -19,7 +19,7 @@ class PersonController extends Controller
 
         // Filter by division_id if provided
         if ($request->has('division_id') && $request->division_id) {
-            $query->where('designation', '!=', null); // Simple filter - you can enhance this
+            $query->where('division_id', $request->division_id);
         }
 
         $people = $query->get();

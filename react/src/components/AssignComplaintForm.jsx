@@ -18,7 +18,7 @@ import {
 import { Close } from '@mui/icons-material';
 import axios from 'axios';
 
-const AssignComplaintForm = ({ show, handleClose, complaint, onSaved }) => {
+const AssignComplaintForm = ({ show, onClose, complaintId, assignment, onSuccess }) => {
   const [divisions, setDivisions] = useState([]);
   const [persons, setPersons] = useState([]);
   const [formData, setFormData] = useState({
@@ -27,40 +27,61 @@ const AssignComplaintForm = ({ show, handleClose, complaint, onSaved }) => {
     due_at: '',
     remark: ''
   });
+  const [assignmentId, setAssignmentId] = useState(null);
   const [loadingPersons, setLoadingPersons] = useState(false);
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
-    if (show) {
+    if (show && complaintId) {
+      setAssignmentId(assignment?.id || null);
+      if (assignment) {
+        // Edit mode - pre-populate with assignment data
+        setFormData({
+          assignee_division_id: assignment.assignee_division_id || '',
+          assignee_user_id: assignment.assignee_user_id || '',
+          due_at: assignment.due_at ? assignment.due_at.split('T')[0] : '',
+          remark: assignment.remark || ''
+        });
+        if (assignment.assignee_division_id) {
+          fetchPersonsByDivision(assignment.assignee_division_id);
+        }
+      } else {
+        // Create mode - reset form
+        setFormData({
+          assignee_division_id: '',
+          assignee_user_id: '',
+          due_at: '',
+          remark: ''
+        });
+        setPersons([]);
+      }
       fetchDivisions();
-      fetchAllPersons();
-      setFormData({
-        assignee_division_id: '',
-        assignee_user_id: '',
-        due_at: '',
-        remark: ''
-      });
       setErrors({});
     }
-  }, [show]);
+  }, [show, complaintId, assignment]);
 
   const fetchDivisions = async () => {
     try {
       const response = await axios.get('http://localhost:8000/api/divisions');
-      setDivisions(response.data.data || []);
+      setDivisions(response.data.data || response.data || []);
     } catch (error) {
       console.error('Failed to fetch divisions', error);
     }
   };
 
-  const fetchAllPersons = async () => {
+  const fetchPersonsByDivision = async (divisionId) => {
+    if (!divisionId) {
+      setPersons([]);
+      return;
+    }
     setLoadingPersons(true);
     try {
-      const response = await axios.get('http://localhost:8000/api/persons');
+      // Fetch persons for the selected division
+      const response = await axios.get(`http://localhost:8000/api/persons?division_id=${divisionId}`);
       setPersons(response.data || []);
     } catch (error) {
-      console.error('Failed to fetch persons', error);
+      console.error('Failed to fetch persons for division', error);
       setPersons([]);
     } finally {
       setLoadingPersons(false);
@@ -74,6 +95,9 @@ const AssignComplaintForm = ({ show, handleClose, complaint, onSaved }) => {
       assignee_division_id: divisionId,
       assignee_user_id: ''
     });
+
+    // Fetch persons for selected division
+    fetchPersonsByDivision(divisionId);
 
     if (errors.assignee_division_id) {
       setErrors({ ...errors, assignee_division_id: null });
@@ -98,14 +122,25 @@ const AssignComplaintForm = ({ show, handleClose, complaint, onSaved }) => {
     setErrors({});
 
     try {
-      await axios.post('http://localhost:8000/api/complaint_assignments', {
-        complaint_id: complaint.id,
+      const payload = {
         assignee_division_id: formData.assignee_division_id || null,
         assignee_user_id: formData.assignee_user_id || null,
         due_at: formData.due_at || null,
         remark: formData.remark || ''
-      });
-      onSaved();
+      };
+
+      if (assignmentId) {
+        // Update existing assignment
+        await axios.put(`http://localhost:8000/api/complaint_assignments/${assignmentId}`, payload);
+      } else {
+        // Create new assignment
+        await axios.post('http://localhost:8000/api/complaint_assignments', {
+          complaint_id: complaintId,
+          ...payload
+        });
+      }
+      onClose();
+      onSuccess();
     } catch (error) {
       console.error('Failed to save complaint assignment', error);
       if (error.response && error.response.data && error.response.data.errors) {
@@ -119,11 +154,11 @@ const AssignComplaintForm = ({ show, handleClose, complaint, onSaved }) => {
   };
 
   return (
-    <Dialog open={show} onClose={handleClose} maxWidth="sm" fullWidth>
+    <Dialog open={show} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          Assign Complaint: {complaint?.reference_no}
-          <IconButton size="small" onClick={handleClose} disabled={saving}>
+          {assignmentId ? 'Update Assignment' : 'Add Assignment'}
+          <IconButton size="small" onClick={onClose} disabled={saving}>
             <Close />
           </IconButton>
         </Box>
@@ -154,20 +189,31 @@ const AssignComplaintForm = ({ show, handleClose, complaint, onSaved }) => {
             )}
           </FormControl>
 
-          <FormControl fullWidth size="small" error={!!errors.assignee_user_id} disabled={saving || loadingPersons}>
+          <FormControl fullWidth size="small" error={!!errors.assignee_user_id} disabled={saving || !formData.assignee_division_id}>
             <InputLabel>Person</InputLabel>
             <Select name="assignee_user_id" value={formData.assignee_user_id} onChange={handleChange} label="Person">
               <MenuItem value="">-- Select Person --</MenuItem>
-              {persons.map((person) => (
-                <MenuItem key={person.id} value={person.id}>
-                  {person.full_name}
-                </MenuItem>
-              ))}
+              {formData.assignee_division_id &&
+                persons.map((person) => (
+                  <MenuItem key={person.id} value={person.id}>
+                    {person.full_name} ({person.designation || 'Officer'})
+                  </MenuItem>
+                ))}
             </Select>
-            {loadingPersons && (
+            {!formData.assignee_division_id && (
+              <Typography variant="caption" color="textSecondary" sx={{ mt: 0.5 }}>
+                Please select a division first
+              </Typography>
+            )}
+            {loadingPersons && formData.assignee_division_id && (
               <Box sx={{ display: 'flex', justifyContent: 'center', mt: 1 }}>
                 <CircularProgress size={20} />
               </Box>
+            )}
+            {formData.assignee_division_id && persons.length === 0 && !loadingPersons && (
+              <Typography variant="caption" color="textSecondary" sx={{ mt: 0.5 }}>
+                No officers available for this division
+              </Typography>
             )}
             {errors.assignee_user_id && (
               <Typography variant="caption" color="error">
@@ -208,11 +254,11 @@ const AssignComplaintForm = ({ show, handleClose, complaint, onSaved }) => {
       </DialogContent>
 
       <DialogActions>
-        <Button onClick={handleClose} disabled={saving}>
+        <Button onClick={onClose} disabled={saving}>
           Cancel
         </Button>
         <Button onClick={handleSubmit} variant="contained" color="primary" disabled={saving}>
-          {saving ? 'Assigning...' : 'Assign'}
+          {saving ? (assignmentId ? 'Updating...' : 'Assigning...') : assignmentId ? 'Update' : 'Assign'}
         </Button>
       </DialogActions>
     </Dialog>

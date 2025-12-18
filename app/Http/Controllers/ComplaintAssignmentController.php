@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\ComplaintAssignment;
+use App\Models\Complaint;
+use App\Models\ComplaintLog;
+use App\Models\Status;
 use Illuminate\Http\Request;
 
 class ComplaintAssignmentController extends Controller
@@ -24,7 +27,8 @@ class ComplaintAssignmentController extends Controller
                 'complaint',
                 'assigneeDivision',
                 'assigneeUser',
-                'assignerUser'
+                'assignerUser',
+                'lastStatus'
             ])->get();
 
             return response()->json($assignments);
@@ -47,6 +51,9 @@ class ComplaintAssignmentController extends Controller
             'remark' => 'nullable|string',
         ]);
 
+        // Get the 'assigned' status
+        $assignedStatus = Status::where('code', 'assigned')->first();
+
         // Create assignment
         $assignment = ComplaintAssignment::create([
             'complaint_id' => $request->input('complaint_id'),
@@ -55,16 +62,37 @@ class ComplaintAssignmentController extends Controller
             'due_at' => $request->input('due_at'),
             'remark' => $request->input('remark'),
             'assigner_user_id' => 1, // TODO: Replace with auth()->user()->person_id
-            'last_status_id' => null, // Set to null for now
+            'last_status_id' => $assignedStatus ? $assignedStatus->id : null,
         ]);
+
+        // Update the complaint's last_status_id to 'assigned'
+        $complaint = Complaint::findOrFail($request->input('complaint_id'));
+        if ($assignedStatus) {
+            $complaint->update(['last_status_id' => $assignedStatus->id]);
+        }
 
         // Load relationships for response
         $assignment->load([
             'complaint',
             'assigneeDivision',
             'assigneeUser',
-            'assignerUser'
+            'assignerUser',
+            'lastStatus'
         ]);
+
+        // Log the assignment
+        try {
+            ComplaintLog::create([
+                'complaint_id' => $assignment->complaint_id,
+                'complaint_assignment_id' => $assignment->id,
+                'status_id' => $assignedStatus ? $assignedStatus->id : null,
+                'action' => 'Assigned',
+                'remark' => 'Assigned to ' . ($assignment->assigneeUser?->full_name ?? 'Division: ' . $assignment->assigneeDivision?->name)
+            ]);
+        } catch (\Exception $e) {
+            // Log creation failed but assignment is successful
+            \Log::error('Failed to log assignment: ' . $e->getMessage());
+        }
 
         return response()->json($assignment, 201);
     }
@@ -78,7 +106,8 @@ class ComplaintAssignmentController extends Controller
             'complaint',
             'assigneeDivision',
             'assigneeUser',
-            'assignerUser'
+            'assignerUser',
+            'lastStatus'
         ])->findOrFail($id);
 
         return response()->json($assignment);
@@ -104,12 +133,34 @@ class ComplaintAssignmentController extends Controller
             'remark'
         ]));
 
+        // Update complaint status to 'assigned' if it's being reassigned
+        $assignedStatus = Status::where('code', 'assigned')->first();
+        if ($assignedStatus) {
+            $complaint = Complaint::findOrFail($assignment->complaint_id);
+            $complaint->update(['last_status_id' => $assignedStatus->id]);
+        }
+
         $assignment->load([
             'complaint',
             'assigneeDivision',
             'assigneeUser',
-            'assignerUser'
+            'assignerUser',
+            'lastStatus'
         ]);
+
+        // Log the reassignment/update
+        try {
+            ComplaintLog::create([
+                'complaint_id' => $assignment->complaint_id,
+                'complaint_assignment_id' => $assignment->id,
+                'status_id' => $request->has('status_id') ? $request->input('status_id') : $assignment->last_status_id,
+                'action' => 'Updated Assignment',
+                'remark' => 'Assignment updated - Assigned to ' . ($assignment->assigneeUser?->full_name ?? 'Division: ' . $assignment->assigneeDivision?->name) . ($request->input('remark') ? '. Remark: ' . $request->input('remark') : '')
+            ]);
+        } catch (\Exception $e) {
+            // Log creation failed but assignment update is successful
+            \Log::error('Failed to log assignment update: ' . $e->getMessage());
+        }
 
         return response()->json($assignment);
     }

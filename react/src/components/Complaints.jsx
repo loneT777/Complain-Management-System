@@ -88,21 +88,13 @@ const Complaints = () => {
           <Card>
             <Card.Header className="d-flex justify-content-between align-items-center">
               <h4 className="mb-0">Complaints</h4>
-              <Button
-                style={{ backgroundColor: '#3a4c4a', borderColor: '#3a4c4a' }}
-                onClick={() => navigate('/add-complaint')}
-              >
+              <Button style={{ backgroundColor: '#3a4c4a', borderColor: '#3a4c4a' }} onClick={() => navigate('/add-complaint')}>
                 <Add className="me-1" /> Add New Complaint
               </Button>
             </Card.Header>
 
             <Card.Body>
-              <ComplaintTable
-                complaints={complaints}
-                loading={loading}
-                assignments={assignments}
-                onAssignClick={handleAssignClick}
-              />
+              <ComplaintTable complaints={complaints} loading={loading} assignments={assignments} onAssign={handleAssignClick} />
             </Card.Body>
           </Card>
         </Col>
