@@ -43,7 +43,7 @@ const MainRoutes = {
         { path: 'complaint/:id', element: <Complaint /> },
         { path: 'edit-complaint/:id', element: <EditComplaint /> },
         { path: 'complaint-assignments', element: <ComplaintAssignments /> },
-        
+
         // Other entity routes
         { path: 'persons', element: <Persons /> },
         { path: 'divisions', element: <Divisions /> },

@@ -1012,12 +1012,12 @@ const Complaint = () => {
                               alignItems: 'center'
                             }}
                           >
-                            <div title={JSON.stringify(assign.assigneeDivision)}>
+                            <div>
                               {assign.assigneeDivision?.name ||
                                 assign.division?.name ||
                                 (assign.assignee_division_id ? `Division #${assign.assignee_division_id}` : '-')}
                             </div>
-                            <div title={JSON.stringify(assign.assigneeUser)}>
+                            <div>
                               {assign.assigneeUser?.full_name ||
                                 assign.assignee?.full_name ||
                                 (assign.assignee_user_id ? `Person #${assign.assignee_user_id}` : '-')}

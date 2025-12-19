@@ -10,6 +10,7 @@ use App\Http\Controllers\MessageController;
 use App\Http\Controllers\ComplaintController;
 use App\Http\Controllers\AttachmentController;
 use App\Http\Controllers\ComplaintAssignmentController;
+use App\Http\Controllers\ComplaintLogController;
 
 /*
 |--------------------------------------------------------------------------
@@ -47,9 +48,12 @@ Route::apiResource('divisions', DivisionController::class);
 Route::apiResource('persons', PersonController::class);
 Route::apiResource('attachments', AttachmentController::class);
 Route::apiResource('complaint_assignments', ComplaintAssignmentController::class);
+Route::apiResource('complaint_logs', ComplaintLogController::class);
 
 // Complaint-specific routes
 Route::get('/complaints/{complaintId}/messages', [MessageController::class, 'getByComplaint']);
+Route::get('/complaints/{complaintId}/assignments', [ComplaintAssignmentController::class, 'getByComplaint']);
+Route::get('/complaints/{complaintId}/logs', [ComplaintLogController::class, 'getByComplaint']);
 Route::get('/categories/{categoryId}/complaints', [CategoryController::class, 'getComplaints']);
 Route::get('/complaints/{complaintId}/attachments', [AttachmentController::class, 'getAttachmentsByComplaint']);
 
