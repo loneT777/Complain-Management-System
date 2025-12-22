@@ -11,6 +11,7 @@ use App\Http\Controllers\ComplaintController;
 use App\Http\Controllers\AttachmentController;
 use App\Http\Controllers\ComplaintAssignmentController;
 use App\Http\Controllers\ComplaintLogController;
+use App\Http\Controllers\Auth\AuthController;
 
 /*
 |--------------------------------------------------------------------------
@@ -29,7 +30,12 @@ Route::get('/sanctum/csrf-cookie', function (Request $request) {
 });
 
 // -----------------
-// Public Routes
+// PUBLIC AUTH ROUTES
+// -----------------
+Route::post('/login', [AuthController::class, 'login']);
+
+// -----------------
+// PUBLIC ROUTES
 // -----------------
 // These routes are accessible without authentication and are intended for public data access.
 
@@ -72,7 +78,15 @@ Route::get('/attachments/{id}/download', [AttachmentController::class, 'download
 Route::get('/attachments/{id}/view', [AttachmentController::class, 'view']);
 
 // -----------------
-// Protected Routes - TEMPORARILY DISABLED FOR DEVELOPMENT
+// PROTECTED ROUTES - With Authentication
+// -----------------
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/me', [AuthController::class, 'me']);
+});
+
+// -----------------
+// PROTECTED ROUTES - TEMPORARILY DISABLED FOR DEVELOPMENT
 // -----------------
 // Uncomment this section when you're ready to enable authentication
 

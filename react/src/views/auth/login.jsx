@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, Row, Col, Button, Form, InputGroup } from "react-bootstrap";
 import FeatherIcon from "feather-icons-react";
@@ -10,58 +10,24 @@ import logoDark from "assets/images/logo-dark.png";
 
 export default function SignIn1() {
   const navigate = useNavigate();
-  const recaptchaRef = useRef(null);
 
   const [credentials, setCredentials] = useState({
-    email: "",
+    username: "",
     password: "",
     remember: false,
   });
 
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [recaptchaToken, setRecaptchaToken] = useState("");
 
   // Load reCAPTCHA
   useEffect(() => {
-    window.recaptchaCallback = (token) => {
-      console.log("reCAPTCHA token received:", token);
-      setRecaptchaToken(token);
-    };
-
-    const script = document.createElement("script");
-    script.src =
-      "https://www.google.com/recaptcha/api.js?onload=recaptchaOnload&render=explicit";
-    script.async = true;
-    script.defer = true;
-
-    window.recaptchaOnload = () => {
-      console.log("reCAPTCHA script loaded");
-      if (recaptchaRef.current) {
-        window.grecaptcha.render(recaptchaRef.current, {
-          sitekey: "6Ldt1-krAAAAAAGublqaAcDyykXmRAV1r9C0RCwe",
-          callback: "recaptchaCallback",
-          "expired-callback": "recaptchaExpired",
-        });
-      }
-    };
-
-    window.recaptchaExpired = () => {
-      console.log("reCAPTCHA expired");
-      setRecaptchaToken("");
-    };
-
-    document.head.appendChild(script);
-
-    return () => {
-      delete window.recaptchaCallback;
-      delete window.recaptchaOnload;
-      delete window.recaptchaExpired;
-      if (document.head.contains(script)) {
-        document.head.removeChild(script);
-      }
-    };
-  }, []);
+    // Check if already logged in
+    const token = localStorage.getItem('authToken');
+    if (token) {
+      navigate('/dashboard/summary');
+    }
+  }, [navigate]);
 
   const professionalStyles = `
     .auth-wrapper {
@@ -87,70 +53,39 @@ export default function SignIn1() {
     e.preventDefault();
     setError("");
 
-    console.log("Form submitted with recaptchaToken:", recaptchaToken);
-
-    if (!credentials.email && !credentials.password) {
-      setError("Please enter both email and password.");
+    if (!credentials.username && !credentials.password) {
+      setError("Please enter both username and password.");
       return;
     }
-    if (!credentials.email) {
-      setError("Please enter your email.");
+    if (!credentials.username) {
+      setError("Please enter your username.");
       return;
     }
     if (!credentials.password) {
       setError("Please enter your password.");
       return;
     }
-    if (!recaptchaToken) {
-      setError("Please complete the reCAPTCHA verification.");
-      return;
-    }
 
     setIsLoading(true);
     try {
-      const payload = {
-        email: credentials.email,
+      const { data } = await axios.post(`${API_URL}/login`, {
+        username: credentials.username,
         password: credentials.password,
-        remember: credentials.remember,
-        recaptcha: recaptchaToken,
-      };
-
-      console.log("Sending payload:", payload);
-
-      const { data } = await axios.post(`${API_URL}/login`, payload, {
-        headers: { "Content-Type": "application/json" },
       });
 
-      console.log("Login response:", data);
+      const { token, user } = data;
 
-      const { role, token, user } = data;
+      localStorage.setItem('authToken', token);
+      localStorage.setItem('user', JSON.stringify(user));
 
-      localStorage.setItem("authToken", token);
-      localStorage.setItem("userRole", role);
-      localStorage.setItem("permissions", JSON.stringify(data.permissions || []));
-
-      if (user) {
-        localStorage.setItem(
-          "login_session_id",
-          JSON.stringify(data.login_session_id)
-        );
-        localStorage.setItem("user", JSON.stringify(user));
-      }
-
-      navigate("/dashboard/summary");
+      navigate('/dashboard/summary');
     } catch (err) {
-      console.error("Login error:", err);
-      console.error("Error response:", err.response?.data);
-
+      console.error('Login error:', err);
+      
       if (err.response?.data?.message) {
         setError(err.response.data.message);
       } else {
-        setError("An error occurred during login. Please try again.");
-      }
-
-      if (window.grecaptcha) {
-        window.grecaptcha.reset();
-        setRecaptchaToken("");
+        setError('Invalid username or password. Please try again.');
       }
     } finally {
       setIsLoading(false);
@@ -243,10 +178,10 @@ export default function SignIn1() {
                         <FeatherIcon icon="mail" size={18} />
                       </InputGroup.Text>
                       <Form.Control
-                        type="email"
-                        name="email"
-                        placeholder="Enter your email address"
-                        value={credentials.email}
+                        type="text"
+                        name="username"
+                        placeholder="Enter your username"
+                        value={credentials.username}
                         onChange={handleChange}
                         disabled={isLoading}
                         style={{
@@ -285,14 +220,6 @@ export default function SignIn1() {
                         }}
                       />
                     </InputGroup>
-
-                    <div className="form-group mb-3">
-                      <div
-                        ref={recaptchaRef}
-                        className="g-recaptcha"
-                        style={{ margin: "8px 0" }}
-                      ></div>
-                    </div>
 
                     <Button
                       type="submit"

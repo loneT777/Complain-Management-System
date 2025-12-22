@@ -36,41 +36,23 @@ export default function NavRight() {
   // Get user data from localStorage on component mount
   useEffect(() => {
     const userData = localStorage.getItem('user');
-    const userRole = localStorage.getItem('userRole');
     
     if (userData) {
       try {
         const parsedUser = JSON.parse(userData);
         setUser({
-          name: `${parsedUser.first_name || ''} ${parsedUser.last_name || ''}`.trim() || 'User',
-          role: userRole || 'User'
+          name: parsedUser.full_name || 'User',
+          role: 'User'
         });
       } catch (e) {
         console.error('Error parsing user data:', e);
-        // Still set the role even if user data parsing fails
-        if (userRole) {
-          setUser(prev => ({
-            ...prev,
-            role: userRole
-          }));
-        }
       }
-    } else if (userRole) {
-      // If no user data but role exists, update just the role
-      setUser(prev => ({
-        ...prev,
-        role: userRole
-      }));
     }
 
     // Set axios default headers if token exists
     const token = localStorage.getItem('authToken');
-    const loginSessionId = localStorage.getItem('login_session_id');
     if (token) {
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      if (loginSessionId) {
-        axios.defaults.headers.common['X-Login-Session-ID'] = loginSessionId;
-      }
     }
   }, []);
 
@@ -80,57 +62,32 @@ export default function NavRight() {
     
     try {
       const token = localStorage.getItem('authToken');
-      const loginSessionId = localStorage.getItem('login_session_id');
-      
-      if (token) {
-        // Include login session ID in headers
-        const headers = {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        };
         
-        if (loginSessionId) {
-          headers['X-Login-Session-ID'] = loginSessionId;
-        }
+        if (token) {
+          const headers = {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          };
 
-        // Call the logout API with Bearer token
-        await axios.post(
-          `${API_URL}/logout`,
-          {},
-          { headers }
-        );
+          await axios.post(`${API_URL}/logout`, {}, { headers });
+        }
+      } catch (error) {
+        console.error('Logout API error:', error);
+      } finally {
+        // Clear localStorage
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('userRole');
+        localStorage.removeItem('user');
+        localStorage.removeItem('login_session_id');
+        localStorage.removeItem('userPermissions');
+        
+        delete axios.defaults.headers.common['Authorization'];
+        delete axios.defaults.headers.common['X-Login-Session-ID'];
+        
+        // Redirect to login page
+        navigate('/login');
+        setIsLoggingOut(false);
       }
-      
-      // Clear localStorage
-      localStorage.removeItem('authToken');
-      localStorage.removeItem('userRole');
-      localStorage.removeItem('user');
-      localStorage.removeItem('login_session_id');
-      localStorage.removeItem('userPermissions');
-      
-      // Clear axios default headers
-      delete axios.defaults.headers.common['Authorization'];
-      delete axios.defaults.headers.common['X-Login-Session-ID'];
-      
-      // Redirect to login page
-      navigate('/login');
-    } catch (error) {
-      console.error('Logout error:', error);
-      
-      // Even if API fails, clear localStorage and redirect
-      localStorage.removeItem('authToken');
-      localStorage.removeItem('userRole');
-      localStorage.removeItem('user');
-      localStorage.removeItem('login_session_id');
-      localStorage.removeItem('userPermissions');
-      
-      delete axios.defaults.headers.common['Authorization'];
-      delete axios.defaults.headers.common['X-Login-Session-ID'];
-      
-      navigate('/login');
-    } finally {
-      setIsLoggingOut(false);
-    }
   };
 
   return (

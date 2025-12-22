@@ -2,7 +2,9 @@ import { lazy } from 'react';
 import { Navigate } from 'react-router-dom';
 import AdminLayout from 'layouts/AdminLayout';
 import GuestLayout from 'layouts/GuestLayout';
+import ProtectedRoute from '../components/ProtectedRoute';
 
+const Login = lazy(() => import('../views/auth/login'));
 const DashboardSales = lazy(() => import('../views/dashboard/DashSales/index'));
 const Complaints = lazy(() => import('../components/Complaints'));
 const Complaint = lazy(() => import('../components/Complaint'));
@@ -19,14 +21,26 @@ const ComplaintAssignments = lazy(() => import('../components/ComplaintAssignmen
 const MainRoutes = {
   path: '/',
   children: [
+    // ROOT REDIRECT
     {
       index: true,
       element: <Navigate to="/dashboard/summary" replace />
     },
+
+    // LOGIN ROUTE (PUBLIC)
+    {
+      path: 'login',
+      element: <Login />
+    },
+
     // PROTECTED ADMIN ROUTES
     {
       path: '/',
-      element: <AdminLayout />,
+      element: (
+        <ProtectedRoute>
+          <AdminLayout />
+        </ProtectedRoute>
+      ),
       children: [
         {
           path: 'dashboard/summary',
