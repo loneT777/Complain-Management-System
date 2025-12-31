@@ -8,7 +8,7 @@ import Navigation from './Navigation';
 import useWindowSize from 'hooks/useWindowSize';
 import { ConfigContext } from 'contexts/ConfigContext';
 import * as actionType from 'store/actions';
-import Loader from 'components/Loader/Loader';
+import Loader from 'components/common/Loader/Loader';
 
 export default function AdminLayout() {
   const windowSize = useWindowSize();

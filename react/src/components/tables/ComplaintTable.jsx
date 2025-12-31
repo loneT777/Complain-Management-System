@@ -1,6 +1,7 @@
 import React from 'react';
 import { Table, Spinner, Button } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
+import { Visibility, Assignment } from '@mui/icons-material';
 
 const ComplaintTable = ({ complaints, loading }) => {
   const navigate = useNavigate();
@@ -78,7 +79,7 @@ const ComplaintTable = ({ complaints, loading }) => {
                   size="sm"
                   onClick={() => handleView(complaint)}
                 >
-                  View
+                  <Visibility fontSize="small" className="me-1" /> View
                 </Button>
 
                 <Button
@@ -86,7 +87,7 @@ const ComplaintTable = ({ complaints, loading }) => {
                   size="sm"
                   onClick={() => alert('Assign functionality to be implemented')}
                 >
-                  Assign
+                  <Assignment fontSize="small" className="me-1" /> Assign
                 </Button>
               </div>
             </td>

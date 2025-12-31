@@ -4,17 +4,17 @@ import AdminLayout from 'layouts/AdminLayout';
 import GuestLayout from 'layouts/GuestLayout';
 
 const DashboardSales = lazy(() => import('../views/dashboard/DashSales/index'));
-const Complaints = lazy(() => import('../components/Complaints'));
-const Complaint = lazy(() => import('../components/Complaint'));
-const AddComplaint = lazy(() => import('../components/AddComplaint'));
-const EditComplaint = lazy(() => import('../components/EditComplaint'));
-const Persons = lazy(() => import('../components/Persons'));
-const Divisions = lazy(() => import('../components/Divisions'));
-const Roles = lazy(() => import('../components/Roles'));
-const Categories = lazy(() => import('../components/Categories'));
-const Messages = lazy(() => import('../components/Messages'));
-const Attachments = lazy(() => import('../components/Attachments'));
-const ComplaintAssignments = lazy(() => import('../components/ComplaintAssignments'));
+const Complaints = lazy(() => import('../components/complaints/Complaints'));
+const Complaint = lazy(() => import('../components/complaints/Complaint'));
+const AddComplaint = lazy(() => import('../components/complaints/AddComplaint'));
+const EditComplaint = lazy(() => import('../components/complaints/EditComplaint'));
+const Persons = lazy(() => import('../views/management/Persons'));
+const Divisions = lazy(() => import('../views/management/Divisions'));
+const Roles = lazy(() => import('../views/management/Roles'));
+const Categories = lazy(() => import('../views/management/Categories'));
+const Messages = lazy(() => import('../views/management/Messages'));
+const Attachments = lazy(() => import('../components/complaints/Attachments'));
+const ComplaintAssignments = lazy(() => import('../components/complaints/ComplaintAssignments'));
 
 const MainRoutes = {
   path: '/',

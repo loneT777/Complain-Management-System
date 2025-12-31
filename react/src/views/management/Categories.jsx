@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Alert } from 'react-bootstrap';
 import { Add } from '@mui/icons-material';
-import CategoryTable from './CategoryTable';
-import CategoryForm from './CategoryForm';
+import CategoryTable from '../../components/tables/CategoryTable';
+import CategoryForm from '../../components/forms/CategoryForm';
 import axios from 'axios';
 
 const Categories = () => {

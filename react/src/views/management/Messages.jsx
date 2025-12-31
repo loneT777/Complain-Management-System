@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Form, Alert, Pagination, InputGroup } from 'react-bootstrap';
 import { Add, Search } from '@mui/icons-material';
-import MessageTable from './MessageTable';
-import MessageForm from './MessageForm';
-import MessageThread from './MessageThread';
+import MessageTable from '../../components/tables/MessageTable';
+import MessageForm from '../../components/forms/MessageForm';
+import MessageThread from '../../components/complaints/MessageThread';
 import axios from 'axios';
 import { useSearchParams } from 'react-router-dom';
 

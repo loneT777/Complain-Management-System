@@ -39,6 +39,7 @@ Route::get('/public/messages', [MessageController::class, 'publicIndex']);
 Route::get('/public/complaints', [ComplaintController::class, 'publicIndex']);
 
 // Temporarily make all routes public for development/testing
+Route::get('/complaints/statistics', [ComplaintController::class, 'statistics']);
 Route::apiResource('messages', MessageController::class);
 Route::apiResource('complaints', ComplaintController::class);
 Route::apiResource('categories', CategoryController::class);

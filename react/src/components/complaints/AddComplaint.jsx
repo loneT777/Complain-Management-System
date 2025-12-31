@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Form, Badge } from 'react-bootstrap';
-import { ArrowBack, Save, Close, AttachFile } from '@mui/icons-material';
+import { ArrowBack, Save, Close, AttachFile, Title as TitleIcon, Description, Category, Person, Lock, Phone, Notes, Flag, ContactPhone } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
@@ -106,7 +106,7 @@ const AddComplaint = () => {
                   <Col md={12} className="mb-3">
                     <Form.Group>
                       <Form.Label>
-                        Title <span className="text-danger">*</span>
+                        <TitleIcon fontSize="small" className="me-1" /> Title <span className="text-danger">*</span>
                       </Form.Label>
                       <Form.Control
                         type="text"
@@ -123,7 +123,7 @@ const AddComplaint = () => {
                   <Col md={12} className="mb-3">
                     <Form.Group>
                       <Form.Label>
-                        Description <span className="text-danger">*</span>
+                        <Description fontSize="small" className="me-1" /> Description <span className="text-danger">*</span>
                       </Form.Label>
                       <Form.Control
                         as="textarea"
@@ -140,7 +140,7 @@ const AddComplaint = () => {
                   {/* Categories */}
                   <Col md={12} className="mb-3">
                     <Form.Group>
-                      <Form.Label>Categories</Form.Label>
+                      <Form.Label><Category fontSize="small" className="me-1" /> Categories</Form.Label>
 
                       <div className="mb-2">
                         {selectedCategories.length > 0 ? (
@@ -201,7 +201,7 @@ const AddComplaint = () => {
                   {/* Complainant Name */}
                   <Col md={6} className="mb-3">
                     <Form.Group>
-                      <Form.Label>Complainant Name</Form.Label>
+                      <Form.Label><Person fontSize="small" className="me-1" /> Complainant Name</Form.Label>
                       <Form.Control
                         type="text"
                         name="complainant_name"
@@ -214,7 +214,7 @@ const AddComplaint = () => {
                   {/* Confidentiality */}
                   <Col md={6} className="mb-3">
                     <Form.Group>
-                      <Form.Label>Confidentiality Level</Form.Label>
+                      <Form.Label><Lock fontSize="small" className="me-1" /> Confidentiality Level</Form.Label>
                       <Form.Select
                         name="confidentiality_level"
                         value={complaint.confidentiality_level}
@@ -232,7 +232,7 @@ const AddComplaint = () => {
                   <Col md={12} className="mb-3">
                     <Form.Group>
                       <Form.Label>
-                        Attachments{' '}
+                        <AttachFile fontSize="small" className="me-1" /> Attachments{' '}
                       </Form.Label>
                       <div
                         className="border rounded p-4 text-center"
@@ -251,7 +251,7 @@ const AddComplaint = () => {
                   {/* Remarks */}
                   <Col md={12} className="mb-3">
                     <Form.Group>
-                      <Form.Label>Remarks</Form.Label>
+                      <Form.Label><Notes fontSize="small" className="me-1" /> Remarks</Form.Label>
                       <Form.Control
                         as="textarea"
                         rows={3}

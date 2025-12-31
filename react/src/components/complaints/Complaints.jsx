@@ -3,7 +3,7 @@ import { Container, Row, Col, Card, Button } from 'react-bootstrap';
 import { Add } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import ComplaintTable from './ComplaintTable';
+import ComplaintTable from '../tables/ComplaintTable';
 import AssignComplaintForm from './AssignComplaintForm';
 
 const Complaints = () => {

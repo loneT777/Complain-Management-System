@@ -3,8 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Card, Button, Badge, Spinner, Tab, Tabs, Alert, Table, Form, InputGroup } from 'react-bootstrap';
 import { ArrowBack, Edit, AttachFile, Message, Person, AccessTime, Download, Visibility, Add, Delete, Reply, Send, MoreVert, AccountCircle } from '@mui/icons-material';
 import axios from 'axios';
-import MessageForm from './MessageForm';
-import AttachmentForm from './AttachmentForm';
+import MessageForm from '../forms/MessageForm';
+import AttachmentForm from '../forms/AttachmentForm';
 import './Complaint.css';
 
 const Complaint = () => {

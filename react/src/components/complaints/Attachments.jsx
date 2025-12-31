@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Form, Alert, Pagination, InputGroup, Modal } from 'react-bootstrap';
 import { Add, Search, CloudUpload } from '@mui/icons-material';
-import AttachmentTable from './AttachmentTable';
-import AttachmentForm from './AttachmentForm';
+import AttachmentTable from '../tables/AttachmentTable';
+import AttachmentForm from '../forms/AttachmentForm';
 import axios from 'axios';
 
 const Attachments = () => {

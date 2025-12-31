@@ -151,4 +151,49 @@ class ComplaintController extends Controller
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
+
+    /**
+     * Get statistics for dashboard
+     */
+    public function statistics()
+    {
+        try {
+            $totalComplaints = Complaint::count();
+            
+            // Get status breakdown
+            $statusBreakdown = Complaint::with('lastStatus')
+                ->get()
+                ->groupBy(function($complaint) {
+                    return $complaint->lastStatus ? $complaint->lastStatus->name : 'No Status';
+                })
+                ->map(function($group) {
+                    return $group->count();
+                });
+
+            // Get priority level breakdown
+            $priorityBreakdown = Complaint::selectRaw('priority_level, COUNT(*) as count')
+                ->groupBy('priority_level')
+                ->get()
+                ->pluck('count', 'priority_level');
+
+            // Recent complaints (last 7 days)
+            $recentComplaints = Complaint::where('created_at', '>=', now()->subDays(7))->count();
+
+            // Get total by channel
+            $channelBreakdown = Complaint::selectRaw('channel, COUNT(*) as count')
+                ->groupBy('channel')
+                ->get()
+                ->pluck('count', 'channel');
+
+            return response()->json([
+                'total_complaints' => $totalComplaints,
+                'status_breakdown' => $statusBreakdown,
+                'priority_breakdown' => $priorityBreakdown,
+                'recent_complaints' => $recentComplaints,
+                'channel_breakdown' => $channelBreakdown,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
 }

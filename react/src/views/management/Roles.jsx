@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button } from 'react-bootstrap';
 import { Add } from '@mui/icons-material';
 import axios from 'axios';
-import RoleTable from './RoleTable';
-import RoleForm from './RoleForm';
+import RoleTable from '../../components/tables/RoleTable';
+import RoleForm from '../../components/forms/RoleForm';
 
 const Roles = () => {
   const [roles, setRoles] = useState([]);

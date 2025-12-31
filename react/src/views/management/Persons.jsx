@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button } from 'react-bootstrap';
 import { Add } from '@mui/icons-material';
 import axios from 'axios';
-import PersonTable from './PersonTable';
-import PersonForm from './PersonForm';
+import PersonTable from '../../components/tables/PersonTable';
+import PersonForm from '../../components/forms/PersonForm';
 
 const Persons = () => {
   const [persons, setPersons] = useState([]);
