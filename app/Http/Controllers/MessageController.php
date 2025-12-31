@@ -101,8 +101,13 @@ class MessageController extends Controller
         }
 
         try {
-            $message = Message::create($request->all());
-            $message->load(['complaint', 'parent']);
+            $data = $request->all();
+            
+            // Get authenticated user's ID, or use default user_id from request, or default to 1
+            $data['user_id'] = auth()->id() ?? $request->input('user_id', 1);
+            
+            $message = Message::create($data);
+            $message->load(['complaint', 'parent', 'user']);
 
             return response()->json([
                 'success' => true,
