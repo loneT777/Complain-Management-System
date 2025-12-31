@@ -10,7 +10,7 @@ class Status extends Model
     use HasFactory;
 
     protected $table = 'status';
-    protected $fillable = ['name', 'code'];
+    protected $fillable = ['name', 'code', 'description'];
     
     // Disable timestamps if the status table doesn't have created_at/updated_at columns
     public $timestamps = false;

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Container, Row, Col, Card, Button, Badge, Spinner, Tab, Tabs, Alert, Table, Form, InputGroup } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Badge, Spinner, Tab, Tabs, Alert, Table, Form, InputGroup, Modal } from 'react-bootstrap';
 import { ArrowBack, Edit, AttachFile, Message, Person, AccessTime, Download, Visibility, Add, Delete, Reply, Send, MoreVert, AccountCircle } from '@mui/icons-material';
 import axios from 'axios';
 import MessageForm from '../forms/MessageForm';
@@ -47,11 +47,17 @@ const Complaint = () => {
   });
   const [editingAttachment, setEditingAttachment] = useState(false);
 
+  // Status and Priority modal states
+  const [statuses, setStatuses] = useState([]);
+  const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [updatingPriority, setUpdatingPriority] = useState(false);
+
   useEffect(() => {
     if (id) {
       fetchComplaint();
       fetchMessages();
       fetchAttachments();
+      fetchStatuses();
     }
   }, [id]);
 
@@ -95,6 +101,15 @@ const Complaint = () => {
     }
   };
 
+  const fetchStatuses = async () => {
+    try {
+      const response = await axios.get('http://localhost:8000/api/statuses');
+      setStatuses(Array.isArray(response.data) ? response.data : response.data.data || []);
+    } catch (error) {
+      console.error('Error fetching statuses:', error);
+    }
+  };
+
   const handleDownload = async (attachmentId, fileName) => {
     try {
       const response = await axios.get(`http://localhost:8000/api/attachments/${attachmentId}/download`, {
@@ -118,6 +133,47 @@ const Complaint = () => {
 
   const handleEdit = () => {
     navigate(`/edit-complaint/${id}`);
+  };
+
+  // Status and Priority handlers
+  const handleUpdateStatus = async (statusId) => {
+    if (!statusId) {
+      alert('Invalid status');
+      return;
+    }
+
+    setUpdatingStatus(true);
+    try {
+      await axios.put(`http://localhost:8000/api/complaints/${id}/status`, {
+        status_id: statusId
+      });
+      fetchComplaint();
+    } catch (error) {
+      console.error('Error updating status:', error);
+      alert('Failed to update status');
+    } finally {
+      setUpdatingStatus(false);
+    }
+  };
+
+  const handleUpdatePriority = async (priorityLevel) => {
+    if (!priorityLevel) {
+      alert('Please select a priority level');
+      return;
+    }
+
+    setUpdatingPriority(true);
+    try {
+      await axios.put(`http://localhost:8000/api/complaints/${id}/priority`, {
+        priority_level: priorityLevel
+      });
+      fetchComplaint();
+    } catch (error) {
+      console.error('Error updating priority:', error);
+      alert('Failed to update priority');
+    } finally {
+      setUpdatingPriority(false);
+    }
   };
 
   // Message handlers
@@ -420,7 +476,51 @@ const Complaint = () => {
                 </Col>
                 <Col md={6}>
                   <strong>Status:</strong>
-                  <p>{complaint.last_status?.name || 'New'}</p>
+                  <div className="mt-2">
+                    <Form.Check
+                      type="radio"
+                      id="status-pending"
+                      name="status"
+                      label="Pending"
+                      value="Pending"
+                      checked={!complaint.last_status?.name || complaint.last_status?.name === 'Pending'}
+                      disabled
+                      className="mb-1"
+                    />
+                    <Form.Check
+                      type="radio"
+                      id="status-assigned"
+                      name="status"
+                      label="Assigned"
+                      value="Assigned"
+                      checked={complaint.last_status?.name === 'Assigned'}
+                      disabled={!complaint.last_status?.name || complaint.last_status?.name === 'Pending' ? false : complaint.last_status?.name !== 'Assigned'}
+                      onChange={() => handleUpdateStatus(statuses.find(s => s.name === 'Assigned')?.id)}
+                      className="mb-1"
+                    />
+                    <Form.Check
+                      type="radio"
+                      id="status-ongoing"
+                      name="status"
+                      label="Ongoing"
+                      value="Ongoing"
+                      checked={complaint.last_status?.name === 'Ongoing'}
+                      disabled={complaint.last_status?.name !== 'Assigned' && complaint.last_status?.name !== 'Ongoing'}
+                      onChange={() => handleUpdateStatus(statuses.find(s => s.name === 'Ongoing')?.id)}
+                      className="mb-1"
+                    />
+                    <Form.Check
+                      type="radio"
+                      id="status-completed"
+                      name="status"
+                      label="Completed"
+                      value="Completed"
+                      checked={complaint.last_status?.name === 'Completed'}
+                      disabled={complaint.last_status?.name !== 'Ongoing' && complaint.last_status?.name !== 'Completed'}
+                      onChange={() => handleUpdateStatus(statuses.find(s => s.name === 'Completed')?.id)}
+                      className="mb-1"
+                    />
+                  </div>
                 </Col>
               </Row>
 
@@ -437,7 +537,41 @@ const Complaint = () => {
 
               <Row className="mb-3">
                 <Col md={6}><strong>Channel:</strong><p>{complaint.channel || 'N/A'}</p></Col>
-                <Col md={6}><strong>Priority:</strong><p>{getPriorityBadge(complaint.priority_level)}</p></Col>
+                <Col md={6}>
+                  <strong>Priority:</strong>
+                  <div className="mt-2">
+                    <Form.Check
+                      type="radio"
+                      id="priority-low"
+                      name="priority"
+                      label="Low"
+                      value="low"
+                      checked={complaint.priority_level === 'low'}
+                      onChange={() => handleUpdatePriority('low')}
+                      className="mb-1"
+                    />
+                    <Form.Check
+                      type="radio"
+                      id="priority-medium"
+                      name="priority"
+                      label="Medium"
+                      value="medium"
+                      checked={complaint.priority_level === 'medium'}
+                      onChange={() => handleUpdatePriority('medium')}
+                      className="mb-1"
+                    />
+                    <Form.Check
+                      type="radio"
+                      id="priority-high"
+                      name="priority"
+                      label="High"
+                      value="high"
+                      checked={complaint.priority_level === 'high'}
+                      onChange={() => handleUpdatePriority('high')}
+                      className="mb-1"
+                    />
+                  </div>
+                </Col>
               </Row>
 
               <Row className="mb-3">

@@ -9,6 +9,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\ComplaintController;
 use App\Http\Controllers\AttachmentController;
+use App\Http\Controllers\StatusController;
 use App\Http\Controllers\ComplaintAssignmentController;
 
 /*
@@ -48,6 +49,12 @@ Route::apiResource('divisions', DivisionController::class);
 Route::apiResource('persons', PersonController::class);
 Route::apiResource('attachments', AttachmentController::class);
 Route::apiResource('complaint_assignments', ComplaintAssignmentController::class);
+Route::apiResource('statuses', StatusController::class);
+
+// Status update routes for complaints
+Route::put('/complaints/{complaintId}/status', [StatusController::class, 'updateComplaintStatus']);
+Route::put('/complaints/{complaintId}/priority', [StatusController::class, 'updateComplaintPriority']);
+Route::put('/complaints/{complaintId}/status-and-priority', [StatusController::class, 'updateComplaintStatusAndPriority']);
 
 // Complaint-specific routes
 Route::get('/complaints/{complaintId}/messages', [MessageController::class, 'getByComplaint']);
