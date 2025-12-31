@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\ComplaintAssignment;
+use App\Models\Complaint;
+use App\Models\Status;
 use Illuminate\Http\Request;
 
 class ComplaintAssignmentController extends Controller
@@ -57,6 +59,20 @@ class ComplaintAssignmentController extends Controller
             'assigner_user_id' => 1, // TODO: Replace with auth()->user()->person_id
             'last_status_id' => null, // Set to null for now
         ]);
+
+        // Automatically update complaint status to "Assigned"
+        try {
+            $complaint = Complaint::findOrFail($request->input('complaint_id'));
+            $assignedStatus = Status::where('name', 'Assigned')->first();
+            
+            if ($assignedStatus) {
+                $complaint->last_status_id = $assignedStatus->id;
+                $complaint->save();
+            }
+        } catch (\Exception $e) {
+            \Log::error('Error updating complaint status: ' . $e->getMessage());
+            // Continue anyway, assignment was created
+        }
 
         // Load relationships for response
         $assignment->load([
