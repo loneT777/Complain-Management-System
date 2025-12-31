@@ -12,6 +12,7 @@ class Message extends Model
     protected $fillable = [
         'parent_id',
         'session_id',
+        'user_id',
         'complaint_id',
         'message',
         'type'
@@ -43,6 +44,14 @@ class Message extends Model
     public function complaint()
     {
         return $this->belongsTo(Complaint::class);
+    }
+
+    /**
+     * Get the user who created this message
+     */
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 
     /**

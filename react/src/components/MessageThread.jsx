@@ -127,18 +127,21 @@ const MessageThread = ({ complaintId, onBack }) => {
   };
 
   const renderMessage = (message, depth = 0) => {
+    const userName = message.user ? message.user.username : 'System';
+    const userInitial = userName.charAt(0).toUpperCase();
+    
     return (
       <Box key={message.id} sx={{ ml: depth * 4, mb: 2 }}>
         <Paper elevation={1} sx={{ p: 2, backgroundColor: depth > 0 ? '#f9f9f9' : 'white' }}>
           <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
             <Avatar sx={{ bgcolor: depth > 0 ? 'secondary.main' : 'primary.main' }}>
-              {depth > 0 ? 'R' : 'M'}
+              {userInitial}
             </Avatar>
             <Box sx={{ flex: 1 }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
                 <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
                   <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-                    {depth > 0 ? 'Reply' : 'Message'} #{message.id}
+                    {userName}
                   </Typography>
                   {message.type && (
                     <Chip 

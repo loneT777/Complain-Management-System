@@ -12,6 +12,7 @@ use App\Http\Controllers\AttachmentController;
 use App\Http\Controllers\ComplaintAssignmentController;
 use App\Http\Controllers\ComplaintLogController;
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\TestController;
 
 /*
 |--------------------------------------------------------------------------
@@ -33,6 +34,16 @@ Route::get('/sanctum/csrf-cookie', function (Request $request) {
 // PUBLIC AUTH ROUTES
 // -----------------
 Route::post('/login', [AuthController::class, 'login']);
+
+// -----------------
+// TEST ROUTES - For Development/Testing Only
+// -----------------
+Route::prefix('test')->group(function () {
+    Route::get('/hash-password', [TestController::class, 'hashPassword']);
+    Route::get('/check-password', [TestController::class, 'checkPassword']);
+    Route::get('/verify-user', [TestController::class, 'verifyUser']);
+    Route::get('/list-users', [TestController::class, 'listUsers']);
+});
 
 // -----------------
 // PUBLIC ROUTES
