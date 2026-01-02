@@ -163,7 +163,7 @@ class StatusController extends Controller
     public function updateComplaintPriority(Request $request, $complaintId)
     {
         $validator = Validator::make($request->all(), [
-            'priority_level' => 'required|string|in:low,medium,high',
+            'priority_level' => 'required|string|in:low,middle,urgent,very_urgent',
             'remark' => 'nullable|string',
         ]);
 
@@ -206,7 +206,7 @@ class StatusController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'status_id' => 'nullable|exists:status,id',
-            'priority_level' => 'nullable|string|in:low,medium,high',
+            'priority_level' => 'nullable|string|in:low,middle,urgent,very_urgent',
             'remark' => 'nullable|string',
         ]);
 

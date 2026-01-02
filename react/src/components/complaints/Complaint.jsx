@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Card, Button, Badge, Spinner, Tab, Tabs, Alert, Table, Form, InputGroup, Modal } from 'react-bootstrap';
-import { ArrowBack, Edit, AttachFile, Message, Person, AccessTime, Download, Visibility, Add, Delete, Reply, Send, MoreVert, AccountCircle } from '@mui/icons-material';
+import { ArrowBack, Edit, AttachFile, Message, Person, AccessTime, Download, Visibility, Add, Delete, Reply, Send, MoreVert, AccountCircle, Description, History, Assignment, Info } from '@mui/icons-material';
 import axios from 'axios';
 import MessageForm from '../forms/MessageForm';
 import AttachmentForm from '../forms/AttachmentForm';
@@ -467,7 +467,7 @@ const Complaint = () => {
         <Col lg={8}>
           {/* Complaint Info */}
           <Card className="mb-4">
-            <Card.Header><h5 className="mb-0">Complaint Information</h5></Card.Header>
+            <Card.Header><h5 className="mb-0"><Info fontSize="small" className="me-2" style={{ verticalAlign: 'middle' }} />Complaint Information</h5></Card.Header>
             <Card.Body>
               <Row className="mb-3">
                 <Col md={6}>
@@ -500,23 +500,12 @@ const Complaint = () => {
                     />
                     <Form.Check
                       type="radio"
-                      id="status-ongoing"
-                      name="status"
-                      label="Ongoing"
-                      value="Ongoing"
-                      checked={complaint.last_status?.name === 'Ongoing'}
-                      disabled={complaint.last_status?.name !== 'Assigned' && complaint.last_status?.name !== 'Ongoing'}
-                      onChange={() => handleUpdateStatus(statuses.find(s => s.name === 'Ongoing')?.id)}
-                      className="mb-1"
-                    />
-                    <Form.Check
-                      type="radio"
                       id="status-completed"
                       name="status"
                       label="Completed"
                       value="Completed"
                       checked={complaint.last_status?.name === 'Completed'}
-                      disabled={complaint.last_status?.name !== 'Ongoing' && complaint.last_status?.name !== 'Completed'}
+                      disabled={complaint.last_status?.name !== 'Assigned' && complaint.last_status?.name !== 'Completed'}
                       onChange={() => handleUpdateStatus(statuses.find(s => s.name === 'Completed')?.id)}
                       className="mb-1"
                     />
@@ -552,22 +541,32 @@ const Complaint = () => {
                     />
                     <Form.Check
                       type="radio"
-                      id="priority-medium"
+                      id="priority-middle"
                       name="priority"
-                      label="Medium"
-                      value="medium"
-                      checked={complaint.priority_level === 'medium'}
-                      onChange={() => handleUpdatePriority('medium')}
+                      label="Middle"
+                      value="middle"
+                      checked={complaint.priority_level === 'middle'}
+                      onChange={() => handleUpdatePriority('middle')}
                       className="mb-1"
                     />
                     <Form.Check
                       type="radio"
-                      id="priority-high"
+                      id="priority-urgent"
                       name="priority"
-                      label="High"
-                      value="high"
-                      checked={complaint.priority_level === 'high'}
-                      onChange={() => handleUpdatePriority('high')}
+                      label="Urgent"
+                      value="urgent"
+                      checked={complaint.priority_level === 'urgent'}
+                      onChange={() => handleUpdatePriority('urgent')}
+                      className="mb-1"
+                    />
+                    <Form.Check
+                      type="radio"
+                      id="priority-very-urgent"
+                      name="priority"
+                      label="Very Urgent"
+                      value="very_urgent"
+                      checked={complaint.priority_level === 'very_urgent'}
+                      onChange={() => handleUpdatePriority('very_urgent')}
                       className="mb-1"
                     />
                   </div>
@@ -922,7 +921,7 @@ const Complaint = () => {
                 <Tab eventKey="attachments" title={`Attachments (${attachments.length})`}>
                   <div className="py-4">
                     <div className="d-flex justify-content-between align-items-center mb-3">
-                      <h5 className="mb-0">Complaint Attachments</h5>
+                      <h5 className="mb-0"><AttachFile fontSize="small" className="me-2" style={{ verticalAlign: 'middle' }} />Complaint Attachments</h5>
                       <Button
                         variant="primary"
                         size="sm"
@@ -1016,7 +1015,7 @@ const Complaint = () => {
                   </div>
                 </Tab>
 
-                <Tab eventKey="logs" title="Activity Log">
+                <Tab eventKey="logs" title={<><History fontSize="small" className="me-1" style={{ verticalAlign: 'middle' }} />Activity Log</>}>
                   <div className="py-4 text-muted text-center">
                     {complaint.logs?.length ? (
                       complaint.logs.map(log => (
@@ -1038,7 +1037,7 @@ const Complaint = () => {
         <Col lg={4}>
           {/* Complainant */}
           <Card className="mb-4">
-            <Card.Header><h5 className="mb-0">Complainant Details</h5></Card.Header>
+            <Card.Header><h5 className="mb-0"><Person fontSize="small" className="me-2" style={{ verticalAlign: 'middle' }} />Complainant Details</h5></Card.Header>
             <Card.Body>
               <p><strong>Name:</strong> {complaint.complainant_name || complaint.complainant?.full_name || 'N/A'}</p>
               <p><strong>Phone:</strong> {complaint.complainant_phone || complaint.complainant?.office_phone || 'N/A'}</p>
@@ -1050,7 +1049,7 @@ const Complaint = () => {
 
           {/* Timeline */}
           <Card className="mb-4">
-            <Card.Header><h5 className="mb-0">Timeline</h5></Card.Header>
+            <Card.Header><h5 className="mb-0"><History fontSize="small" className="me-2" style={{ verticalAlign: 'middle' }} />Timeline</h5></Card.Header>
             <Card.Body>
               <p><strong>Created:</strong> {new Date(complaint.created_at).toLocaleString()}</p>
               {complaint.received_at && <p><strong>Received:</strong> {new Date(complaint.received_at).toLocaleString()}</p>}
@@ -1065,7 +1064,7 @@ const Complaint = () => {
           {/* Assignments */}
           {complaint.assignments?.length > 0 && (
             <Card className="mb-4">
-              <Card.Header><h5 className="mb-0">Assignments</h5></Card.Header>
+              <Card.Header><h5 className="mb-0"><Assignment fontSize="small" className="me-2" style={{ verticalAlign: 'middle' }} />Assignments</h5></Card.Header>
               <Card.Body>
                 {complaint.assignments.map(assign => (
                   <div key={assign.id} className="mb-3 pb-3 border-bottom">
