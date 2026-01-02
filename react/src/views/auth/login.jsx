@@ -1,23 +1,23 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { Card, Row, Col, Button, Form, InputGroup } from "react-bootstrap";
-import FeatherIcon from "feather-icons-react";
-import axios from "axios";
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Card, Row, Col, Button, Form, InputGroup } from 'react-bootstrap';
+import FeatherIcon from 'feather-icons-react';
+import axios from 'axios';
 const API_URL = import.meta.env.VITE_API_URL;
 
 // assets
-import logoDark from "assets/images/logo-dark.png";
+import logoDark from 'assets/images/logo-dark.png';
 
 export default function SignIn1() {
   const navigate = useNavigate();
 
   const [credentials, setCredentials] = useState({
-    username: "",
-    password: "",
-    remember: false,
+    username: '',
+    password: '',
+    remember: false
   });
 
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   // Load reCAPTCHA
@@ -45,24 +45,24 @@ export default function SignIn1() {
     const { name, value, type, checked } = e.target;
     setCredentials({
       ...credentials,
-      [name]: type === "checkbox" ? checked : value,
+      [name]: type === 'checkbox' ? checked : value
     });
   };
 
   const checkLogin = async (e) => {
     e.preventDefault();
-    setError("");
+    setError('');
 
     if (!credentials.username && !credentials.password) {
-      setError("Please enter both username and password.");
+      setError('Please enter both username and password.');
       return;
     }
     if (!credentials.username) {
-      setError("Please enter your username.");
+      setError('Please enter your username.');
       return;
     }
     if (!credentials.password) {
-      setError("Please enter your password.");
+      setError('Please enter your password.');
       return;
     }
 
@@ -70,18 +70,19 @@ export default function SignIn1() {
     try {
       const { data } = await axios.post(`${API_URL}/login`, {
         username: credentials.username,
-        password: credentials.password,
+        password: credentials.password
       });
 
-      const { token, user } = data;
+      const { token, user, session_id } = data;
 
       localStorage.setItem('authToken', token);
       localStorage.setItem('user', JSON.stringify(user));
+      localStorage.setItem('sessionId', session_id);
 
       navigate('/dashboard/summary');
     } catch (err) {
       console.error('Login error:', err);
-      
+
       if (err.response?.data?.message) {
         setError(err.response.data.message);
       } else {
@@ -98,25 +99,24 @@ export default function SignIn1() {
       <div
         className="auth-wrapper"
         style={{
-          background:
-            "linear-gradient(135deg, #0b1026 0%, #312e81 45%, #6366f1 100%)",
-          minHeight: "100vh",
-          position: "relative",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
+          background: 'linear-gradient(135deg, #0b1026 0%, #312e81 45%, #6366f1 100%)',
+          minHeight: '100vh',
+          position: 'relative',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
         }}
       >
         <div className="auth-content text-center">
           <Card
             className="borderless professional-card"
             style={{
-              background: "rgba(255, 255, 255, 0.98)",
-              border: "1px solid rgba(255, 255, 255, 0.2)",
-              borderRadius: "12px",
-              boxShadow: "0 8px 32px rgba(0, 0, 0, 0.3)",
-              maxWidth: "380px",
-              margin: "0 auto",
+              background: 'rgba(255, 255, 255, 0.98)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              borderRadius: '12px',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+              maxWidth: '380px',
+              margin: '0 auto'
             }}
           >
             <Row className="align-items-center text-center">
@@ -124,8 +124,8 @@ export default function SignIn1() {
                 <Card.Body
                   className="card-body"
                   style={{
-                    padding: "1.5rem 1.5rem",
-                    background: "transparent",
+                    padding: '1.5rem 1.5rem',
+                    background: 'transparent'
                   }}
                 >
                   <img
@@ -133,16 +133,16 @@ export default function SignIn1() {
                     alt="Government Logo"
                     className="img-fluid mb-3"
                     style={{
-                      maxHeight: "114px",
-                      width: "auto",
+                      maxHeight: '114px',
+                      width: 'auto'
                     }}
                   />
                   <h4
                     className="mb-3"
                     style={{
-                      color: "#312e81",
-                      fontWeight: "600",
-                      fontSize: "1.6rem",
+                      color: '#312e81',
+                      fontWeight: '600',
+                      fontSize: '1.6rem'
                     }}
                   >
                     LEAVE <br />
@@ -154,12 +154,12 @@ export default function SignIn1() {
                     <div
                       className="alert alert-danger mb-3"
                       style={{
-                        backgroundColor: "#f8d7da",
-                        borderColor: "#f5c6cb",
-                        color: "#721c24",
-                        fontSize: "0.9rem",
-                        border: "1px solid #f5c6cb",
-                        borderRadius: "6px",
+                        backgroundColor: '#f8d7da',
+                        borderColor: '#f5c6cb',
+                        color: '#721c24',
+                        fontSize: '0.9rem',
+                        border: '1px solid #f5c6cb',
+                        borderRadius: '6px'
                       }}
                     >
                       {error}
@@ -170,9 +170,9 @@ export default function SignIn1() {
                     <InputGroup className="mb-3">
                       <InputGroup.Text
                         style={{
-                          backgroundColor: "#f8f9fa",
-                          border: "1px solid #dee2e6",
-                          color: "#495057",
+                          backgroundColor: '#f8f9fa',
+                          border: '1px solid #dee2e6',
+                          color: '#495057'
                         }}
                       >
                         <FeatherIcon icon="mail" size={18} />
@@ -185,11 +185,11 @@ export default function SignIn1() {
                         onChange={handleChange}
                         disabled={isLoading}
                         style={{
-                          border: "1px solid #dee2e6",
-                          backgroundColor: "#fff",
-                          color: "#495057",
-                          fontSize: "1rem",
-                          padding: "0.65rem",
+                          border: '1px solid #dee2e6',
+                          backgroundColor: '#fff',
+                          color: '#495057',
+                          fontSize: '1rem',
+                          padding: '0.65rem'
                         }}
                       />
                     </InputGroup>
@@ -197,9 +197,9 @@ export default function SignIn1() {
                     <InputGroup className="mb-3">
                       <InputGroup.Text
                         style={{
-                          backgroundColor: "#f8f9fa",
-                          border: "1px solid #dee2e6",
-                          color: "#495057",
+                          backgroundColor: '#f8f9fa',
+                          border: '1px solid #dee2e6',
+                          color: '#495057'
                         }}
                       >
                         <FeatherIcon icon="lock" size={18} />
@@ -212,11 +212,11 @@ export default function SignIn1() {
                         onChange={handleChange}
                         disabled={isLoading}
                         style={{
-                          border: "1px solid #dee2e6",
-                          backgroundColor: "#fff",
-                          color: "#495057",
-                          fontSize: "1rem",
-                          padding: "0.65rem",
+                          border: '1px solid #dee2e6',
+                          backgroundColor: '#fff',
+                          color: '#495057',
+                          fontSize: '1rem',
+                          padding: '0.65rem'
                         }}
                       />
                     </InputGroup>
@@ -226,42 +226,34 @@ export default function SignIn1() {
                       className="btn btn-block mb-3"
                       disabled={isLoading}
                       style={{
-                        backgroundColor: "#6366f1",
-                        borderColor: "#4f46e5",
-                        color: "white",
-                        fontWeight: "500",
-                        padding: "0.65rem 1.25rem",
-                        fontSize: "0.95rem",
-                        borderRadius: "6px",
-                        width: "100%",
-                        transition: "background-color 0.2s ease",
+                        backgroundColor: '#6366f1',
+                        borderColor: '#4f46e5',
+                        color: 'white',
+                        fontWeight: '500',
+                        padding: '0.65rem 1.25rem',
+                        fontSize: '0.95rem',
+                        borderRadius: '6px',
+                        width: '100%',
+                        transition: 'background-color 0.2s ease'
                       }}
                       onMouseEnter={(e) => {
-                        if (!isLoading)
-                          e.target.style.backgroundColor = "#4f46e5";
+                        if (!isLoading) e.target.style.backgroundColor = '#4f46e5';
                       }}
                       onMouseLeave={(e) => {
-                        if (!isLoading)
-                          e.target.style.backgroundColor = "#6366f1";
+                        if (!isLoading) e.target.style.backgroundColor = '#6366f1';
                       }}
                     >
                       {isLoading ? (
                         <>
-                          <span
-                            className="spinner-border spinner-border-sm me-2"
-                            role="status"
-                          ></span>
+                          <span className="spinner-border spinner-border-sm me-2" role="status"></span>
                           <em>SIGNING IN...</em>
                         </>
                       ) : (
-                        "SIGN IN"
+                        'SIGN IN'
                       )}
                     </Button>
 
-                    <p
-                      className="text-muted mb-2"
-                      style={{ fontSize: "0.85rem" }}
-                    >
+                    <p className="text-muted mb-2" style={{ fontSize: '0.85rem' }}>
                       © PM Office | Sri Lanka
                     </p>
                   </Form>

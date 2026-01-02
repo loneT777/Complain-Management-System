@@ -12,11 +12,11 @@ class UserSeeder extends Seeder
     public function run()
     {
         $now = Carbon::now();
-        
+
         $users = [
             [
                 'role_id' => 1, // Super Admin
-                'username' => 'admin',
+                'username' => 'admin@gmail.com',
                 'password' => Hash::make('password123'),
                 'full_name' => 'Rajitha Perera',
                 'person_id' => 1,

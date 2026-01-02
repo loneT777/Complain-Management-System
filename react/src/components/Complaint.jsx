@@ -70,9 +70,10 @@ const Complaint = () => {
   const [assignments, setAssignments] = useState([]);
   const [loadingAssignments, setLoadingAssignments] = useState(false);
 
-  // Log modal states
+  // Log states
   const [showLogForm, setShowLogForm] = useState(false);
   const [editingLog, setEditingLog] = useState(null);
+  const [currentAssignmentId, setCurrentAssignmentId] = useState(null);
   const [logs, setLogs] = useState([]);
   const [loadingLogs, setLoadingLogs] = useState(false);
 
@@ -147,7 +148,9 @@ const Complaint = () => {
     setLoadingLogs(true);
     try {
       const response = await axios.get(`http://localhost:8000/api/complaints/${id}/logs`);
-      setLogs(response.data.data || response.data || []);
+      const logsData = Array.isArray(response.data) ? response.data : response.data.data || [];
+      setLogs(logsData);
+      console.log('Logs fetched:', logsData);
     } catch (error) {
       console.error('Error fetching logs:', error);
       setLogs([]);
@@ -975,71 +978,138 @@ const Complaint = () => {
                         <Spinner animation="border" size="sm" />
                       </div>
                     ) : assignments.length > 0 ? (
-                      <div
-                        style={{
-                          border: '1px solid #e0e0e0',
-                          borderRadius: '8px',
-                          overflow: 'hidden'
-                        }}
-                      >
-                        <div
-                          style={{
-                            display: 'grid',
-                            gridTemplateColumns: '200px 200px 150px 120px 100px',
-                            gap: '10px',
-                            padding: '12px 15px',
-                            backgroundColor: '#f5f5f5',
-                            fontWeight: '600',
-                            borderBottom: '2px solid #ddd'
-                          }}
-                        >
-                          <div>Division</div>
-                          <div>Officer</div>
-                          <div>Due Date</div>
-                          <div>Status</div>
-                          <div>Action</div>
-                        </div>
-
-                        {assignments.map((assign, idx) => (
-                          <div
-                            key={assign.id}
-                            style={{
-                              display: 'grid',
-                              gridTemplateColumns: '200px 200px 150px 120px 100px',
-                              gap: '10px',
-                              padding: '12px 15px',
-                              borderBottom: idx < assignments.length - 1 ? '1px solid #f0f0f0' : 'none',
-                              alignItems: 'center'
-                            }}
-                          >
-                            <div>
-                              {assign.assigneeDivision?.name ||
-                                assign.division?.name ||
-                                (assign.assignee_division_id ? `Division #${assign.assignee_division_id}` : '-')}
-                            </div>
-                            <div>
-                              {assign.assigneeUser?.full_name ||
-                                assign.assignee?.full_name ||
-                                (assign.assignee_user_id ? `Person #${assign.assignee_user_id}` : '-')}
-                            </div>
-                            <div>{assign.due_at ? new Date(assign.due_at).toLocaleDateString() : '-'}</div>
-                            <div>
-                              <Badge bg={idx === 0 ? 'success' : 'secondary'}>{idx === 0 ? 'Current' : 'Reassigned'}</Badge>
-                            </div>
-                            <div>
-                              <Button
-                                size="sm"
-                                variant="outline-primary"
-                                onClick={() => {
-                                  setEditingAssignment(assign);
-                                  setShowAssignForm(true);
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        {assignments.map((assign, idx) => {
+                          const assignmentLogs = logs.filter(
+                            (log) => log.complaint_assignment_id === assign.id && log.action !== 'Assigned'
+                          );
+                          return (
+                            <div
+                              key={assign.id}
+                              style={{
+                                border: '1px solid #e0e0e0',
+                                borderRadius: '8px',
+                                overflow: 'hidden'
+                              }}
+                            >
+                              {/* Header Row */}
+                              <div
+                                style={{
+                                  display: 'grid',
+                                  gridTemplateColumns: '1fr 1fr 110px 80px 1fr 100px',
+                                  gap: '8px',
+                                  padding: '12px 15px',
+                                  backgroundColor: '#f5f5f5',
+                                  fontWeight: '600',
+                                  borderBottom: '1px solid #ddd'
                                 }}
                               >
-                                <Edit fontSize="small" />
-                              </Button>
+                                <div>Division</div>
+                                <div>Assignee</div>
+                                <div>Due Date</div>
+                                <div>Status</div>
+                                <div>Remark</div>
+                                <div>Actions</div>
+                              </div>
+
+                              {/* Assignment Data Row */}
+                              <div
+                                style={{
+                                  display: 'grid',
+                                  gridTemplateColumns: '1fr 1fr 110px 80px 1fr 100px',
+                                  gap: '8px',
+                                  padding: '12px 15px',
+                                  backgroundColor: '#fff',
+                                  borderBottom: '1px solid #e0e0e0',
+                                  alignItems: 'center'
+                                }}
+                              >
+                                <div>
+                                  {assign.assigneeDivision?.name ||
+                                    assign.division?.name ||
+                                    (assign.assignee_division_id ? `Division #${assign.assignee_division_id}` : '-')}
+                                </div>
+                                <div>
+                                  {assign.assigneeUser?.full_name ||
+                                    assign.assignee?.full_name ||
+                                    (assign.assignee_user_id ? `Person #${assign.assignee_user_id}` : '-')}
+                                </div>
+                                <div>{assign.due_at ? new Date(assign.due_at).toLocaleDateString() : '-'}</div>
+                                <div>
+                                  <Badge bg={idx === 0 ? 'success' : 'secondary'}>{idx === 0 ? 'Current' : 'Reassigned'}</Badge>
+                                </div>
+                                <div style={{ fontSize: '0.9rem', color: '#666', fontWeight: '400' }}>{assign.remark || '-'}</div>
+                                <div style={{ display: 'flex', gap: '4px', fontSize: '0.75rem' }}>
+                                  {idx === 0 ? (
+                                    <Button
+                                      size="sm"
+                                      variant="outline-info"
+                                      style={{ padding: '3px 8px', fontSize: '0.75rem' }}
+                                      onClick={() => {
+                                        setEditingLog(null);
+                                        setCurrentAssignmentId(assign.id);
+                                        setShowLogForm(true);
+                                      }}
+                                      title="Add Log"
+                                    >
+                                      + Log
+                                    </Button>
+                                  ) : null}
+                                </div>
+                              </div>
+
+                              {/* Logs Section */}
+                              <div
+                                style={{
+                                  backgroundColor: '#f9f9f9',
+                                  padding: '12px 15px',
+                                  borderLeft: '3px solid #2196F3'
+                                }}
+                              >
+                                <div style={{ fontWeight: '600', marginBottom: '8px', fontSize: '0.9rem', color: '#333' }}>
+                                  Logs ({assignmentLogs.length})
+                                </div>
+                                {assignmentLogs.length > 0 ? (
+                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                    {assignmentLogs.map((log) => (
+                                      <div
+                                        key={log.id}
+                                        style={{
+                                          padding: '10px 12px',
+                                          backgroundColor: '#fff',
+                                          border: '1px solid #e0e0e0',
+                                          borderRadius: '4px',
+                                          fontSize: '0.85rem'
+                                        }}
+                                      >
+                                        <div
+                                          style={{
+                                            display: 'flex',
+                                            justifyContent: 'space-between',
+                                            alignItems: 'flex-start',
+                                            marginBottom: '4px'
+                                          }}
+                                        >
+                                          <div style={{ fontWeight: '600', color: '#1976D2' }}>{log.action}</div>
+                                          <div style={{ color: '#999', fontSize: '0.75rem', marginLeft: '8px', whiteSpace: 'nowrap' }}>
+                                            {new Date(log.created_at).toLocaleString()}
+                                          </div>
+                                        </div>
+                                        {log.remark && (
+                                          <div style={{ color: '#555', fontSize: '0.85rem', marginBottom: '0px' }}>{log.remark}</div>
+                                        )}
+                                      </div>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <div style={{ color: '#999', fontSize: '0.85rem', padding: '8px 0', fontStyle: 'italic' }}>
+                                    No logs yet for this assignment
+                                  </div>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     ) : (
                       <div className="text-center text-muted py-4">
@@ -1050,80 +1120,120 @@ const Complaint = () => {
                   </div>
                 </Tab>
 
-                <Tab eventKey="logs" title={`Complaint Log (${logs.length})`}>
+                <Tab eventKey="logs" title={`Complaint Log (${logs.filter((l) => l.action !== 'Assigned').length})`}>
                   <div className="py-4">
                     <div className="d-flex justify-content-between align-items-center mb-3">
                       <h5 className="mb-0">Complaint Logs</h5>
-                      <Button
-                        variant="info"
-                        size="sm"
-                        onClick={() => {
-                          setEditingLog(null);
-                          setShowLogForm(true);
-                        }}
-                      >
-                        <Add fontSize="small" className="me-1" />
-                        Add Log Entry
-                      </Button>
+                      {assignments.length > 0 ? (
+                        <Button
+                          variant="info"
+                          size="sm"
+                          onClick={() => {
+                            setEditingLog(null);
+                            setCurrentAssignmentId(assignments[0]?.id);
+                            setShowLogForm(true);
+                          }}
+                        >
+                          <Add fontSize="small" className="me-1" />
+                          Add Log Entry
+                        </Button>
+                      ) : (
+                        <Alert variant="warning" className="mb-0" style={{ fontSize: '14px' }}>
+                          📋 Please create an assignment first before adding logs
+                        </Alert>
+                      )}
                     </div>
 
                     {loadingLogs ? (
                       <div className="text-center py-4">
                         <Spinner animation="border" size="sm" />
                       </div>
-                    ) : logs.length > 0 ? (
-                      <div
-                        style={{
-                          border: '1px solid #e0e0e0',
-                          borderRadius: '8px',
-                          overflow: 'hidden'
-                        }}
-                      >
-                        <div
-                          style={{
-                            display: 'grid',
-                            gridTemplateColumns: '100px 1fr 140px',
-                            gap: '15px',
-                            padding: '12px 15px',
-                            backgroundColor: '#f5f5f5',
-                            fontWeight: '600',
-                            borderBottom: '2px solid #ddd'
-                          }}
-                        >
-                          <div>Action</div>
-                          <div>Remark</div>
-                          <div>Updated At</div>
-                        </div>
+                    ) : logs.filter((l) => l.action !== 'Assigned').length > 0 ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        {assignments.map((assign) => {
+                          const assignmentLogs = logs.filter(
+                            (log) => log.complaint_assignment_id === assign.id && log.action !== 'Assigned'
+                          );
 
-                        {logs.map((log, idx) => (
-                          <div
-                            key={log.id}
-                            style={{
-                              display: 'grid',
-                              gridTemplateColumns: '100px 1fr 140px',
-                              gap: '15px',
-                              padding: '12px 15px',
-                              borderBottom: idx < logs.length - 1 ? '1px solid #f0f0f0' : 'none',
-                              alignItems: 'flex-start'
-                            }}
-                          >
-                            <div style={{ fontWeight: '500', minWidth: '100px' }}>{log.action || '-'}</div>
+                          if (assignmentLogs.length === 0) return null;
+
+                          return (
                             <div
+                              key={assign.id}
                               style={{
-                                color: '#666',
-                                wordWrap: 'break-word',
-                                overflowWrap: 'break-word',
-                                whiteSpace: 'pre-wrap',
-                                minWidth: '0'
+                                border: '1px solid #e0e0e0',
+                                borderRadius: '8px',
+                                overflow: 'hidden'
                               }}
                             >
-                              {log.remark || '-'}
+                              {/* Assignment Header */}
+                              <div
+                                style={{
+                                  backgroundColor: '#f5f5f5',
+                                  color: '#333',
+                                  padding: '8px 12px',
+                                  fontWeight: '600',
+                                  fontSize: '0.9rem',
+                                  borderBottom: '1px solid #ddd'
+                                }}
+                              >
+                                👤 {assign.assigneeUser?.full_name || assign.assignee?.full_name || 'Unassigned'}
+                                {assign.assigneeDivision?.name && ` (${assign.assigneeDivision.name})`}
+                              </div>
+
+                              {/* Logs Grid Header */}
+                              <div
+                                style={{
+                                  display: 'grid',
+                                  gridTemplateColumns: '100px 1fr 140px',
+                                  gap: '15px',
+                                  padding: '8px 12px',
+                                  backgroundColor: '#f5f5f5',
+                                  fontWeight: '600',
+                                  fontSize: '0.85rem',
+                                  borderBottom: '1px solid #ddd'
+                                }}
+                              >
+                                <div>Action</div>
+                                <div>Remark</div>
+                                <div>Date</div>
+                              </div>
+
+                              {/* Logs Data */}
+                              {assignmentLogs.map((log, idx) => (
+                                <div
+                                  key={log.id}
+                                  style={{
+                                    display: 'grid',
+                                    gridTemplateColumns: '100px 1fr 140px',
+                                    gap: '15px',
+                                    padding: '8px 12px',
+                                    backgroundColor: '#fff',
+                                    borderBottom: idx < assignmentLogs.length - 1 ? '1px solid #f0f0f0' : 'none',
+                                    alignItems: 'flex-start'
+                                  }}
+                                >
+                                  <div style={{ fontWeight: '500', minWidth: '100px', fontSize: '0.9rem' }}>{log.action || '-'}</div>
+                                  <div
+                                    style={{
+                                      color: '#666',
+                                      wordWrap: 'break-word',
+                                      overflowWrap: 'break-word',
+                                      whiteSpace: 'pre-wrap',
+                                      minWidth: '0',
+                                      fontSize: '0.9rem'
+                                    }}
+                                  >
+                                    {log.remark || '-'}
+                                  </div>
+                                  <div style={{ fontSize: '0.8rem', color: '#999', minWidth: '140px' }}>
+                                    {new Date(log.updated_at).toLocaleString()}
+                                  </div>
+                                </div>
+                              ))}
                             </div>
-                            <div style={{ fontSize: '12px', color: '#999', minWidth: '140px' }}>
-                              {new Date(log.updated_at).toLocaleString()}
-                            </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     ) : (
                       <div className="text-center text-muted py-4">
@@ -1250,11 +1360,16 @@ const Complaint = () => {
       {/* Log Form Modal */}
       <ComplaintLogForm
         show={showLogForm}
-        onClose={() => setShowLogForm(false)}
+        onClose={() => {
+          setShowLogForm(false);
+          setCurrentAssignmentId(null);
+        }}
         complaintId={id}
+        assignmentId={currentAssignmentId}
         log={editingLog}
         onSuccess={() => {
           setShowLogForm(false);
+          setCurrentAssignmentId(null);
           fetchLogs();
         }}
       />

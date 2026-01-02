@@ -19,27 +19,27 @@ class ComplaintController extends Controller
     {
         try {
             $query = Complaint::with(['complainant', 'lastStatus']);
-            
+
             // Apply filters if provided
             if ($request->has('status_id')) {
                 $query->where('last_status_id', $request->status_id);
             }
-            
+
             if ($request->has('priority_level')) {
                 $query->where('priority_level', $request->priority_level);
             }
-            
+
             if ($request->has('date_from')) {
                 $query->whereDate('created_at', '>=', $request->date_from);
             }
-            
+
             if ($request->has('date_to')) {
                 $query->whereDate('created_at', '<=', $request->date_to);
             }
-            
+
             $complaints = $query->orderBy('created_at', 'desc')
                 ->paginate($request->input('per_page', 10));
-                
+
             return response()->json($complaints);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
@@ -73,7 +73,7 @@ class ComplaintController extends Controller
 
         try {
             DB::beginTransaction();
-            
+
             $complaint = Complaint::create(array_merge($request->except('category_ids'), [
                 'reference_no' => $referenceNo,
                 'received_at' => now(),
@@ -85,20 +85,15 @@ class ComplaintController extends Controller
                 $complaint->categories()->attach($request->category_ids);
             }
 
-            // Log complaint creation
-            ComplaintLog::create([
-                'complaint_id' => $complaint->id,
-                'action' => 'Created',
-                'remark' => 'Complaint created: ' . $complaint->title
-            ]);
-            
+            // Note: Logs are created only after complaint assignment
+            // No log created at complaint creation stage
+
             DB::commit();
-            
+
             return response()->json([
                 'message' => 'Complaint created successfully',
                 'data' => $complaint->load(['categories', 'complainant', 'lastStatus'])
             ], 201);
-            
         } catch (\Exception $e) {
             DB::rollBack();
             \Log::error('Failed to create complaint: ' . $e->getMessage());
@@ -116,16 +111,16 @@ class ComplaintController extends Controller
                 'complainant',
                 'lastStatus',
                 'categories',
-                'assignments' => function($query) {
+                'assignments' => function ($query) {
                     $query->with(['assigneeDivision', 'assigneeUser', 'lastStatus'])
-                          ->orderBy('created_at', 'desc');
+                        ->orderBy('created_at', 'desc');
                 },
-                'logs' => function($query) {
+                'logs' => function ($query) {
                     $query->with(['assignee', 'status'])
-                          ->orderBy('created_at', 'desc');
+                        ->orderBy('created_at', 'desc');
                 }
             ])->findOrFail($id);
-            
+
             return response()->json($complaint);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
@@ -159,7 +154,7 @@ class ComplaintController extends Controller
 
             // Get original values for logging
             $originalValues = $complaint->getOriginal();
-            
+
             // Update complaint fields, excluding category_ids which is handled separately
             $complaint->update($request->except(['category_ids', 'complainant_name', 'complainant_phone']));
 
@@ -180,21 +175,8 @@ class ComplaintController extends Controller
                 $complaint->categories()->sync($request->category_ids);
             }
 
-            // Log the update with details of what changed
-            $changes = [];
-            foreach ($request->all() as $key => $value) {
-                if ($key !== 'category_ids' && isset($originalValues[$key]) && $originalValues[$key] != $value) {
-                    $changes[] = "$key: {$originalValues[$key]} → $value";
-                }
-            }
-            
-            if (!empty($changes) || $request->has('category_ids')) {
-                ComplaintLog::create([
-                    'complaint_id' => $complaint->id,
-                    'action' => 'Updated',
-                    'remark' => 'Complaint updated. Changes: ' . implode(', ', $changes)
-                ]);
-            }
+            // Note: Logs are only created after complaint assignment
+            // Update logs are not created at this stage
 
             return response()->json([
                 'message' => 'Complaint updated successfully',
@@ -215,20 +197,16 @@ class ComplaintController extends Controller
     {
         try {
             DB::beginTransaction();
-            
+
             $complaint = Complaint::findOrFail($id);
-            
-            // Log the deletion before actually deleting
-            ComplaintLog::create([
-                'complaint_id' => $complaint->id,
-                'action' => 'Deleted',
-                'remark' => 'Complaint deleted: ' . $complaint->title
-            ]);
-            
+
+            // Note: No log created for deletion since logs require assignment first
+            // If complaint has assignments, their logs remain in history
+
             $complaint->delete();
-            
+
             DB::commit();
-            
+
             return response()->json(['message' => 'Complaint deleted successfully']);
         } catch (ModelNotFoundException $e) {
             DB::rollBack();

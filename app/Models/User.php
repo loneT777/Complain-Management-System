@@ -63,4 +63,23 @@ class User extends Authenticatable
     {
         return $this->hasMany(Attachment::class);
     }
+
+    /**
+     * Get all login sessions for the user
+     */
+    public function loginSessions()
+    {
+        return $this->hasMany(LoginSession::class);
+    }
+
+    /**
+     * Get the current active login session
+     */
+    public function activeSession()
+    {
+        return $this->loginSessions()
+            ->whereNull('logout_time')
+            ->latest('login_time')
+            ->first();
+    }
 }

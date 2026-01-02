@@ -6,6 +6,7 @@ use App\Models\ComplaintAssignment;
 use App\Models\Complaint;
 use App\Models\ComplaintLog;
 use App\Models\Status;
+use App\Config\PrioritySLA;
 use Illuminate\Http\Request;
 
 class ComplaintAssignmentController extends Controller
@@ -75,6 +76,26 @@ class ComplaintAssignmentController extends Controller
         } catch (\Exception $e) {
             \Log::error('Error fetching complaint assignments: ' . $e->getMessage());
             return response()->json(['error' => 'Failed to fetch assignments', 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Get complaint SLA information for assignment form
+     */
+    public function getComplaintSLA($complaintId)
+    {
+        try {
+            $complaint = Complaint::findOrFail($complaintId);
+            $slaDays = PrioritySLA::getDays($complaint->priority_level);
+
+            return response()->json([
+                'complaint_id' => $complaint->id,
+                'priority_level' => $complaint->priority_level,
+                'sla_days' => $slaDays,
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error fetching complaint SLA: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to fetch complaint SLA', 'message' => $e->getMessage()], 500);
         }
     }
 

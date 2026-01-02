@@ -12,6 +12,7 @@ use App\Http\Controllers\AttachmentController;
 use App\Http\Controllers\ComplaintAssignmentController;
 use App\Http\Controllers\ComplaintLogController;
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\TestHashController;
 
 /*
 |--------------------------------------------------------------------------
@@ -63,6 +64,13 @@ Route::get('/complaints/{complaintId}/logs', [ComplaintLogController::class, 'ge
 Route::get('/categories/{categoryId}/complaints', [CategoryController::class, 'getComplaints']);
 Route::get('/complaints/{complaintId}/attachments', [AttachmentController::class, 'getAttachmentsByComplaint']);
 
+// Complaint Assignment SLA route
+Route::get('/complaint_assignments/sla/{complaintId}', [ComplaintAssignmentController::class, 'getComplaintSLA']);
+
+// Test Hash Routes (for password hashing - REMOVE IN PRODUCTION)
+Route::get('/test/hash', [TestHashController::class, 'hashPassword']);
+Route::post('/test/verify', [TestHashController::class, 'verifyPassword']);
+
 // Public attachment routes (for development/testing)
 Route::get('/public/attachments', [AttachmentController::class, 'index']);
 Route::post('/public/attachments', [AttachmentController::class, 'store']);
@@ -83,6 +91,7 @@ Route::get('/attachments/{id}/view', [AttachmentController::class, 'view']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
+    Route::get('/login-history', [AuthController::class, 'loginHistory']);
 });
 
 // -----------------

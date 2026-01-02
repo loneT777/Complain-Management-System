@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\ComplaintLog;
+use App\Models\Complaint;
+use App\Models\ComplaintAssignment;
 use Illuminate\Http\Request;
 
 class ComplaintLogController extends Controller
@@ -40,6 +42,7 @@ class ComplaintLogController extends Controller
     {
         try {
             $logs = ComplaintLog::where('complaint_id', $complaintId)
+                ->select('id', 'complaint_id', 'complaint_assignment_id', 'status_id', 'assignee_id', 'action', 'remark', 'created_at', 'updated_at')
                 ->with(['complaint', 'assignee', 'status'])
                 ->orderBy('created_at', 'desc')
                 ->get();
@@ -58,12 +61,25 @@ class ComplaintLogController extends Controller
     {
         $request->validate([
             'complaint_id' => 'required|exists:complaints,id',
+            'complaint_assignment_id' => 'nullable|exists:complaint_assignments,id',
             'action' => 'required|string',
             'remark' => 'nullable|string',
         ]);
 
+        // Check if complaint has at least one assignment
+        $complaint = Complaint::findOrFail($request->input('complaint_id'));
+        $hasAssignment = ComplaintAssignment::where('complaint_id', $complaint->id)->exists();
+
+        if (!$hasAssignment) {
+            return response()->json([
+                'error' => 'Cannot create log for unassigned complaint',
+                'message' => 'Complaint must be assigned before logs can be created'
+            ], 422);
+        }
+
         $log = ComplaintLog::create([
             'complaint_id' => $request->input('complaint_id'),
+            'complaint_assignment_id' => $request->input('complaint_assignment_id'),
             'action' => $request->input('action'),
             'remark' => $request->input('remark'),
         ]);

@@ -36,7 +36,7 @@ export default function NavRight() {
   // Get user data from localStorage on component mount
   useEffect(() => {
     const userData = localStorage.getItem('user');
-    
+
     if (userData) {
       try {
         const parsedUser = JSON.parse(userData);
@@ -59,35 +59,36 @@ export default function NavRight() {
   const handleLogout = async (e) => {
     e.preventDefault();
     setIsLoggingOut(true);
-    
+
     try {
       const token = localStorage.getItem('authToken');
-        
-        if (token) {
-          const headers = {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          };
 
-          await axios.post(`${API_URL}/logout`, {}, { headers });
-        }
-      } catch (error) {
-        console.error('Logout API error:', error);
-      } finally {
-        // Clear localStorage
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('userRole');
-        localStorage.removeItem('user');
-        localStorage.removeItem('login_session_id');
-        localStorage.removeItem('userPermissions');
-        
-        delete axios.defaults.headers.common['Authorization'];
-        delete axios.defaults.headers.common['X-Login-Session-ID'];
-        
-        // Redirect to login page
-        navigate('/login');
-        setIsLoggingOut(false);
+      if (token) {
+        const headers = {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        };
+
+        await axios.post(`${API_URL}/logout`, {}, { headers });
       }
+    } catch (error) {
+      console.error('Logout API error:', error);
+    } finally {
+      // Clear localStorage
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('userRole');
+      localStorage.removeItem('user');
+      localStorage.removeItem('login_session_id');
+      localStorage.removeItem('sessionId');
+      localStorage.removeItem('userPermissions');
+
+      delete axios.defaults.headers.common['Authorization'];
+      delete axios.defaults.headers.common['X-Login-Session-ID'];
+
+      // Redirect to login page
+      navigate('/login');
+      setIsLoggingOut(false);
+    }
   };
 
   return (
@@ -117,12 +118,12 @@ export default function NavRight() {
               <span className="user-desc">{user.role}</span>
             </span>
           </div>
-          
-          <Link 
-            to="#" 
+
+          <Link
+            to="#"
             className="btn btn-sm d-flex align-items-center"
             onClick={handleLogout}
-            style={{ 
+            style={{
               pointerEvents: isLoggingOut ? 'none' : 'auto',
               opacity: isLoggingOut ? 0.7 : 1,
               borderRadius: '6px',
