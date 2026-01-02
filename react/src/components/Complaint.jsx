@@ -266,11 +266,12 @@ const Complaint = () => {
     if (!newComment.trim()) return;
 
     try {
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
       await axios.post('http://localhost:8000/api/messages', {
         complaint_id: parseInt(id),
         message: newComment.trim(),
         type: 'reply',
-        user_id: 1 // Default user ID - should be replaced with actual logged-in user
+        user_id: user.id || 1
       });
       setNewComment('');
       fetchMessages();
@@ -288,12 +289,13 @@ const Complaint = () => {
     if (!replyText.trim()) return;
 
     try {
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
       await axios.post('http://localhost:8000/api/messages', {
         complaint_id: parseInt(id),
         message: replyText.trim(),
         type: 'reply',
         parent_id: parentId,
-        user_id: 1 // Default user ID - should be replaced with actual logged-in user
+        user_id: user.id || 1
       });
       setReplyText('');
       setReplyingTo(null);
@@ -626,7 +628,7 @@ const Complaint = () => {
                                       <div className="d-flex justify-content-between align-items-start mb-1">
                                         <div className="d-flex align-items-center gap-2">
                                           <strong className="fb-comment-author">
-                                            {msg.sender?.full_name || msg.sender_name || 'System'}
+                                            {msg.user?.full_name || msg.user?.username || 'System'}
                                           </strong>
                                           {msg.type && (
                                             <Badge
@@ -707,9 +709,11 @@ const Complaint = () => {
                                       <Button variant="link" size="sm" className="fb-action-btn" onClick={() => setReplyingTo(msg.id)}>
                                         💬 Reply
                                       </Button>
-                                      <Button variant="link" size="sm" className="fb-action-btn" onClick={() => startEditing(msg)}>
-                                        ✏️ Edit
-                                      </Button>
+                                      {replies.length === 0 && (
+                                        <Button variant="link" size="sm" className="fb-action-btn" onClick={() => startEditing(msg)}>
+                                          ✏️ Edit
+                                        </Button>
+                                      )}
                                       <Button
                                         variant="link"
                                         size="sm"
@@ -795,7 +799,7 @@ const Complaint = () => {
                                                 <div className="flex-grow-1">
                                                   <div className="fb-comment-bubble-small">
                                                     <strong className="fb-comment-author-small">
-                                                      {reply.sender?.full_name || reply.sender_name || 'System'}
+                                                      {reply.user?.full_name || reply.user?.username || 'System'}
                                                     </strong>
                                                     <p className="mb-0" style={{ lineHeight: '1.6' }}>
                                                       {reply.message}

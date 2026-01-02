@@ -37,10 +37,12 @@ class CompleteComplaintSeeder extends Seeder
         $person = Person::first();
         if (!$person) {
             $person = Person::create([
+                'full_name' => 'Sarah Johnson',
                 'first_name' => 'Sarah',
                 'last_name' => 'Johnson',
+                'nic' => '199512345678',
                 'email' => 'sarah.johnson@company.com',
-                'phone' => '+94771234567',
+                'office_phone' => '+94771234567',
             ]);
         }
 
@@ -50,6 +52,7 @@ class CompleteComplaintSeeder extends Seeder
                 'name' => 'IT Support',
                 'code' => 'IT-SUP',
                 'description' => 'Information Technology Support Division',
+                'session_id' => 1,
             ]);
         }
 
@@ -59,13 +62,15 @@ class CompleteComplaintSeeder extends Seeder
                 'name' => 'In Progress',
                 'description' => 'Complaint is being worked on',
                 'color' => 'warning',
+                'session_id' => 1,
             ]);
         }
 
         $category = Category::first();
         if (!$category) {
             $category = Category::create([
-                'name' => 'Hardware Issues',
+                'code' => 'HW-001',
+                'category_name' => 'Hardware Issues',
                 'description' => 'Problems related to computer hardware',
             ]);
         }
@@ -84,7 +89,7 @@ class CompleteComplaintSeeder extends Seeder
             'user_received_id' => $user->id,
             'due_at' => now()->addDays(4),
             'complainant_name' => $person->first_name . ' ' . $person->last_name,
-            'complainant_phone' => $person->phone,
+            'complainant_phone' => $person->office_phone,
             'remark' => 'Urgent - affecting daily work',
             'created_at' => now()->subDays(3),
             'updated_at' => now()->subHours(2),

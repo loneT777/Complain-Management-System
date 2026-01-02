@@ -42,6 +42,7 @@ const MessageTable = ({ messages, loading, handleEdit, handleDelete, handleViewT
           <tr>
             <th>ID</th>
             <th>Complaint</th>
+            <th>User</th>
             <th>Message</th>
             <th>Type</th>
             <th>Parent ID</th>
@@ -52,7 +53,7 @@ const MessageTable = ({ messages, loading, handleEdit, handleDelete, handleViewT
         <tbody>
           {messages.length === 0 ? (
             <tr>
-              <td colSpan="7" className="text-center text-muted py-4">
+              <td colSpan="8" className="text-center text-muted py-4">
                 No messages found
               </td>
             </tr>
@@ -69,6 +70,17 @@ const MessageTable = ({ messages, loading, handleEdit, handleDelete, handleViewT
                     </div>
                   ) : (
                     '-'
+                  )}
+                </td>
+                <td>
+                  {message.user ? (
+                    <div>
+                      <strong>{message.user.username}</strong>
+                      <br />
+                      <small className="text-muted">{message.user.full_name}</small>
+                    </div>
+                  ) : (
+                    <span className="text-muted">System</span>
                   )}
                 </td>
                 <td style={{ maxWidth: '300px', overflow: 'hidden', textOverflow: 'ellipsis' }}>

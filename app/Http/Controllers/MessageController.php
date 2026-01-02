@@ -18,7 +18,7 @@ class MessageController extends Controller
             $perPage = $request->input('per_page', 10);
             $search = $request->input('search', '');
 
-            $query = Message::with(['complaint', 'parent']);
+            $query = Message::with(['complaint', 'parent', 'user']);
 
             if ($search) {
                 $query->where(function ($q) use ($search) {
@@ -60,7 +60,7 @@ class MessageController extends Controller
     public function publicIndex()
     {
         try {
-            $messages = Message::with(['complaint', 'parent'])->orderBy('created_at', 'desc')->get();
+            $messages = Message::with(['complaint', 'parent', 'user'])->orderBy('created_at', 'desc')->get();
             return response()->json([
                 'success' => true,
                 'data' => $messages
@@ -101,8 +101,13 @@ class MessageController extends Controller
         }
 
         try {
-            $message = Message::create($request->all());
-            $message->load(['complaint', 'parent']);
+            $data = $request->all();
+            
+            // Get authenticated user's ID, or use default user_id from request, or default to 1
+            $data['user_id'] = auth()->id() ?? $request->input('user_id', 1);
+            
+            $message = Message::create($data);
+            $message->load(['complaint', 'parent', 'user']);
 
             return response()->json([
                 'success' => true,
@@ -124,7 +129,7 @@ class MessageController extends Controller
     public function show($id)
     {
         try {
-            $message = Message::with(['complaint', 'parent', 'replies'])->findOrFail($id);
+            $message = Message::with(['complaint', 'parent', 'replies', 'user'])->findOrFail($id);
 
             return response()->json([
                 'success' => true,
@@ -222,9 +227,9 @@ class MessageController extends Controller
     public function getByComplaint($complaintId)
     {
         try {
-            $messages = Message::with(['parent'])
+            $messages = Message::with(['parent', 'user'])
                 ->where('complaint_id', $complaintId)
-                ->orderBy('created_at', 'asc')
+                ->orderBy('created_at', 'desc')
                 ->get();
 
             return response()->json([
