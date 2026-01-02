@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             PersonSeeder::class,
             UserSeeder::class,
             StatusSeeder::class,
+            PrioritySeeder::class,
             CompleteComplaintSeeder::class, // Added sample complaints
         ]);
     }

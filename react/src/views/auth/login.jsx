@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Card, Row, Col, Button, Form, InputGroup } from "react-bootstrap";
 import FeatherIcon from "feather-icons-react";
 import axios from "axios";
-const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 // assets
 import logoDark from "assets/images/logo-dark.png";

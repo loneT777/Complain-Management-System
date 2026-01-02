@@ -273,3 +273,35 @@
 .fb-comments-list::-webkit-scrollbar-thumb:hover {
   background: #8a8d91;
 }
+/* Nav Tabs Styling */
+.nav-tabs {
+  border-bottom: 2px solid #dee2e6;
+  margin-bottom: 0;
+}
+
+.nav-tabs .nav-link {
+  color: #6c757d;
+  border: none;
+  border-bottom: 3px solid transparent;
+  padding: 0.75rem 1.5rem;
+  margin-bottom: -2px;
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.nav-tabs .nav-link:hover {
+  color: #495057;
+  border-bottom-color: #dee2e6;
+}
+
+.nav-tabs .nav-link.active {
+  color: #0d6efd;
+  background-color: transparent;
+  border-bottom-color: #0d6efd;
+}
+
+.nav-tabs .nav-link:disabled {
+  color: #6c757d;
+  cursor: not-allowed;
+  opacity: 0.5;
+}

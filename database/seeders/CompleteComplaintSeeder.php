@@ -56,15 +56,8 @@ class CompleteComplaintSeeder extends Seeder
             ]);
         }
 
-        $status = Status::where('name', 'In Progress')->first();
-        if (!$status) {
-            $status = Status::create([
-                'name' => 'In Progress',
-                'description' => 'Complaint is being worked on',
-                'color' => 'warning',
-                'session_id' => 1,
-            ]);
-        }
+        // Status is already created by StatusSeeder, so just get it
+        $status = Status::where('code', 'pending')->first();
 
         $category = Category::first();
         if (!$category) {

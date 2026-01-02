@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Container, Row, Col, Card, Button, Badge, Spinner, Tab, Tabs, Alert, Table, Form, InputGroup } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Badge, Spinner, Alert, Table, Form, InputGroup } from 'react-bootstrap';
 import {
   ArrowBack,
   Edit,
@@ -22,6 +22,7 @@ import MessageForm from './MessageForm';
 import AttachmentForm from './AttachmentForm';
 import AssignComplaintForm from './AssignComplaintForm';
 import ComplaintLogForm from './ComplaintLogForm';
+import ComplaintStatusPriority from './ComplaintStatusPriority';
 import './Complaint.css';
 
 const Complaint = () => {
@@ -33,6 +34,7 @@ const Complaint = () => {
   const [attachments, setAttachments] = useState([]);
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [loadingAttachments, setLoadingAttachments] = useState(false);
+  const [activeTab, setActiveTab] = useState('messages');
 
   // Message modal states
   const [showMessageModal, setShowMessageModal] = useState(false);
@@ -478,10 +480,6 @@ const Complaint = () => {
                   <strong>Reference No:</strong>
                   <p className="text-primary">{complaint.reference_no}</p>
                 </Col>
-                <Col md={6}>
-                  <strong>Status:</strong>
-                  <p>{complaint.last_status?.name || 'New'}</p>
-                </Col>
               </Row>
 
               <Row className="mb-3">
@@ -504,16 +502,12 @@ const Complaint = () => {
                   <p>{complaint.channel || 'N/A'}</p>
                 </Col>
                 <Col md={6}>
-                  <strong>Priority:</strong>
-                  <p>{getPriorityBadge(complaint.priority_level)}</p>
+                  <strong>Confidentiality:</strong>
+                  <p>{complaint.confidentiality_level || 'N/A'}</p>
                 </Col>
               </Row>
 
               <Row className="mb-3">
-                <Col md={6}>
-                  <strong>Confidentiality:</strong>
-                  <p>{complaint.confidentiality_level || 'N/A'}</p>
-                </Col>
                 <Col md={6}>
                   <strong>Due Date:</strong>
                   <p>{complaint.due_at ? new Date(complaint.due_at).toLocaleDateString() : 'N/A'}</p>
@@ -531,11 +525,110 @@ const Complaint = () => {
             </Card.Body>
           </Card>
 
+          {/* Status and Priority Card */}
+          {complaint && (
+            <ComplaintStatusPriority 
+              complaintId={complaint.id} 
+              complaint={complaint}
+              onUpdate={(updatedComplaint) => {
+                setComplaint({ ...complaint, ...updatedComplaint });
+              }}
+            />
+          )}
+
           {/* TABS */}
           <Card className="mb-4">
             <Card.Body>
-              <Tabs defaultActiveKey="messages">
-                <Tab eventKey="messages" title={`Comments (${messages.length})`}>
+              {/* Custom Nav Tabs */}
+              <ul className="nav nav-tabs" style={{ borderBottom: '2px solid #dee2e6', marginBottom: '1.5rem' }}>
+                <li className="nav-item">
+                  <a
+                    className={`nav-link ${activeTab === 'messages' ? 'active' : ''}`}
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setActiveTab('messages');
+                    }}
+                    style={{
+                      color: activeTab === 'messages' ? '#0d6efd' : '#6c757d',
+                      borderBottom: activeTab === 'messages' ? '3px solid #0d6efd' : '3px solid transparent',
+                      paddingBottom: '0.75rem',
+                      fontWeight: activeTab === 'messages' ? '600' : '500',
+                      cursor: 'pointer',
+                      marginBottom: '-2px',
+                      transition: 'all 0.3s ease'
+                    }}
+                  >
+                    Comments ({messages.length})
+                  </a>
+                </li>
+                <li className="nav-item">
+                  <a
+                    className={`nav-link ${activeTab === 'attachments' ? 'active' : ''}`}
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setActiveTab('attachments');
+                    }}
+                    style={{
+                      color: activeTab === 'attachments' ? '#0d6efd' : '#6c757d',
+                      borderBottom: activeTab === 'attachments' ? '3px solid #0d6efd' : '3px solid transparent',
+                      paddingBottom: '0.75rem',
+                      fontWeight: activeTab === 'attachments' ? '600' : '500',
+                      cursor: 'pointer',
+                      marginBottom: '-2px',
+                      transition: 'all 0.3s ease'
+                    }}
+                  >
+                    Attachments ({attachments.length})
+                  </a>
+                </li>
+                <li className="nav-item">
+                  <a
+                    className={`nav-link ${activeTab === 'assignments' ? 'active' : ''}`}
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setActiveTab('assignments');
+                    }}
+                    style={{
+                      color: activeTab === 'assignments' ? '#0d6efd' : '#6c757d',
+                      borderBottom: activeTab === 'assignments' ? '3px solid #0d6efd' : '3px solid transparent',
+                      paddingBottom: '0.75rem',
+                      fontWeight: activeTab === 'assignments' ? '600' : '500',
+                      cursor: 'pointer',
+                      marginBottom: '-2px',
+                      transition: 'all 0.3s ease'
+                    }}
+                  >
+                    Complaint Assignment ({assignments.length})
+                  </a>
+                </li>
+                <li className="nav-item">
+                  <a
+                    className={`nav-link ${activeTab === 'logs' ? 'active' : ''}`}
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setActiveTab('logs');
+                    }}
+                    style={{
+                      color: activeTab === 'logs' ? '#0d6efd' : '#6c757d',
+                      borderBottom: activeTab === 'logs' ? '3px solid #0d6efd' : '3px solid transparent',
+                      paddingBottom: '0.75rem',
+                      fontWeight: activeTab === 'logs' ? '600' : '500',
+                      cursor: 'pointer',
+                      marginBottom: '-2px',
+                      transition: 'all 0.3s ease'
+                    }}
+                  >
+                    Complaint Log ({logs.length})
+                  </a>
+                </li>
+              </ul>
+
+              {/* Tab Content */}
+              {activeTab === 'messages' && (
                   <div className="py-4">
                     {/* Comment Input Box */}
                     <div className="fb-comment-box mb-4">
@@ -867,42 +960,42 @@ const Complaint = () => {
                       </div>
                     )}
                   </div>
-                </Tab>
+              )}
 
-                <Tab eventKey="attachments" title={`Attachments (${attachments.length})`}>
-                  <div className="py-4">
-                    <div className="d-flex justify-content-between align-items-center mb-3">
-                      <h5 className="mb-0">Complaint Attachments</h5>
-                      <Button variant="primary" size="sm" onClick={handleAddAttachment}>
-                        <Add fontSize="small" className="me-1" />
-                        Upload Files
-                      </Button>
+              {activeTab === 'attachments' && (
+                <div className="py-4">
+                  <div className="d-flex justify-content-between align-items-center mb-3">
+                    <h5 className="mb-0">Complaint Attachments</h5>
+                    <Button variant="primary" size="sm" onClick={handleAddAttachment}>
+                      <Add fontSize="small" className="me-1" />
+                      Upload Files
+                    </Button>
+                  </div>
+                  {loadingAttachments ? (
+                    <div className="text-center">
+                      <Spinner animation="border" size="sm" />
+                      <p className="text-muted mt-2">Loading attachments...</p>
                     </div>
-                    {loadingAttachments ? (
-                      <div className="text-center">
-                        <Spinner animation="border" size="sm" />
-                        <p className="text-muted mt-2">Loading attachments...</p>
-                      </div>
-                    ) : attachments.length > 0 ? (
-                      <>
-                        <Alert variant="info" className="mb-3">
-                          <AttachFile className="me-2" />
-                          <strong>Total Attachments:</strong> {attachments.length} file(s)
-                        </Alert>
-                        <Table hover responsive className="mb-0">
-                          <thead>
-                            <tr>
-                              <th>#</th>
-                              <th>File Name</th>
-                              <th>Type</th>
-                              <th>Size</th>
-                              <th>Uploaded</th>
-                              <th>Actions</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {attachments.map((att, index) => (
-                              <tr key={att.id}>
+                  ) : attachments.length > 0 ? (
+                    <>
+                      <Alert variant="info" className="mb-3">
+                        <AttachFile className="me-2" />
+                        <strong>Total Attachments:</strong> {attachments.length} file(s)
+                      </Alert>
+                      <Table hover responsive className="mb-0">
+                        <thead>
+                          <tr>
+                            <th>#</th>
+                            <th>File Name</th>
+                            <th>Type</th>
+                            <th>Size</th>
+                            <th>Uploaded</th>
+                            <th>Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {attachments.map((att, index) => (
+                            <tr key={att.id}>
                                 <td>{index + 1}</td>
                                 <td>
                                   <div className="d-flex align-items-center">
@@ -955,11 +1048,11 @@ const Complaint = () => {
                       </div>
                     )}
                   </div>
-                </Tab>
+              )}
 
-                <Tab eventKey="assignments" title={`Complaint Assignment (${assignments.length})`}>
-                  <div className="py-4">
-                    <div className="d-flex justify-content-between align-items-center mb-3">
+              {activeTab === 'assignments' && (
+                <div className="py-4">
+                  <div className="d-flex justify-content-between align-items-center mb-3">
                       <h5 className="mb-0">Assignments</h5>
                       <Button
                         variant="success"
@@ -1052,13 +1145,13 @@ const Complaint = () => {
                       </div>
                     )}
                   </div>
-                </Tab>
+              )}
 
-                <Tab eventKey="logs" title={`Complaint Log (${logs.length})`}>
-                  <div className="py-4">
-                    <div className="d-flex justify-content-between align-items-center mb-3">
-                      <h5 className="mb-0">Complaint Logs</h5>
-                      <Button
+              {activeTab === 'logs' && (
+                <div className="py-4">
+                  <div className="d-flex justify-content-between align-items-center mb-3">
+                    <h5 className="mb-0">Complaint Logs</h5>
+                    <Button
                         variant="info"
                         size="sm"
                         onClick={() => {
@@ -1136,8 +1229,7 @@ const Complaint = () => {
                       </div>
                     )}
                   </div>
-                </Tab>
-              </Tabs>
+              )}
             </Card.Body>
           </Card>
         </Col>

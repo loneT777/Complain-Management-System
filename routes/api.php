@@ -74,6 +74,12 @@ Route::get('/complaints/{complaintId}/logs', [ComplaintLogController::class, 'ge
 Route::get('/categories/{categoryId}/complaints', [CategoryController::class, 'getComplaints']);
 Route::get('/complaints/{complaintId}/attachments', [AttachmentController::class, 'getAttachmentsByComplaint']);
 
+// Status and Priority routes
+Route::get('/complaint-statuses', [ComplaintController::class, 'getStatuses']);
+Route::get('/complaint-priorities', [ComplaintController::class, 'getPriorities']);
+Route::put('/complaints/{id}/status', [ComplaintController::class, 'updateStatus']);
+Route::put('/complaints/{id}/priority', [ComplaintController::class, 'updatePriority']);
+
 // Public attachment routes (for development/testing)
 Route::get('/public/attachments', [AttachmentController::class, 'index']);
 Route::post('/public/attachments', [AttachmentController::class, 'store']);

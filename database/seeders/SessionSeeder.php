@@ -24,6 +24,6 @@ class SessionSeeder extends Seeder
             ],
         ];
 
-        DB::table('sessions')->insert($sessions);
+        DB::table('sessions')->insertOrIgnore($sessions);
     }
 }

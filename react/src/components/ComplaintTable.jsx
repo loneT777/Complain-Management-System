@@ -1,5 +1,5 @@
 import React from 'react';
-import { Table, Spinner, Button } from 'react-bootstrap';
+import { Table, Spinner, Button, Badge } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 
 const ComplaintTable = ({ complaints, loading, assignments = {}, onAssign }) => {
@@ -7,6 +7,25 @@ const ComplaintTable = ({ complaints, loading, assignments = {}, onAssign }) => 
 
   const handleView = (complaint) => {
     navigate(`/complaint/${complaint.id}`);
+  };
+
+  const getStatusColor = (statusName) => {
+    const colors = {
+      'Pending': 'secondary',
+      'Assigned': 'warning',
+      'Completed': 'success'
+    };
+    return colors[statusName] || 'secondary';
+  };
+
+  const getPriorityColor = (priorityLevel) => {
+    const colors = {
+      'Low': 'success',
+      'Medium': 'warning',
+      'Urgent': 'danger',
+      'Very Urgent': 'dark'
+    };
+    return colors[priorityLevel] || 'secondary';
   };
 
   if (loading) {
@@ -27,23 +46,15 @@ const ComplaintTable = ({ complaints, loading, assignments = {}, onAssign }) => 
     );
   }
 
-  // If you want priority badges later, keep this placeholder
-  const getPriorityBadge = (priority) => {
-    const variants = {
-      high: 'danger',
-      medium: 'warning',
-      low: 'success'
-    };
-    return variants[priority] || 'secondary';
-  };
-
   return (
     <Table striped bordered hover responsive className="mt-3">
       <thead>
         <tr>
-          <th style={{ width: '5%' }}>ID</th>
-          <th style={{ width: '15%' }}>Title</th>
-          <th style={{ width: '40%' }}>Description</th>
+          <th style={{ width: '3%' }}>ID</th>
+          <th style={{ width: '12%' }}>Title</th>
+          <th style={{ width: '25%' }}>Description</th>
+          <th style={{ width: '10%' }}>Status</th>
+          <th style={{ width: '10%' }}>Priority</th>
           <th style={{ width: '20%' }}>Assignment</th>
           <th style={{ width: '20%' }}>Actions</th>
         </tr>
@@ -55,6 +66,24 @@ const ComplaintTable = ({ complaints, loading, assignments = {}, onAssign }) => 
             <td>{complaint.id}</td>
             <td>{complaint.title}</td>
             <td>{complaint.description}</td>
+            <td>
+              {complaint.lastStatus ? (
+                <Badge bg={getStatusColor(complaint.lastStatus.name)}>
+                  {complaint.lastStatus.name}
+                </Badge>
+              ) : (
+                <Badge bg="secondary">Not Set</Badge>
+              )}
+            </td>
+            <td>
+              {complaint.priority_level ? (
+                <Badge bg={getPriorityColor(complaint.priority_level)}>
+                  {complaint.priority_level}
+                </Badge>
+              ) : (
+                <Badge bg="secondary">Not Set</Badge>
+              )}
+            </td>
 
             <td>
               {(() => {

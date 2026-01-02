@@ -74,10 +74,14 @@ class ComplaintController extends Controller
         try {
             DB::beginTransaction();
             
+            // Get the Pending status
+            $pendingStatus = \App\Models\Status::where('code', 'pending')->first();
+            
             $complaint = Complaint::create(array_merge($request->except('category_ids'), [
                 'reference_no' => $referenceNo,
                 'received_at' => now(),
-                'complainant_id' => Auth::id() ?? 1 // Use authenticated user ID or default to 1
+                'complainant_id' => Auth::id() ?? 1, // Use authenticated user ID or default to 1
+                'last_status_id' => $pendingStatus ? $pendingStatus->id : 1 // Set initial status to Pending
             ]));
 
             // Attach categories if provided
@@ -237,6 +241,126 @@ class ComplaintController extends Controller
             DB::rollBack();
             \Log::error('Failed to delete complaint: ' . $e->getMessage());
             return response()->json(['error' => 'Failed to delete complaint: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Update complaint status
+     */
+    public function updateStatus(Request $request, $id)
+    {
+        try {
+            $complaint = Complaint::findOrFail($id);
+
+            $validator = Validator::make($request->all(), [
+                'status_id' => 'required|exists:status,id',
+                'remark' => 'nullable|string',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json(['errors' => $validator->errors()], 422);
+            }
+
+            DB::beginTransaction();
+
+            $oldStatus = $complaint->lastStatus ? $complaint->lastStatus->name : 'Unknown';
+            $newStatus = \App\Models\Status::find($request->status_id)->name;
+
+            $complaint->update(['last_status_id' => $request->status_id]);
+
+            // Log the status change
+            ComplaintLog::create([
+                'complaint_id' => $complaint->id,
+                'action' => 'Status Changed',
+                'remark' => "Status changed from {$oldStatus} to {$newStatus}. " . ($request->remark ?? '')
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Complaint status updated successfully',
+                'data' => $complaint->load(['lastStatus'])
+            ]);
+
+        } catch (ModelNotFoundException $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'Complaint not found'], 404);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Failed to update complaint status: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to update complaint status'], 500);
+        }
+    }
+
+    /**
+     * Update complaint priority
+     */
+    public function updatePriority(Request $request, $id)
+    {
+        try {
+            $complaint = Complaint::findOrFail($id);
+
+            $validator = Validator::make($request->all(), [
+                'priority_level' => 'required|in:Low,Medium,Urgent,Very Urgent',
+                'remark' => 'nullable|string',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json(['errors' => $validator->errors()], 422);
+            }
+
+            DB::beginTransaction();
+
+            $oldPriority = $complaint->priority_level ?? 'Not Set';
+            $complaint->update(['priority_level' => $request->priority_level]);
+
+            // Log the priority change
+            ComplaintLog::create([
+                'complaint_id' => $complaint->id,
+                'action' => 'Priority Changed',
+                'remark' => "Priority changed from {$oldPriority} to {$request->priority_level}. " . ($request->remark ?? '')
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Complaint priority updated successfully',
+                'data' => $complaint
+            ]);
+
+        } catch (ModelNotFoundException $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'Complaint not found'], 404);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Failed to update complaint priority: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to update complaint priority'], 500);
+        }
+    }
+
+    /**
+     * Get all priority levels
+     */
+    public function getPriorities()
+    {
+        try {
+            $priorities = \App\Models\Priority::all();
+            return response()->json($priorities);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Get all status levels
+     */
+    public function getStatuses()
+    {
+        try {
+            $statuses = \App\Models\Status::all();
+            return response()->json($statuses);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
         }
     }
 }

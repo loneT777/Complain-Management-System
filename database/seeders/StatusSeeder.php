@@ -13,11 +13,12 @@ class StatusSeeder extends Seeder
      */
     public function run(): void
     {
-        Status::firstOrCreate(['code' => 'open'], ['name' => 'Open']);
+        // Delete old statuses
+        Status::whereNotIn('code', ['pending', 'assigned', 'completed'])->delete();
+        
+        // Create/update only the required statuses
+        Status::firstOrCreate(['code' => 'pending'], ['name' => 'Pending']);
         Status::firstOrCreate(['code' => 'assigned'], ['name' => 'Assigned']);
-        Status::firstOrCreate(['code' => 'in_progress'], ['name' => 'In Progress']);
-        Status::firstOrCreate(['code' => 'resolved'], ['name' => 'Resolved']);
-        Status::firstOrCreate(['code' => 'closed'], ['name' => 'Closed']);
-        Status::firstOrCreate(['code' => 'rejected'], ['name' => 'Rejected']);
+        Status::firstOrCreate(['code' => 'completed'], ['name' => 'Completed']);
     }
 }
