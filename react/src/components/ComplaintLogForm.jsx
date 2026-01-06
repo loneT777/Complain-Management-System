@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Modal, Form, Button, Row, Col } from 'react-bootstrap';
 import axios from 'axios';
 
-const ComplaintLogForm = ({ show, onClose, complaintId, log, onSuccess }) => {
+const ComplaintLogForm = ({ show, onClose, complaintId, assignmentId, log, onSuccess }) => {
   const [formData, setFormData] = useState({
     action: '',
     remark: ''
@@ -13,6 +13,7 @@ const ComplaintLogForm = ({ show, onClose, complaintId, log, onSuccess }) => {
 
   useEffect(() => {
     if (show) {
+      console.log('ComplaintLogForm opened. assignmentId received:', assignmentId);
       if (log) {
         setFormData({
           action: log.action || '',
@@ -22,7 +23,7 @@ const ComplaintLogForm = ({ show, onClose, complaintId, log, onSuccess }) => {
         setFormData({ action: '', remark: '' });
       }
     }
-  }, [show, log]);
+  }, [show, assignmentId, log]);
 
   const fetchDropdownData = async () => {
     try {
@@ -54,15 +55,19 @@ const ComplaintLogForm = ({ show, onClose, complaintId, log, onSuccess }) => {
         remark: formData.remark || null
       };
 
+      console.log('Submitting log with payload:', { ...payload, complaintId, assignmentId });
+
       if (log) {
         // Update existing log
         await axios.put(`http://localhost:8000/api/complaint_logs/${log.id}`, payload);
       } else {
         // Create new log
-        await axios.post('http://localhost:8000/api/complaint_logs', {
+        const response = await axios.post('http://localhost:8000/api/complaint_logs', {
           ...payload,
-          complaint_id: complaintId
+          complaint_id: complaintId,
+          complaint_assignment_id: assignmentId
         });
+        console.log('Log created successfully:', response.data);
       }
       onSuccess();
       onClose();

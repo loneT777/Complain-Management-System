@@ -31,10 +31,14 @@ const AssignComplaintForm = ({ show, onClose, complaintId, assignment, onSuccess
   const [loadingPersons, setLoadingPersons] = useState(false);
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState({});
+  const [slaDays, setSlaDays] = useState(0);
+  const [priorityLevel, setPriorityLevel] = useState('');
 
   useEffect(() => {
     if (show && complaintId) {
       setAssignmentId(assignment?.id || null);
+      // Fetch complaint SLA information
+      fetchComplaintSLA();
       if (assignment) {
         // Edit mode - pre-populate with assignment data
         setFormData({
@@ -45,6 +49,9 @@ const AssignComplaintForm = ({ show, onClose, complaintId, assignment, onSuccess
         });
         if (assignment.assignee_division_id) {
           fetchPersonsByDivision(assignment.assignee_division_id);
+        } else {
+          // No division selected in edit mode, fetch all persons
+          fetchPersonsByDivision('');
         }
       } else {
         // Create mode - reset form
@@ -54,12 +61,24 @@ const AssignComplaintForm = ({ show, onClose, complaintId, assignment, onSuccess
           due_at: '',
           remark: ''
         });
-        setPersons([]);
+        // Fetch all persons on initial open
+        fetchPersonsByDivision('');
       }
       fetchDivisions();
       setErrors({});
     }
   }, [show, complaintId, assignment]);
+
+  const fetchComplaintSLA = async () => {
+    try {
+      const response = await axios.get(`http://localhost:8000/api/complaint_assignments/sla/${complaintId}`);
+      setSlaDays(response.data.sla_days || 0);
+      setPriorityLevel(response.data.priority_level || '');
+    } catch (error) {
+      console.error('Failed to fetch complaint SLA', error);
+      setSlaDays(0);
+    }
+  };
 
   const fetchDivisions = async () => {
     try {
@@ -71,17 +90,14 @@ const AssignComplaintForm = ({ show, onClose, complaintId, assignment, onSuccess
   };
 
   const fetchPersonsByDivision = async (divisionId) => {
-    if (!divisionId) {
-      setPersons([]);
-      return;
-    }
     setLoadingPersons(true);
     try {
-      // Fetch persons for the selected division
-      const response = await axios.get(`http://localhost:8000/api/persons?division_id=${divisionId}`);
+      // Fetch persons for the selected division, or all persons if no division selected
+      const url = divisionId ? `http://localhost:8000/api/persons?division_id=${divisionId}` : `http://localhost:8000/api/persons`;
+      const response = await axios.get(url);
       setPersons(response.data || []);
     } catch (error) {
-      console.error('Failed to fetch persons for division', error);
+      console.error('Failed to fetch persons', error);
       setPersons([]);
     } finally {
       setLoadingPersons(false);
@@ -90,13 +106,23 @@ const AssignComplaintForm = ({ show, onClose, complaintId, assignment, onSuccess
 
   const handleDivisionChange = (e) => {
     const divisionId = e.target.value;
+
+    // Calculate due date based on SLA days
+    let calculatedDueDate = '';
+    if (divisionId && slaDays !== null && slaDays >= 0) {
+      const today = new Date();
+      const dueDate = new Date(today.getTime() + slaDays * 24 * 60 * 60 * 1000);
+      calculatedDueDate = dueDate.toISOString().split('T')[0];
+    }
+
     setFormData({
       ...formData,
       assignee_division_id: divisionId,
-      assignee_user_id: ''
+      assignee_user_id: '',
+      due_at: calculatedDueDate
     });
 
-    // Fetch persons for selected division
+    // Fetch persons for selected division or all persons if cleared
     fetchPersonsByDivision(divisionId);
 
     if (errors.assignee_division_id) {
@@ -106,10 +132,37 @@ const AssignComplaintForm = ({ show, onClose, complaintId, assignment, onSuccess
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value
-    });
+
+    // If person is selected, auto-fill division and calculate due date
+    if (name === 'assignee_user_id' && value) {
+      const selectedPerson = persons.find((p) => p.id === parseInt(value));
+      if (selectedPerson && selectedPerson.division_id) {
+        // Calculate due date based on SLA days
+        let calculatedDueDate = '';
+        if (slaDays !== null && slaDays >= 0) {
+          const today = new Date();
+          const dueDate = new Date(today.getTime() + slaDays * 24 * 60 * 60 * 1000);
+          calculatedDueDate = dueDate.toISOString().split('T')[0];
+        }
+
+        setFormData({
+          ...formData,
+          [name]: value,
+          assignee_division_id: selectedPerson.division_id,
+          due_at: calculatedDueDate
+        });
+      } else {
+        setFormData({
+          ...formData,
+          [name]: value
+        });
+      }
+    } else {
+      setFormData({
+        ...formData,
+        [name]: value
+      });
+    }
 
     if (errors[name]) {
       setErrors({ ...errors, [name]: null });
@@ -181,6 +234,17 @@ const AssignComplaintForm = ({ show, onClose, complaintId, assignment, onSuccess
 
       <DialogContent sx={{ pt: 2 }}>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {priorityLevel && (
+            <Box sx={{ p: 1.5, backgroundColor: '#f5f5f5', borderRadius: 1, border: '1px solid #e0e0e0' }}>
+              <Typography variant="body2" sx={{ mb: 0.5 }}>
+                <strong>Priority Level:</strong> {priorityLevel}
+              </Typography>
+              <Typography variant="caption" sx={{ color: '#666' }}>
+                {slaDays === 0 ? 'Resolve today' : `Resolve within ${slaDays} day${slaDays !== 1 ? 's' : ''}`}
+              </Typography>
+            </Box>
+          )}
+
           <FormControl fullWidth size="small" error={!!errors.assignee_division_id}>
             <InputLabel>Division</InputLabel>
             <Select
@@ -204,30 +268,24 @@ const AssignComplaintForm = ({ show, onClose, complaintId, assignment, onSuccess
             )}
           </FormControl>
 
-          <FormControl fullWidth size="small" error={!!errors.assignee_user_id} disabled={saving || !formData.assignee_division_id}>
+          <FormControl fullWidth size="small" error={!!errors.assignee_user_id} disabled={saving}>
             <InputLabel>Person</InputLabel>
             <Select name="assignee_user_id" value={formData.assignee_user_id} onChange={handleChange} label="Person">
               <MenuItem value="">-- Select Person --</MenuItem>
-              {formData.assignee_division_id &&
-                persons.map((person) => (
-                  <MenuItem key={person.id} value={person.id}>
-                    {person.full_name} ({person.designation || 'Officer'})
-                  </MenuItem>
-                ))}
+              {persons.map((person) => (
+                <MenuItem key={person.id} value={person.id}>
+                  {person.full_name} ({person.designation || 'Officer'})
+                </MenuItem>
+              ))}
             </Select>
-            {!formData.assignee_division_id && (
-              <Typography variant="caption" color="textSecondary" sx={{ mt: 0.5 }}>
-                Please select a division first
-              </Typography>
-            )}
-            {loadingPersons && formData.assignee_division_id && (
+            {loadingPersons && (
               <Box sx={{ display: 'flex', justifyContent: 'center', mt: 1 }}>
                 <CircularProgress size={20} />
               </Box>
             )}
-            {formData.assignee_division_id && persons.length === 0 && !loadingPersons && (
+            {!loadingPersons && persons.length === 0 && (
               <Typography variant="caption" color="textSecondary" sx={{ mt: 0.5 }}>
-                No officers available for this division
+                {formData.assignee_division_id ? 'No officers available for this division' : 'No officers available'}
               </Typography>
             )}
             {errors.assignee_user_id && (
