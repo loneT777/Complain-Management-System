@@ -42,10 +42,10 @@ class UserController extends Controller
             ['email' => $validated['email']],
             [
                 'full_name' => $validated['full_name'],
-                'mobile' => '',
-                'is_active' => true,
-                'session_id' => 1, // Default session
-                'updated_session_id' => 1,
+                'nic' => 'N/A-' . time(), // Temporary NIC for system users
+                'is_approved' => true,
+                'session_id' => 1,
+                'user_id' => 1,
             ]
         );
 

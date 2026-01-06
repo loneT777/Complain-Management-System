@@ -13,7 +13,7 @@ const Users = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [currentUser, setCurrentUser] = useState({
     full_name: '',
-    email: '',
+    username: '',
     password: '',
     role_id: '',
     designation: '',
@@ -70,7 +70,7 @@ const Users = () => {
       setCurrentUser({
         id: user.id,
         full_name: user.person?.full_name || user.full_name || '',
-        email: user.email || '',
+        username: user.username || '',
         password: '',
         role_id: user.role_id || '',
         designation: user.designation || '',
@@ -92,9 +92,10 @@ const Users = () => {
 
   const handleCloseModal = () => {
     setShowModal(false);
+    setEditMode(false);
     setCurrentUser({
       full_name: '',
-      email: '',
+      username: '',
       password: '',
       role_id: '',
       designation: '',
@@ -105,21 +106,28 @@ const Users = () => {
   const handleDeactivate = async (userId) => {
     if (window.confirm('Are you sure you want to deactivate this user?')) {
       try {
-        await axios.put(`http://localhost:8000/api/users/${userId}`, { is_active: false });
+        const response = await axios.put(`http://localhost:8000/api/users/${userId}`, { is_active: false });
+        alert(response.data.message || 'User deactivated successfully');
         fetchUsers();
       } catch (error) {
         console.error('Error deactivating user:', error);
-        alert('Error deactivating user. Please try again.');
+        if (error.response?.data?.message) {
+          alert('Error: ' + error.response.data.message);
+        } else {
+          alert('Error deactivating user. Please try again.');
+        }
       }
     }
   };
 
   const handleChange = (e) => {
-    const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
-    setCurrentUser({
-      ...currentUser,
-      [e.target.name]: value
-    });
+    const { name, value, type, checked } = e.target;
+    const newValue = type === 'checkbox' ? checked : value;
+    
+    setCurrentUser(prevUser => ({
+      ...prevUser,
+      [name]: newValue
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -127,18 +135,27 @@ const Users = () => {
     try {
       if (editMode) {
         const updateData = { ...currentUser };
-        if (!updateData.password) {
+        if (!updateData.password || updateData.password.trim() === '') {
           delete updateData.password; // Don't update password if not provided
         }
-        await axios.put(`http://localhost:8000/api/users/${currentUser.id}`, updateData);
+        const response = await axios.put(`http://localhost:8000/api/users/${currentUser.id}`, updateData);
+        alert(response.data.message || 'User updated successfully');
       } else {
-        await axios.post('http://localhost:8000/api/users', currentUser);
+        const response = await axios.post('http://localhost:8000/api/users', currentUser);
+        alert(response.data.message || 'User created successfully');
       }
       fetchUsers();
       handleCloseModal();
     } catch (error) {
       console.error('Error saving user:', error);
-      alert('Error saving user. Please check the form.');
+      if (error.response?.data?.message) {
+        alert('Error: ' + error.response.data.message);
+      } else if (error.response?.data?.errors) {
+        const errors = Object.values(error.response.data.errors).flat().join('\n');
+        alert('Validation errors:\n' + errors);
+      } else {
+        alert('Error saving user. Please check the form and try again.');
+      }
     }
   };
 
@@ -222,7 +239,7 @@ const Users = () => {
                           fontSize: '13px',
                           textTransform: 'uppercase',
                           letterSpacing: '0.5px'
-                        }}>Email</th>
+                        }}>Username</th>
                         <th style={{ 
                           padding: '16px 12px',
                           color: '#64748b',
@@ -273,7 +290,7 @@ const Users = () => {
                         filteredUsers.map((user) => (
                           <tr key={user.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
                             <td style={{ padding: '16px 12px', color: '#475569', fontWeight: '500' }}>{user.id}</td>
-                            <td style={{ padding: '16px 12px', color: '#475569' }}>{user.email || 'N/A'}</td>
+                            <td style={{ padding: '16px 12px', color: '#475569' }}>{user.username || 'N/A'}</td>
                             <td style={{ padding: '16px 12px', color: '#1e293b', fontWeight: '500' }}>
                               {user.person?.full_name || user.username || 'N/A'}
                             </td>
@@ -374,13 +391,21 @@ const Users = () => {
       </Row>
 
       {/* User Form Modal */}
-      <Modal show={showModal} onHide={handleCloseModal} centered style={{ zIndex: 1050 }}>
+      <Modal 
+        show={showModal} 
+        onHide={handleCloseModal} 
+        centered 
+        backdrop="static"
+        style={{ zIndex: 9999 }}
+      >
         <Modal.Header 
           closeButton 
           style={{ 
             borderBottom: '1px solid #e5e7eb', 
             padding: '20px 24px',
-            backgroundColor: '#fff'
+            backgroundColor: '#fff',
+            position: 'relative',
+            zIndex: 10000
           }}
         >
           <Modal.Title style={{ color: '#111827', fontWeight: '600', fontSize: '18px' }}>
@@ -389,17 +414,17 @@ const Users = () => {
         </Modal.Header>
         <Modal.Body style={{ padding: '24px', backgroundColor: '#fff' }}>
           <Form onSubmit={handleSubmit}>
-            {/* Email */}
+            {/* Username */}
             <Form.Group className="mb-4">
               <Form.Label style={{ color: '#374151', fontWeight: '500', marginBottom: '8px', fontSize: '14px' }}>
-                Email
+                Username
               </Form.Label>
               <Form.Control
-                type="email"
-                name="email"
-                value={currentUser.email}
+                type="text"
+                name="username"
+                value={currentUser.username}
                 onChange={handleChange}
-                placeholder="Enter email address"
+                placeholder="Enter username"
                 required
                 style={{ 
                   padding: '12px 14px',
@@ -472,14 +497,14 @@ const Users = () => {
                   padding: '12px 14px',
                   border: '1px solid #d1d5db',
                   borderRadius: '6px',
-                  color: '#6b7280',
                   fontSize: '14px',
-                  backgroundColor: '#fff'
+                  backgroundColor: '#fff',
+                  color: currentUser.role_id ? '#111827' : '#6b7280'
                 }}
               >
                 <option value="">Select a role</option>
                 {roles.map((role) => (
-                  <option key={role.id} value={role.id}>
+                  <option key={role.id} value={role.id} style={{ color: '#111827' }}>
                     {role.name}
                   </option>
                 ))}
