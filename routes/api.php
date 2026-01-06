@@ -34,7 +34,7 @@ Route::get('/sanctum/csrf-cookie', function (Request $request) {
 // PUBLIC AUTH ROUTES
 // -----------------
 Route::post('/login', [AuthController::class, 'login']);
-porarily make all routes public for development/testing
+// Temporarily make all routes public for development/testing
 Route::apiResource('messages', MessageController::class);
 Route::apiResource('complaints', ComplaintController::class);
 Route::apiResource('categories', CategoryController::class);
@@ -52,21 +52,15 @@ Route::get('/complaints/{complaintId}/logs', [ComplaintLogController::class, 'ge
 Route::get('/categories/{categoryId}/complaints', [CategoryController::class, 'getComplaints']);
 Route::get('/complaints/{complaintId}/attachments', [AttachmentController::class, 'getAttachmentsByComplaint']);
 
-<<<<<<< HEAD
 // Status and Priority routes
 Route::get('/complaint-statuses', [ComplaintController::class, 'getStatuses']);
 Route::get('/complaint-priorities', [ComplaintController::class, 'getPriorities']);
 Route::get('/dashboard-stats', [ComplaintController::class, 'getDashboardStats']);
 Route::put('/complaints/{id}/status', [ComplaintController::class, 'updateStatus']);
 Route::put('/complaints/{id}/priority', [ComplaintController::class, 'updatePriority']);
-=======
+
 // Complaint Assignment SLA route
 Route::get('/complaint_assignments/sla/{complaintId}', [ComplaintAssignmentController::class, 'getComplaintSLA']);
-
-// Test Hash Routes (for password hashing - REMOVE IN PRODUCTION)
-Route::get('/test/hash', [TestHashController::class, 'hashPassword']);
-Route::post('/test/verify', [TestHashController::class, 'verifyPassword']);
->>>>>>> c3e1369f2d41314978e4e1cd7a6db9ec5aba9b33
 
 // Public attachment routes (for development/testing)
 Route::get('/public/attachments', [AttachmentController::class, 'index']);

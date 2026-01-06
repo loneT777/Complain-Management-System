@@ -6,6 +6,7 @@ use App\Models\ComplaintLog;
 use App\Models\Complaint;
 use App\Models\ComplaintAssignment;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class ComplaintLogController extends Controller
 {
@@ -30,7 +31,7 @@ class ComplaintLogController extends Controller
 
             return response()->json($logs);
         } catch (\Exception $e) {
-            \Log::error('Error fetching complaint logs: ' . $e->getMessage());
+            Log::error('Error fetching complaint logs: ' . $e->getMessage());
             return response()->json(['error' => 'Failed to fetch logs', 'message' => $e->getMessage()], 500);
         }
     }
@@ -49,7 +50,7 @@ class ComplaintLogController extends Controller
 
             return response()->json($logs);
         } catch (\Exception $e) {
-            \Log::error('Error fetching complaint logs: ' . $e->getMessage());
+            Log::error('Error fetching complaint logs: ' . $e->getMessage());
             return response()->json(['error' => 'Failed to fetch logs', 'message' => $e->getMessage()], 500);
         }
     }

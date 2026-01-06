@@ -1,18 +1,9 @@
-<<<<<<< HEAD
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, Row, Col, Button, Form, InputGroup } from "react-bootstrap";
 import FeatherIcon from "feather-icons-react";
 import axios from "axios";
 const API_URL = import.meta.env.VITE_API_URL || '/api';
-=======
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Card, Row, Col, Button, Form, InputGroup } from 'react-bootstrap';
-import FeatherIcon from 'feather-icons-react';
-import axios from 'axios';
-const API_URL = import.meta.env.VITE_API_URL;
->>>>>>> c3e1369f2d41314978e4e1cd7a6db9ec5aba9b33
 
 // assets
 import logoDark from 'assets/images/logo-dark.png';

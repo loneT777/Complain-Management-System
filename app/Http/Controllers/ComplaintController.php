@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class ComplaintController extends Controller
 {
@@ -37,8 +38,11 @@ class ComplaintController extends Controller
                 $query->whereDate('created_at', '<=', $request->date_to);
             }
 
-            $complaints = $query->orderBy('created_at', 'desc')
-                ->paginate($request->input('per_page', 10));
+            // Commented out pagination to return all complaints
+            // $complaints = $query->orderBy('created_at', 'desc')
+            //     ->paginate($request->input('per_page', 10));
+            
+            $complaints = $query->orderBy('created_at', 'desc')->get();
 
             return response()->json($complaints);
         } catch (\Exception $e) {
@@ -73,14 +77,10 @@ class ComplaintController extends Controller
 
         try {
             DB::beginTransaction();
-<<<<<<< HEAD
             
             // Get the Pending status
             $pendingStatus = \App\Models\Status::where('code', 'pending')->first();
             
-=======
-
->>>>>>> c3e1369f2d41314978e4e1cd7a6db9ec5aba9b33
             $complaint = Complaint::create(array_merge($request->except('category_ids'), [
                 'reference_no' => $referenceNo,
                 'received_at' => now(),
@@ -104,7 +104,7 @@ class ComplaintController extends Controller
             ], 201);
         } catch (\Exception $e) {
             DB::rollBack();
-            \Log::error('Failed to create complaint: ' . $e->getMessage());
+            Log::error('Failed to create complaint: ' . $e->getMessage());
             return response()->json(['error' => 'Failed to create complaint: ' . $e->getMessage()], 500);
         }
     }
@@ -193,7 +193,7 @@ class ComplaintController extends Controller
         } catch (ModelNotFoundException $e) {
             return response()->json(['message' => 'Complaint not found'], 404);
         } catch (\Exception $e) {
-            \Log::error('Failed to update complaint: ' . $e->getMessage());
+            Log::error('Failed to update complaint: ' . $e->getMessage());
             return response()->json(['error' => 'Failed to update complaint: ' . $e->getMessage()], 500);
         }
     }
@@ -221,11 +221,10 @@ class ComplaintController extends Controller
             return response()->json(['message' => 'Complaint not found'], 404);
         } catch (\Exception $e) {
             DB::rollBack();
-            \Log::error('Failed to delete complaint: ' . $e->getMessage());
+            Log::error('Failed to delete complaint: ' . $e->getMessage());
             return response()->json(['error' => 'Failed to delete complaint: ' . $e->getMessage()], 500);
         }
     }
-<<<<<<< HEAD
 
     /**
      * Update complaint status
@@ -270,7 +269,7 @@ class ComplaintController extends Controller
             return response()->json(['message' => 'Complaint not found'], 404);
         } catch (\Exception $e) {
             DB::rollBack();
-            \Log::error('Failed to update complaint status: ' . $e->getMessage());
+            Log::error('Failed to update complaint status: ' . $e->getMessage());
             return response()->json(['error' => 'Failed to update complaint status'], 500);
         }
     }
@@ -316,7 +315,7 @@ class ComplaintController extends Controller
             return response()->json(['message' => 'Complaint not found'], 404);
         } catch (\Exception $e) {
             DB::rollBack();
-            \Log::error('Failed to update complaint priority: ' . $e->getMessage());
+            Log::error('Failed to update complaint priority: ' . $e->getMessage());
             return response()->json(['error' => 'Failed to update complaint priority'], 500);
         }
     }
@@ -428,6 +427,4 @@ class ComplaintController extends Controller
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
-=======
->>>>>>> c3e1369f2d41314978e4e1cd7a6db9ec5aba9b33
 }
