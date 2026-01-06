@@ -77,6 +77,7 @@ Route::get('/complaints/{complaintId}/attachments', [AttachmentController::class
 // Status and Priority routes
 Route::get('/complaint-statuses', [ComplaintController::class, 'getStatuses']);
 Route::get('/complaint-priorities', [ComplaintController::class, 'getPriorities']);
+Route::get('/dashboard-stats', [ComplaintController::class, 'getDashboardStats']);
 Route::put('/complaints/{id}/status', [ComplaintController::class, 'updateStatus']);
 Route::put('/complaints/{id}/priority', [ComplaintController::class, 'updatePriority']);
 

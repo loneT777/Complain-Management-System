@@ -31,12 +31,6 @@ const menuItems = {
               title: 'New Complaint',
               type: 'item',
               url: '/add-complaint'
-            },
-            {
-              id: 'complaint-detail',
-              title: 'Complaint Details',
-              type: 'item',
-              url: '/complaint/1'
             }
           ]
         },

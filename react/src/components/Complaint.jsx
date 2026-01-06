@@ -183,6 +183,34 @@ const Complaint = () => {
     navigate(`/edit-complaint/${id}`);
   };
 
+  const handleCancelComplaint = async () => {
+    if (!window.confirm('Are you sure you want to cancel this complaint?')) {
+      return;
+    }
+
+    try {
+      // First fetch available statuses to get the Cancel status ID
+      const statusesResponse = await axios.get('http://localhost:8000/api/complaint-statuses');
+      const statuses = statusesResponse.data || [];
+      const cancelStatus = statuses.find(s => s.name?.toLowerCase() === 'cancel' || s.code?.toLowerCase() === 'cancel');
+      
+      if (!cancelStatus) {
+        alert('Cancel status not found in system');
+        return;
+      }
+
+      const response = await axios.put(`http://localhost:8000/api/complaints/${id}/status`, {
+        status_id: cancelStatus.id,
+        remark: 'Complaint cancelled by user'
+      });
+      setComplaint(response.data.data || response.data);
+      alert('Complaint cancelled successfully');
+    } catch (error) {
+      console.error('Error cancelling complaint:', error);
+      alert('Failed to cancel complaint');
+    }
+  };
+
   // Message handlers
   const handleAddMessage = () => {
     setCurrentMessage({
@@ -396,10 +424,19 @@ const Complaint = () => {
     const variants = {
       Low: 'secondary',
       Medium: 'info',
-      High: 'warning',
-      Urgent: 'danger'
+      Urgent: 'warning',
+      VeryUrgent: 'danger'
     };
     return <Badge bg={variants[priority] || 'secondary'}>{priority || 'N/A'}</Badge>;
+  };
+
+  const getStatusColor = (statusName) => {
+    const colors = {
+      'Pending': 'secondary',
+      'Assigned': 'warning',
+      'Completed': 'success'
+    };
+    return colors[statusName] || 'secondary';
   };
 
   const getMessageTypeBadge = (type) => {
@@ -509,6 +546,27 @@ const Complaint = () => {
 
               <Row className="mb-3">
                 <Col md={6}>
+                  <strong>Status:</strong>
+                  <div className="d-flex align-items-center gap-2 mt-1">
+                    {complaint?.lastStatus ? (
+                      <Badge bg={getStatusColor(complaint.lastStatus.name)}>
+                        {complaint.lastStatus.name}
+                      </Badge>
+                    ) : (
+                      <Badge bg="secondary">Pending</Badge>
+                    )}
+                    {complaint?.lastStatus?.name !== 'Cancel' && (
+                      <Button
+                        variant="outline-danger"
+                        size="sm"
+                        onClick={handleCancelComplaint}
+                      >
+                        Cancel
+                      </Button>
+                    )}
+                  </div>
+                </Col>
+                <Col md={6}>
                   <strong>Due Date:</strong>
                   <p>{complaint.due_at ? new Date(complaint.due_at).toLocaleDateString() : 'N/A'}</p>
                 </Col>
@@ -524,17 +582,6 @@ const Complaint = () => {
               )}
             </Card.Body>
           </Card>
-
-          {/* Status and Priority Card */}
-          {complaint && (
-            <ComplaintStatusPriority 
-              complaintId={complaint.id} 
-              complaint={complaint}
-              onUpdate={(updatedComplaint) => {
-                setComplaint({ ...complaint, ...updatedComplaint });
-              }}
-            />
-          )}
 
           {/* TABS */}
           <Card className="mb-4">
@@ -1340,6 +1387,7 @@ const Complaint = () => {
         onSuccess={() => {
           setShowAssignForm(false);
           fetchAssignments();
+          fetchComplaint(); // Refresh complaint to update status
         }}
       />
 

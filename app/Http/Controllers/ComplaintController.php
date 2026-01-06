@@ -363,4 +363,86 @@ class ComplaintController extends Controller
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
+
+    /**
+     * Get dashboard statistics for complaints by status and priority
+     */
+    public function getDashboardStats()
+    {
+        try {
+            // Get specific status counts
+            $pendingCount = Complaint::whereHas('lastStatus', function ($query) {
+                $query->where('code', 'pending')->orWhere('code', 'open');
+            })->count();
+            
+            $assignedCount = Complaint::whereHas('lastStatus', function ($query) {
+                $query->where('code', 'assigned');
+            })->count();
+            
+            $completedCount = Complaint::whereHas('lastStatus', function ($query) {
+                $query->where('code', 'resolved')->orWhere('code', 'closed');
+            })->count();
+
+            // Get specific priority counts
+            $lowCount = Complaint::where('priority_level', 'low')->count();
+            $mediumCount = Complaint::where('priority_level', 'medium')->count();
+            $urgentCount = Complaint::where('priority_level', 'urgent')->count();
+            $veryUrgentCount = Complaint::where('priority_level', 'very_urgent')->count();
+
+            // Get total complaints
+            $totalComplaints = Complaint::count();
+
+            $statusStats = [
+                [
+                    'status_name' => 'Pending',
+                    'status_code' => 'pending',
+                    'count' => $pendingCount
+                ],
+                [
+                    'status_name' => 'Assigned',
+                    'status_code' => 'assigned',
+                    'count' => $assignedCount
+                ],
+                [
+                    'status_name' => 'Completed',
+                    'status_code' => 'completed',
+                    'count' => $completedCount
+                ]
+            ];
+
+            $priorityStats = [
+                [
+                    'priority_level' => 'low',
+                    'count' => $lowCount
+                ],
+                [
+                    'priority_level' => 'medium',
+                    'count' => $mediumCount
+                ],
+                [
+                    'priority_level' => 'urgent',
+                    'count' => $urgentCount
+                ],
+                [
+                    'priority_level' => 'very_urgent',
+                    'count' => $veryUrgentCount
+                ]
+            ];
+
+            return response()->json([
+                'status_stats' => $statusStats,
+                'priority_stats' => $priorityStats,
+                'total_complaints' => $totalComplaints,
+                'pending_count' => $pendingCount,
+                'assigned_count' => $assignedCount,
+                'completed_count' => $completedCount,
+                'low_count' => $lowCount,
+                'medium_count' => $mediumCount,
+                'urgent_count' => $urgentCount,
+                'very_urgent_count' => $veryUrgentCount
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
 }

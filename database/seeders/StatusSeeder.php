@@ -14,10 +14,11 @@ class StatusSeeder extends Seeder
     public function run(): void
     {
         // Delete old statuses
-        Status::whereNotIn('code', ['pending', 'assigned', 'completed'])->delete();
+        Status::whereNotIn('code', ['pending','cancel', 'assigned', 'completed',])->delete();
         
         // Create/update only the required statuses
         Status::firstOrCreate(['code' => 'pending'], ['name' => 'Pending']);
+        Status::firstOrCreate(['code' => 'cancel'], ['name' => 'Cancel']);
         Status::firstOrCreate(['code' => 'assigned'], ['name' => 'Assigned']);
         Status::firstOrCreate(['code' => 'completed'], ['name' => 'Completed']);
     }

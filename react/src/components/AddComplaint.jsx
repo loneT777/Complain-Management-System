@@ -10,6 +10,21 @@ const AddComplaint = () => {
   const [categories, setCategories] = useState([]);
   const [selectedCategories, setSelectedCategories] = useState([]);
 
+  // Bootstrap color variant mapping to hex colors
+  const bootstrapColors = {
+    secondary: { hex: '#6c757d', light: '#e2e3e5' },
+    info: { hex: '#0dcaf0', light: '#cff4fc' },
+    warning: { hex: '#ffc107', light: '#fff3cd' },
+    danger: { hex: '#dc3545', light: '#f8d7da' }
+  };
+
+  const priorityLevels = [
+    { value: 'Low', variant: 'secondary', label: 'Low' },
+    { value: 'Medium', variant: 'info', label: 'Medium' },
+    { value: 'Urgent', variant: 'warning', label: 'Urgent' },
+    { value: 'Very Urgent', variant: 'danger', label: 'Very Urgent' }
+  ];
+
   const [complaint, setComplaint] = useState({
     title: '',
     description: '',
@@ -101,6 +116,52 @@ const AddComplaint = () => {
 
             <Card.Body>
               <Form onSubmit={handleSubmit}>
+                {/* Priority Level Radio Buttons at Top */}
+                <Row className="mb-4">
+                  <Col md={12}>
+                    <Form.Group>
+                      <Form.Label className="mb-3" style={{ fontWeight: '600', display: 'block' }}>
+                        Priority Level <span className="text-danger">*</span>
+                      </Form.Label>
+                      <div className="d-flex gap-3 flex-wrap">
+                        {priorityLevels.map((priority) => (
+                          <div key={priority.value} className="form-check">
+                            <input
+                              className="form-check-input"
+                              type="radio"
+                              name="priority_level"
+                              id={`priority_${priority.value}`}
+                              value={priority.value}
+                              checked={complaint.priority_level === priority.value}
+                              onChange={handleChange}
+                              required
+                              style={{ cursor: 'pointer' }}
+                            />
+                            <label
+                              className="form-check-label"
+                              htmlFor={`priority_${priority.value}`}
+                              style={{
+                                cursor: 'pointer',
+                                padding: '8px 12px',
+                                borderRadius: '4px',
+                                backgroundColor: complaint.priority_level === priority.value ? bootstrapColors[priority.variant].light : '#f8f9fa',
+                                border: `2px solid ${bootstrapColors[priority.variant].hex}`,
+                                color: bootstrapColors[priority.variant].hex,
+                                fontWeight: '500',
+                                transition: 'all 0.3s ease',
+                                display: 'inline-block',
+                                marginLeft: '0.5rem'
+                              }}
+                            >
+                              {priority.label}
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                    </Form.Group>
+                  </Col>
+                </Row>
+
                 <Row>
                   {/* Title */}
                   <Col md={12} className="mb-3">
@@ -224,6 +285,25 @@ const AddComplaint = () => {
                         <option value="Public">Public</option>
                         <option value="Confidential">Confidential</option>
                         <option value="Highly Confidential">Highly Confidential</option>
+                      </Form.Select>
+                    </Form.Group>
+                  </Col>
+
+                  {/* Channel */}
+                  <Col md={6} className="mb-3">
+                    <Form.Group>
+                      <Form.Label>Channel</Form.Label>
+                      <Form.Select
+                        name="channel"
+                        value={complaint.channel}
+                        onChange={handleChange}
+                      >
+                        <option value="">Select channel</option>
+                        <option value="Phone">Phone</option>
+                        <option value="Email">Email</option>
+                        <option value="In-Person">In-Person</option>
+                        <option value="Online Portal">Online Portal</option>
+                        <option value="Letter">Letter</option>
                       </Form.Select>
                     </Form.Group>
                   </Col>

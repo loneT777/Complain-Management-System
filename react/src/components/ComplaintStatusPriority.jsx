@@ -6,25 +6,20 @@ const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 const ComplaintStatusPriority = ({ complaintId, complaint, onUpdate }) => {
   const [statuses, setStatuses] = useState([]);
-  const [priorities, setPriorities] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
   useEffect(() => {
-    fetchStatusesAndPriorities();
+    fetchStatuses();
   }, []);
 
-  const fetchStatusesAndPriorities = async () => {
+  const fetchStatuses = async () => {
     try {
-      const [statusRes, priorityRes] = await Promise.all([
-        axios.get(`${API_URL}/complaint-statuses`),
-        axios.get(`${API_URL}/complaint-priorities`)
-      ]);
+      const statusRes = await axios.get(`${API_URL}/complaint-statuses`);
       setStatuses(statusRes.data);
-      setPriorities(priorityRes.data);
     } catch (error) {
-      console.error('Error fetching statuses and priorities:', error);
+      console.error('Error fetching statuses:', error);
     }
   };
 
@@ -50,28 +45,6 @@ const ComplaintStatusPriority = ({ complaintId, complaint, onUpdate }) => {
     }
   };
 
-  const handlePriorityChange = async (priority) => {
-    setLoading(true);
-    setError('');
-    setSuccess('');
-    try {
-      const response = await axios.put(`${API_URL}/complaints/${complaintId}/priority`, {
-        priority_level: priority,
-        remark: 'Priority updated from complaint view'
-      });
-      setSuccess('Priority updated successfully');
-      if (onUpdate) {
-        onUpdate(response.data.data);
-      }
-      setTimeout(() => setSuccess(''), 3000);
-    } catch (err) {
-      setError(err.response?.data?.message || 'Failed to update priority');
-      setTimeout(() => setError(''), 3000);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const getStatusColor = (statusName) => {
     const colors = {
       'Pending': 'secondary',
@@ -81,30 +54,10 @@ const ComplaintStatusPriority = ({ complaintId, complaint, onUpdate }) => {
     return colors[statusName] || 'secondary';
   };
 
-  const getPriorityColor = (priorityLevel) => {
-    const colors = {
-      'Low': 'success',
-      'Medium': 'warning',
-      'Urgent': 'danger',
-      'Very Urgent': 'dark'
-    };
-    return colors[priorityLevel] || 'secondary';
-  };
-
-  const getPriorityBg = (priorityLevel) => {
-    const bgs = {
-      'Low': '#28a745',
-      'Medium': '#ffc107',
-      'Urgent': '#dc3545',
-      'Very Urgent': '#343a40'
-    };
-    return bgs[priorityLevel] || '#6c757d';
-  };
-
   return (
     <Card className="mb-3">
       <Card.Header className="bg-light">
-        <h5 className="mb-0">Complaint Status & Priority</h5>
+        <h5 className="mb-0">Complaint Status</h5>
       </Card.Header>
       <Card.Body>
         {error && <Alert variant="danger" className="mb-3">{error}</Alert>}
@@ -140,44 +93,6 @@ const ComplaintStatusPriority = ({ complaintId, complaint, onUpdate }) => {
                       {status.name}
                     </Dropdown.Item>
                   ))}
-                </Dropdown.Menu>
-              </Dropdown>
-            </div>
-          </Col>
-
-          <Col md={6}>
-            <div className="mb-3">
-              <h6 className="mb-2">Current Priority</h6>
-              <div className="d-flex align-items-center gap-2 mb-2">
-                {complaint?.priority_level ? (
-                  <Badge style={{ backgroundColor: getPriorityBg(complaint.priority_level) }}>
-                    {complaint.priority_level}
-                  </Badge>
-                ) : (
-                  <Badge bg="secondary">Not Set</Badge>
-                )}
-              </div>
-              <Dropdown>
-                <Dropdown.Toggle 
-                  variant="outline-warning" 
-                  size="sm" 
-                  disabled={loading}
-                >
-                  Change Priority
-                </Dropdown.Toggle>
-                <Dropdown.Menu>
-                  <Dropdown.Item onClick={() => handlePriorityChange('Low')}>
-                    Low
-                  </Dropdown.Item>
-                  <Dropdown.Item onClick={() => handlePriorityChange('Medium')}>
-                    Medium
-                  </Dropdown.Item>
-                  <Dropdown.Item onClick={() => handlePriorityChange('Urgent')}>
-                    Urgent
-                  </Dropdown.Item>
-                  <Dropdown.Item onClick={() => handlePriorityChange('Very Urgent')}>
-                    Very Urgent
-                  </Dropdown.Item>
                 </Dropdown.Menu>
               </Dropdown>
             </div>
