@@ -8,6 +8,7 @@ use App\Models\ComplaintLog;
 use App\Models\Status;
 use App\Config\PrioritySLA;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
 class ComplaintAssignmentController extends Controller
@@ -60,7 +61,7 @@ class ComplaintAssignmentController extends Controller
                         'complaint_id' => $assign->complaint_id,
                         'assignee_division_id' => $assign->assignee_division_id,
                         'assignee_user_id' => $assign->assignee_user_id,
-                        'assigner_id' => $assign->assigner_id,
+                        'assigner_user_id' => $assign->assigner_user_id,
                         'last_status_id' => $assign->last_status_id,
                         'due_at' => $assign->due_at,
                         'remark' => $assign->remark,
@@ -106,7 +107,7 @@ class ComplaintAssignmentController extends Controller
             $request->validate([
                 'complaint_id' => 'required|exists:complaints,id',
                 'assignee_division_id' => 'nullable|exists:divisions,id',
-                'assignee_id' => 'nullable|exists:persons,id',
+                'assignee_user_id' => 'nullable|exists:persons,id',
                 'due_at' => 'nullable|date',
                 'remark' => 'nullable|string',
             ]);
@@ -118,10 +119,10 @@ class ComplaintAssignmentController extends Controller
             $assignment = ComplaintAssignment::create([
                 'complaint_id' => $request->input('complaint_id'),
                 'assignee_division_id' => $request->input('assignee_division_id'),
-                'assignee_id' => $request->input('assignee_id'),
+                'assignee_user_id' => $request->input('assignee_user_id'),
                 'due_at' => $request->input('due_at'),
                 'remark' => $request->input('remark'),
-                'assigner_id' => 1, // TODO: Replace with auth()->user()->person_id
+                'assigner_user_id' => Auth::user()?->person_id,
                 'last_status_id' => $assignedStatus ? $assignedStatus->id : null,
             ]);
 

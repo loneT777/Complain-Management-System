@@ -214,6 +214,36 @@ const Complaint = () => {
     }
   };
 
+  const handleCompleteComplaint = async () => {
+    if (!window.confirm('Mark this complaint as completed?')) {
+      return;
+    }
+
+    try {
+      const statusesResponse = await axios.get('http://localhost:8000/api/complaint-statuses');
+      const statuses = statusesResponse.data || [];
+      const completedStatus = statuses.find(
+        (s) => s.name?.toLowerCase() === 'completed' || s.code?.toLowerCase() === 'completed'
+      );
+
+      if (!completedStatus) {
+        alert('Completed status not found in system');
+        return;
+      }
+
+      const response = await axios.put(`http://localhost:8000/api/complaints/${id}/status`, {
+        status_id: completedStatus.id,
+        remark: 'Complaint marked as completed by user'
+      });
+
+      setComplaint(response.data.data || response.data);
+      alert('Complaint marked as completed');
+    } catch (error) {
+      console.error('Error completing complaint:', error);
+      alert('Failed to mark complaint as completed');
+    }
+  };
+
   // Message handlers
   const handleAddMessage = () => {
     setCurrentMessage({
@@ -437,7 +467,8 @@ const Complaint = () => {
     const colors = {
       'Pending': 'secondary',
       'Assigned': 'warning',
-      'Completed': 'success'
+      'Completed': 'success',
+      'Cancel': 'danger'
     };
     return colors[statusName] || 'secondary';
   };
@@ -551,20 +582,41 @@ const Complaint = () => {
                 <Col md={6}>
                   <strong>Status:</strong>
                   <div className="d-flex align-items-center gap-2 mt-1">
-                    {complaint?.lastStatus ? (
-                      <Badge bg={getStatusColor(complaint.lastStatus.name)}>
-                        {complaint.lastStatus.name}
-                      </Badge>
-                    ) : (
-                      <Badge bg="secondary">Pending</Badge>
-                    )}
-                    {complaint?.lastStatus?.name !== 'Cancel' && (
+                    {(() => {
+                      const lastStatus = complaint?.last_status || complaint?.lastStatus;
+                      if (lastStatus?.name) {
+                        return (
+                          <Badge bg={getStatusColor(lastStatus.name)}>
+                            {lastStatus.name}
+                          </Badge>
+                        );
+                      }
+                      return <Badge bg="secondary">Pending</Badge>;
+                    })()}
+                    {(() => {
+                      const lastStatus = complaint?.last_status || complaint?.lastStatus;
+                      const statusCode = (lastStatus?.code || lastStatus?.name || '').toString().toLowerCase();
+                      return statusCode === 'pending';
+                    })() && (
                       <Button
                         variant="outline-danger"
                         size="sm"
                         onClick={handleCancelComplaint}
                       >
                         Cancel
+                      </Button>
+                    )}
+                    {(() => {
+                      const lastStatus = complaint?.last_status || complaint?.lastStatus;
+                      const statusCode = (lastStatus?.code || lastStatus?.name || '').toString().toLowerCase();
+                      return statusCode === 'assigned';
+                    })() && (
+                      <Button
+                        variant="outline-success"
+                        size="sm"
+                        onClick={handleCompleteComplaint}
+                      >
+                        Complete
                       </Button>
                     )}
                   </div>

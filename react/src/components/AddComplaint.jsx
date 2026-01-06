@@ -29,7 +29,7 @@ const AddComplaint = () => {
     title: '',
     description: '',
     channel: '',
-    priority_level: '',
+    priority_level: 'Medium',
     confidentiality_level: '',
     complainant_name: '',
     complainant_phone: '',
@@ -97,21 +97,12 @@ const AddComplaint = () => {
 
   return (
     <Container fluid className="p-4">
-      <Row className="mb-3">
-        <Col>
-          <div className="d-flex justify-content-between align-items-center">
-            <div className="d-flex align-items-center">
-              <h4 className="mb-0">New Complaint</h4>
-            </div>
-          </div>
-        </Col>
-      </Row>
 
       <Row>
         <Col lg={8}>
           <Card>
             <Card.Header>
-              <h5 className="mb-0">Complaint Information</h5>
+              <h5 className="mb-0">New complaint</h5>
             </Card.Header>
 
             <Card.Body>
@@ -125,35 +116,38 @@ const AddComplaint = () => {
                       </Form.Label>
                       <div className="d-flex gap-3 flex-wrap">
                         {priorityLevels.map((priority) => (
-                          <div key={priority.value} className="form-check">
-                            <input
-                              className="form-check-input"
-                              type="radio"
-                              name="priority_level"
-                              id={`priority_${priority.value}`}
-                              value={priority.value}
-                              checked={complaint.priority_level === priority.value}
-                              onChange={handleChange}
-                              required
-                              style={{ cursor: 'pointer' }}
-                            />
+                          <div key={priority.value}>
                             <label
-                              className="form-check-label"
                               htmlFor={`priority_${priority.value}`}
                               style={{
                                 cursor: 'pointer',
                                 padding: '8px 12px',
                                 borderRadius: '4px',
-                                backgroundColor: complaint.priority_level === priority.value ? bootstrapColors[priority.variant].light : '#f8f9fa',
+                                backgroundColor:
+                                  complaint.priority_level === priority.value
+                                    ? bootstrapColors[priority.variant].light
+                                    : '#f8f9fa',
                                 border: `2px solid ${bootstrapColors[priority.variant].hex}`,
                                 color: bootstrapColors[priority.variant].hex,
                                 fontWeight: '500',
                                 transition: 'all 0.3s ease',
-                                display: 'inline-block',
-                                marginLeft: '0.5rem'
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '0.5rem'
                               }}
                             >
-                              {priority.label}
+                              <input
+                                className="form-check-input m-0"
+                                type="radio"
+                                name="priority_level"
+                                id={`priority_${priority.value}`}
+                                value={priority.value}
+                                checked={complaint.priority_level === priority.value}
+                                onChange={handleChange}
+                                required
+                                style={{ cursor: 'pointer' }}
+                              />
+                              <span>{priority.label}</span>
                             </label>
                           </div>
                         ))}
@@ -391,11 +385,11 @@ const AddComplaint = () => {
             </Card.Header>
             <Card.Body>
               <div className="mb-3">
-                <strong className="text-danger">Urgent:</strong>
+                <strong className="text-danger">Very Urgent:</strong>
                 <p className="mb-0 small">Requires immediate attention</p>
               </div>
               <div className="mb-3">
-                <strong className="text-warning">High:</strong>
+                <strong className="text-warning">Urgent:</strong>
                 <p className="mb-0 small">Should be addressed within 24 hours</p>
               </div>
               <div className="mb-3">

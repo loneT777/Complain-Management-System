@@ -19,7 +19,7 @@ class ComplaintController extends Controller
     public function index(Request $request)
     {
         try {
-            $query = Complaint::with(['complainant', 'lastStatus']);
+            $query = Complaint::with(['complainant', 'lastStatus', 'categories']);
 
             // Apply filters if provided
             if ($request->has('status_id')) {
@@ -44,7 +44,10 @@ class ComplaintController extends Controller
             
             $complaints = $query->orderBy('created_at', 'desc')->get();
 
-            return response()->json($complaints);
+            return response()->json([
+                'success' => true,
+                'data' => $complaints
+            ]);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }

@@ -67,13 +67,17 @@ const ComplaintTable = ({ complaints, loading, assignments = {}, onAssign }) => 
             <td>{complaint.title}</td>
             <td>{complaint.description}</td>
             <td>
-              {complaint.lastStatus ? (
-                <Badge bg={getStatusColor(complaint.lastStatus.name)}>
-                  {complaint.lastStatus.name}
-                </Badge>
-              ) : (
-                <Badge bg="secondary">Not Set</Badge>
-              )}
+              {(() => {
+                const lastStatus = complaint.last_status || complaint.lastStatus;
+                if (lastStatus?.name) {
+                  return (
+                    <Badge bg={getStatusColor(lastStatus.name)}>
+                      {lastStatus.name}
+                    </Badge>
+                  );
+                }
+                return <Badge bg="secondary">Pending</Badge>;
+              })()}
             </td>
             <td>
               {complaint.priority_level ? (

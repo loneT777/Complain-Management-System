@@ -82,14 +82,7 @@ const menuItems = {
         //   iconname: 'attach_file',
         //   url: '/attachments'
         // },
-        {
-          id: 'complaint-assignments',
-          title: 'Complaint Assignments',
-          type: 'item',
-          icon: 'material-icons-two-tone',
-          iconname: 'assignment',
-          url: '/complaint-assignments'
-        }
+        
       ]
     }
   ]
