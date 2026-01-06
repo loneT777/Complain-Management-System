@@ -34,19 +34,7 @@ Route::get('/sanctum/csrf-cookie', function (Request $request) {
 // PUBLIC AUTH ROUTES
 // -----------------
 Route::post('/login', [AuthController::class, 'login']);
-
-// -----------------
-// PUBLIC ROUTES
-// -----------------
-// These routes are accessible without authentication and are intended for public data access.
-
-Route::get('/public/roles', [RoleController::class, 'publicIndex']);
-Route::get('/public/divisions', [DivisionController::class, 'publicIndex']);
-Route::get('/public/categories', [CategoryController::class, 'publicIndex']);
-Route::get('/public/messages', [MessageController::class, 'publicIndex']);
-Route::get('/public/complaints', [ComplaintController::class, 'publicIndex']);
-
-// Temporarily make all routes public for development/testing
+porarily make all routes public for development/testing
 Route::apiResource('messages', MessageController::class);
 Route::apiResource('complaints', ComplaintController::class);
 Route::apiResource('categories', CategoryController::class);
