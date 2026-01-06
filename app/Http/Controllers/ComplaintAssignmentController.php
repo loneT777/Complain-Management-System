@@ -9,7 +9,11 @@ use App\Models\Status;
 use App\Config\PrioritySLA;
 use Illuminate\Http\Request;
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 use Illuminate\Support\Facades\Log;
+=======
+use Illuminate\Support\Facades\Auth;
+>>>>>>> Stashed changes
 =======
 use Illuminate\Support\Facades\Auth;
 >>>>>>> Stashed changes

@@ -7,7 +7,11 @@ use App\Models\Complaint;
 use App\Models\ComplaintAssignment;
 use Illuminate\Http\Request;
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 use Illuminate\Support\Facades\Log;
+=======
+use Illuminate\Support\Facades\Auth;
+>>>>>>> Stashed changes
 =======
 use Illuminate\Support\Facades\Auth;
 >>>>>>> Stashed changes
