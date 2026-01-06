@@ -13,6 +13,9 @@ use App\Http\Controllers\ComplaintAssignmentController;
 use App\Http\Controllers\ComplaintLogController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\TestHashController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\PermissionController;
+use App\Http\Controllers\RolePermissionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -44,6 +47,13 @@ Route::apiResource('persons', PersonController::class);
 Route::apiResource('attachments', AttachmentController::class);
 Route::apiResource('complaint_assignments', ComplaintAssignmentController::class);
 Route::apiResource('complaint_logs', ComplaintLogController::class);
+
+// Security Management Routes
+Route::apiResource('users', UserController::class);
+Route::apiResource('permissions', PermissionController::class);
+Route::get('role-permissions/{roleId}', [RolePermissionController::class, 'show']);
+Route::post('role-permissions', [RolePermissionController::class, 'store']);
+Route::get('roles-with-permissions', [RolePermissionController::class, 'index']);
 
 // Complaint-specific routes
 Route::get('/complaints/{complaintId}/messages', [MessageController::class, 'getByComplaint']);

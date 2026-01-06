@@ -6,19 +6,41 @@ use App\Models\Message;
 use App\Models\Complaint;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Auth;
 
 class MessageController extends Controller
 {
     /**
-     * Get all messages with pagination and search
+     * Get all messages with pagination and search, filtered by role
      */
     public function index(Request $request)
     {
         try {
+            $user = Auth::user();
+            
+            if (!$user) {
+                return response()->json(['error' => 'Unauthorized'], 401);
+            }
+
             $perPage = $request->input('per_page', 10);
             $search = $request->input('search', '');
 
             $query = Message::with(['complaint', 'parent', 'user']);
+
+            // Apply role-based filtering
+            if ($user->isSuperAdmin()) {
+                // Super Admin: Display all messages
+                // No additional filtering needed
+            } elseif ($user->hasDivisionAccess()) {
+                // Division User: Display messages for division complaints
+                $query->whereHas('complaint', function ($q) use ($user) {
+                    $q->where('division_id', $user->division_id);
+                });
+            } else {
+                // Regular User: Display messages for accessible complaints
+                $accessibleComplaintIds = $user->getAccessibleComplaintIds();
+                $query->whereIn('complaint_id', $accessibleComplaintIds);
+            }
 
             if ($search) {
                 $query->where(function ($q) use ($search) {

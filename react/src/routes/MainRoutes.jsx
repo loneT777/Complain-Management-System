@@ -18,6 +18,12 @@ const Messages = lazy(() => import('../components/Messages'));
 const Attachments = lazy(() => import('../components/Attachments'));
 const ComplaintAssignments = lazy(() => import('../components/ComplaintAssignments'));
 
+// Security Management
+const Users = lazy(() => import('../views/security/Users'));
+const RolesManagement = lazy(() => import('../views/security/RolesManagement'));
+const Permissions = lazy(() => import('../views/security/Permissions'));
+const RolePermissions = lazy(() => import('../views/security/RolePermissions'));
+
 const MainRoutes = {
   path: '/',
   children: [
@@ -65,6 +71,12 @@ const MainRoutes = {
         { path: 'categories', element: <Categories /> },
         { path: 'messages', element: <Messages /> },
         { path: 'attachments', element: <Attachments /> },
+
+        // Security Management routes
+        { path: 'security/users', element: <Users /> },
+        { path: 'security/roles', element: <RolesManagement /> },
+        { path: 'security/permissions', element: <Permissions /> },
+        { path: 'security/role-permissions', element: <RolePermissions /> },
 
         // Catch-all for undefined routes
         {

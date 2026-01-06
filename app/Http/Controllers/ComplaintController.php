@@ -15,13 +15,37 @@ class ComplaintController extends Controller
 {
     /**
      * Display a paginated listing of complaints with relationships and filtering.
+     * Filters complaints based on user role and permissions.
      */
     public function index(Request $request)
     {
         try {
+            $user = Auth::user();
+            
+            if (!$user) {
+                return response()->json(['error' => 'Unauthorized'], 401);
+            }
+
             $query = Complaint::with(['complainant', 'lastStatus']);
 
-            // Apply filters if provided
+            // Apply role-based filtering
+            if ($user->isSuperAdmin()) {
+                // Super Admin: Display all complaints
+                // No additional filtering needed
+            } elseif ($user->hasDivisionAccess()) {
+                // Division User: Display division-specific complaints
+                $query->where('division_id', $user->division_id);
+            } else {
+                // Regular User: Display own complaints or assigned complaints
+                $query->where(function ($q) use ($user) {
+                    $q->where('created_by', $user->id)
+                      ->orWhereHas('assignments', function ($assignQuery) use ($user) {
+                          $assignQuery->where('user_id', $user->id);
+                      });
+                });
+            }
+
+            // Apply additional filters if provided
             if ($request->has('status_id')) {
                 $query->where('last_status_id', $request->status_id);
             }
@@ -111,10 +135,17 @@ class ComplaintController extends Controller
 
     /**
      * Display the specified complaint with relationships.
+     * Checks if user has permission to view this complaint.
      */
     public function show($id)
     {
         try {
+            $user = Auth::user();
+            
+            if (!$user) {
+                return response()->json(['error' => 'Unauthorized'], 401);
+            }
+
             $complaint = Complaint::with([
                 'complainant',
                 'lastStatus',
@@ -128,6 +159,24 @@ class ComplaintController extends Controller
                         ->orderBy('created_at', 'desc');
                 }
             ])->findOrFail($id);
+
+            // Check if user has access to view this complaint
+            if (!$user->isSuperAdmin()) {
+                if ($user->hasDivisionAccess()) {
+                    // Check if complaint belongs to user's division
+                    if ($complaint->division_id !== $user->division_id) {
+                        return response()->json(['error' => 'Forbidden - You cannot view this complaint'], 403);
+                    }
+                } else {
+                    // Check if user created or is assigned to this complaint
+                    $hasAccess = $complaint->created_by === $user->id ||
+                        $complaint->assignments()->where('user_id', $user->id)->exists();
+                    
+                    if (!$hasAccess) {
+                        return response()->json(['error' => 'Forbidden - You cannot view this complaint'], 403);
+                    }
+                }
+            }
 
             return response()->json($complaint);
         } catch (\Exception $e) {

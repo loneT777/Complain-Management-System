@@ -8,17 +8,42 @@ use App\Models\ComplaintLog;
 use App\Models\Status;
 use App\Config\PrioritySLA;
 use Illuminate\Http\Request;
+<<<<<<< Updated upstream
 use Illuminate\Support\Facades\Log;
+=======
+use Illuminate\Support\Facades\Auth;
+>>>>>>> Stashed changes
 
 class ComplaintAssignmentController extends Controller
 {
     /**
-     * Display a listing of complaint assignments
+     * Display a listing of complaint assignments with role-based filtering
      */
     public function index(Request $request)
     {
         try {
+            $user = Auth::user();
+            
+            if (!$user) {
+                return response()->json(['error' => 'Unauthorized'], 401);
+            }
+
             $query = ComplaintAssignment::query();
+
+            // Apply role-based filtering
+            if ($user->isSuperAdmin()) {
+                // Super Admin: Display all assignments
+                // No additional filtering needed
+            } elseif ($user->hasDivisionAccess()) {
+                // Division User: Display assignments for division complaints
+                $query->whereHas('complaint', function ($q) use ($user) {
+                    $q->where('division_id', $user->division_id);
+                });
+            } else {
+                // Regular User: Display assignments for accessible complaints
+                $accessibleComplaintIds = $user->getAccessibleComplaintIds();
+                $query->whereIn('complaint_id', $accessibleComplaintIds);
+            }
 
             // Filter by complaint_id if provided
             if ($request->has('complaint_id')) {
@@ -42,10 +67,36 @@ class ComplaintAssignmentController extends Controller
 
     /**
      * Get assignments for a specific complaint
+     * Checks if user has access to view this complaint's assignments
      */
     public function getByComplaint($complaintId)
     {
         try {
+            $user = Auth::user();
+            
+            if (!$user) {
+                return response()->json(['error' => 'Unauthorized'], 401);
+            }
+
+            // Verify complaint exists
+            $complaint = Complaint::findOrFail($complaintId);
+
+            // Check access permission
+            if (!$user->isSuperAdmin()) {
+                if ($user->hasDivisionAccess()) {
+                    if ($complaint->division_id !== $user->division_id) {
+                        return response()->json(['error' => 'Forbidden'], 403);
+                    }
+                } else {
+                    $hasAccess = $complaint->created_by === $user->id ||
+                        $complaint->assignments()->where('user_id', $user->id)->exists();
+                    
+                    if (!$hasAccess) {
+                        return response()->json(['error' => 'Forbidden'], 403);
+                    }
+                }
+            }
+
             $assignments = ComplaintAssignment::where('complaint_id', $complaintId)
                 ->with(['assigneeDivision', 'assigneeUser', 'assignerUser', 'lastStatus', 'complaint'])
                 ->orderBy('created_at', 'desc')

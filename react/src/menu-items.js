@@ -89,6 +89,39 @@ const menuItems = {
           icon: 'material-icons-two-tone',
           iconname: 'assignment',
           url: '/complaint-assignments'
+        },
+        {
+          id: 'security',
+          title: 'Security',
+          type: 'collapse',
+          icon: 'material-icons-two-tone',
+          iconname: 'security',
+          children: [
+            {
+              id: 'users',
+              title: 'Users',
+              type: 'item',
+              url: '/security/users'
+            },
+            // {
+            //   id: 'roles-management',
+            //   title: 'Roles',
+            //   type: 'item',
+            //   url: '/security/roles'
+            // },
+            {
+              id: 'permissions',
+              title: 'Permissions',
+              type: 'item',
+              url: '/security/permissions'
+            },
+            {
+              id: 'role-permissions',
+              title: 'Role Permissions',
+              type: 'item',
+              url: '/security/role-permissions'
+            }
+          ]
         }
       ]
     }
