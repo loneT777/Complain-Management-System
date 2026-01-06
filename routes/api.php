@@ -12,7 +12,7 @@ use App\Http\Controllers\AttachmentController;
 use App\Http\Controllers\ComplaintAssignmentController;
 use App\Http\Controllers\ComplaintLogController;
 use App\Http\Controllers\Auth\AuthController;
-use App\Http\Controllers\TestController;
+use App\Http\Controllers\TestHashController;
 
 /*
 |--------------------------------------------------------------------------
@@ -34,16 +34,6 @@ Route::get('/sanctum/csrf-cookie', function (Request $request) {
 // PUBLIC AUTH ROUTES
 // -----------------
 Route::post('/login', [AuthController::class, 'login']);
-
-// -----------------
-// TEST ROUTES - For Development/Testing Only
-// -----------------
-Route::prefix('test')->group(function () {
-    Route::get('/hash-password', [TestController::class, 'hashPassword']);
-    Route::get('/check-password', [TestController::class, 'checkPassword']);
-    Route::get('/verify-user', [TestController::class, 'verifyUser']);
-    Route::get('/list-users', [TestController::class, 'listUsers']);
-});
 
 // -----------------
 // PUBLIC ROUTES
@@ -74,12 +64,21 @@ Route::get('/complaints/{complaintId}/logs', [ComplaintLogController::class, 'ge
 Route::get('/categories/{categoryId}/complaints', [CategoryController::class, 'getComplaints']);
 Route::get('/complaints/{complaintId}/attachments', [AttachmentController::class, 'getAttachmentsByComplaint']);
 
+<<<<<<< HEAD
 // Status and Priority routes
 Route::get('/complaint-statuses', [ComplaintController::class, 'getStatuses']);
 Route::get('/complaint-priorities', [ComplaintController::class, 'getPriorities']);
 Route::get('/dashboard-stats', [ComplaintController::class, 'getDashboardStats']);
 Route::put('/complaints/{id}/status', [ComplaintController::class, 'updateStatus']);
 Route::put('/complaints/{id}/priority', [ComplaintController::class, 'updatePriority']);
+=======
+// Complaint Assignment SLA route
+Route::get('/complaint_assignments/sla/{complaintId}', [ComplaintAssignmentController::class, 'getComplaintSLA']);
+
+// Test Hash Routes (for password hashing - REMOVE IN PRODUCTION)
+Route::get('/test/hash', [TestHashController::class, 'hashPassword']);
+Route::post('/test/verify', [TestHashController::class, 'verifyPassword']);
+>>>>>>> c3e1369f2d41314978e4e1cd7a6db9ec5aba9b33
 
 // Public attachment routes (for development/testing)
 Route::get('/public/attachments', [AttachmentController::class, 'index']);
@@ -101,6 +100,7 @@ Route::get('/attachments/{id}/view', [AttachmentController::class, 'view']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
+    Route::get('/login-history', [AuthController::class, 'loginHistory']);
 });
 
 // -----------------
