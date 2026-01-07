@@ -13,9 +13,19 @@ const ComplaintTable = ({ complaints, loading, assignments = {}, onAssign }) => 
     const colors = {
       'Pending': 'secondary',
       'Assigned': 'warning',
-      'Completed': 'success'
+      'Completed': 'success',
+      'Cancelled': 'danger',
+      'Cancel': 'danger'  // Handle database value
     };
     return colors[statusName] || 'secondary';
+  };
+
+  const formatStatusName = (statusName) => {
+    // Convert "Cancel" to "Cancelled" for display
+    if (statusName && statusName.toLowerCase() === 'cancel') {
+      return 'Cancelled';
+    }
+    return statusName;
   };
 
   const getPriorityColor = (priorityLevel) => {
@@ -72,7 +82,7 @@ const ComplaintTable = ({ complaints, loading, assignments = {}, onAssign }) => 
                 if (lastStatus?.name) {
                   return (
                     <Badge bg={getStatusColor(lastStatus.name)}>
-                      {lastStatus.name}
+                      {formatStatusName(lastStatus.name)}
                     </Badge>
                   );
                 }

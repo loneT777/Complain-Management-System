@@ -1,6 +1,6 @@
-import React, { useMemo, useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Button, Form } from 'react-bootstrap';
-import { Add } from '@mui/icons-material';
+import React, { useState, useEffect } from 'react';
+import { Container, Row, Col, Card, Button, Form, InputGroup } from 'react-bootstrap';
+import { Add, Search } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import ComplaintTable from './ComplaintTable';
@@ -15,14 +15,23 @@ const Complaints = () => {
   const [selectedComplaint, setSelectedComplaint] = useState(null);
   const [assignments, setAssignments] = useState({}); // complaintId => assignment
 
-  useEffect(() => {
-    fetchComplaints();
-  }, []);
-
-  const fetchComplaints = async () => {
+  // Fetch complaints from API with search
+  const fetchComplaints = async (search = null) => {
+    if (search && search.length < 3) {
+      // minimum 3 characters should be there
+      return;
+    }
+    
+    const searchTxt = search ? search : '';
+    
     setLoading(true);
     try {
-      const response = await axios.get('http://localhost:8000/api/complaints');
+      const params = {};
+      if (searchTxt) {
+        params.search = searchTxt;
+      }
+      
+      const response = await axios.get('http://localhost:8000/api/complaints', { params });
       const complaintsData = response.data.data || response.data;
       setComplaints(complaintsData);
 
@@ -34,6 +43,10 @@ const Complaints = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchComplaints(searchTerm);
+  }, [searchTerm]);
 
   const fetchAssignments = async (complaintIds) => {
     if (!complaintIds.length) {
@@ -79,49 +92,8 @@ const Complaints = () => {
   const handleAssignmentSaved = () => {
     setShowAssignModal(false);
     setSelectedComplaint(null);
-    fetchComplaints(); // refresh complaints and assignments on save
+    fetchComplaints(searchTerm); // refresh complaints and assignments on save
   };
-
-  const filteredComplaints = useMemo(() => {
-    const q = (searchTerm || '').trim().toLowerCase();
-    if (q.length < 3) {
-      return complaints;
-    }
-
-    const qDigits = q.replace(/\D/g, '');
-
-    return (complaints || []).filter((c) => {
-      const title = (c?.title || '').toString().toLowerCase();
-
-      const complainantName = (
-        c?.complainant?.full_name ||
-        c?.complainant?.name ||
-        c?.complainant_name ||
-        ''
-      )
-        .toString()
-        .toLowerCase();
-
-      const phoneRaw = (
-        c?.complainant?.phone ||
-        c?.complainant_phone ||
-        ''
-      )
-        .toString()
-        .toLowerCase();
-
-      if (title.includes(q) || complainantName.includes(q) || phoneRaw.includes(q)) {
-        return true;
-      }
-
-      if (qDigits.length >= 3) {
-        const phoneDigits = phoneRaw.replace(/\D/g, '');
-        return phoneDigits.includes(qDigits);
-      }
-
-      return false;
-    });
-  }, [complaints, searchTerm]);
 
   return (
     <Container fluid className="p-4">
@@ -130,13 +102,21 @@ const Complaints = () => {
           <Card>
             <Card.Header className="d-flex justify-content-between align-items-center">
               <h4 className="mb-0">Complaints</h4>
-              <div className="flex-grow-1 px-3">
-                <Form.Control
-                  type="search"
-                  placeholder="Search by title, complainant name, or phone (min 3 characters)"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
+              <div className="flex-grow-1 d-flex justify-content-center">
+                <InputGroup style={{ width: '400px' }}>
+                  <InputGroup.Text>
+                    <Search fontSize="small" />
+                  </InputGroup.Text>
+                  <Form.Control
+                    type="search"
+                    placeholder="Search: Min 3 characters"
+                    value={searchTerm || ""}
+                    onChange={(e) => {
+                      setSearchTerm(e.target.value);
+                      fetchComplaints(e.target.value);
+                    }}
+                  />
+                </InputGroup>
               </div>
               <Button style={{ backgroundColor: '#3a4c4a', borderColor: '#3a4c4a' }} onClick={() => navigate('/add-complaint')}>
                 <Add className="me-1" /> Add New Complaint
@@ -144,7 +124,7 @@ const Complaints = () => {
             </Card.Header>
 
             <Card.Body>
-              <ComplaintTable complaints={filteredComplaints} loading={loading} assignments={assignments} onAssign={handleAssignClick} />
+              <ComplaintTable complaints={complaints} loading={loading} assignments={assignments} onAssign={handleAssignClick} />
             </Card.Body>
           </Card>
         </Col>

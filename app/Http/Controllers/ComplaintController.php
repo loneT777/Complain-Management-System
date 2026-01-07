@@ -21,6 +21,19 @@ class ComplaintController extends Controller
         try {
             $query = Complaint::with(['complainant', 'lastStatus', 'categories']);
 
+            // Apply search filter
+            if ($request->has('search') && $request->search != '') {
+                $search = $request->search;
+                $query->where(function ($q) use ($search) {
+                    $q->where('title', 'LIKE', "%{$search}%")
+                      ->orWhere('complainant_name', 'LIKE', "%{$search}%")
+                      ->orWhere('complainant_phone', 'LIKE', "%{$search}%")
+                      ->orWhereHas('complainant', function ($subQ) use ($search) {
+                          $subQ->where('full_name', 'LIKE', "%{$search}%");
+                      });
+                });
+            }
+
             // Apply filters if provided
             if ($request->has('status_id')) {
                 $query->where('last_status_id', $request->status_id);
@@ -69,22 +82,26 @@ class ComplaintController extends Controller
             'remark' => 'nullable|string',
             'category_ids' => 'nullable|array',
             'category_ids.*' => 'exists:categories,id',
+            'attachments' => 'nullable|array|max:5',
+            'attachments.*' => 'file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png|max:5120',
         ]);
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        // Generate unique reference number in a thread-safe way
-        $referenceNo = 'CMP-' . date('Ymd') . '-' . str_pad(mt_rand(1, 9999), 4, '0', STR_PAD_LEFT);
-
         try {
             DB::beginTransaction();
+            
+            // Generate sequential reference number
+            $lastComplaint = Complaint::orderBy('id', 'desc')->first();
+            $nextNumber = $lastComplaint ? ($lastComplaint->id + 1) : 1;
+            $referenceNo = 'CMP-' . str_pad($nextNumber, 6, '0', STR_PAD_LEFT);
             
             // Get the Pending status
             $pendingStatus = \App\Models\Status::where('code', 'pending')->first();
             
-            $complaint = Complaint::create(array_merge($request->except('category_ids'), [
+            $complaint = Complaint::create(array_merge($request->except(['category_ids', 'attachments']), [
                 'reference_no' => $referenceNo,
                 'received_at' => now(),
                 'complainant_id' => Auth::id() ?? 1, // Use authenticated user ID or default to 1
@@ -94,6 +111,25 @@ class ComplaintController extends Controller
             // Attach categories if provided
             if ($request->has('category_ids') && is_array($request->category_ids)) {
                 $complaint->categories()->attach($request->category_ids);
+            }
+
+            // Handle file attachments
+            if ($request->hasFile('attachments')) {
+                foreach ($request->file('attachments') as $file) {
+                    $fileName = time() . '_' . $file->getClientOriginalName();
+                    $filePath = $file->storeAs('complaints/attachments', $fileName, 'public');
+                    
+                    // Create attachment record (you'll need an Attachment model)
+                    DB::table('complaint_attachments')->insert([
+                        'complaint_id' => $complaint->id,
+                        'file_name' => $fileName,
+                        'file_path' => $filePath,
+                        'file_size' => $file->getSize(),
+                        'mime_type' => $file->getMimeType(),
+                        'created_at' => now(),
+                        'updated_at' => now()
+                    ]);
+                }
             }
 
             // Note: Logs are created only after complaint assignment
