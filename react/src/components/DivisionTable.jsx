@@ -46,13 +46,13 @@ const DivisionTable = ({ divisions, loading, handleEdit, handleDelete }) => {
                   >
                     <Edit fontSize="small" />
                   </Button>
-                  <Button
+                  {/* <Button
                     variant="danger"
                     size="sm"
                     onClick={() => handleDelete(division.id)}
                   >
                     <Delete fontSize="small" />
-                  </Button>
+                  </Button> */}
                 </td>
               </tr>
             ))

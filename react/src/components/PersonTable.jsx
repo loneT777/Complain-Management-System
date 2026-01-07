@@ -56,13 +56,13 @@ const PersonTable = ({ persons, loading, handleEdit, handleDelete }) => {
                   >
                     <Edit fontSize="small" />
                   </Button>
-                  <Button
+                  {/* <Button
                     variant="danger"
                     size="sm"
                     onClick={() => handleDelete(person.id)}
                   >
                     <Delete fontSize="small" />
-                  </Button>
+                  </Button> */}
                 </td>
               </tr>
             ))

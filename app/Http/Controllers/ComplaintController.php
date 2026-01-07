@@ -253,6 +253,14 @@ class ComplaintController extends Controller
 
             $complaint->update(['last_status_id' => $request->status_id]);
 
+            // Create a record in complaint_statuses table to track status history
+            DB::table('complaint_statuses')->insert([
+                'status_id' => $request->status_id,
+                'complaint_id' => $complaint->id,
+                'remark' => $request->remark,
+                'created_at' => now()
+            ]);
+
             // Log the status change
             ComplaintLog::create([
                 'complaint_id' => $complaint->id,

@@ -192,13 +192,13 @@ const Complaint = () => {
     }
 
     try {
-      // First fetch available statuses to get the Cancel status ID
+      // First fetch available statuses to get the Cancelled status ID
       const statusesResponse = await axios.get('http://localhost:8000/api/complaint-statuses');
       const statuses = statusesResponse.data || [];
-      const cancelStatus = statuses.find(s => s.name?.toLowerCase() === 'cancel' || s.code?.toLowerCase() === 'cancel');
+      const cancelStatus = statuses.find(s => s.name?.toLowerCase() === 'cancelled' || s.code?.toLowerCase() === 'cancelled');
       
       if (!cancelStatus) {
-        alert('Cancel status not found in system');
+        alert('Cancelled status not found in system');
         return;
       }
 
@@ -468,9 +468,18 @@ const Complaint = () => {
       'Pending': 'secondary',
       'Assigned': 'warning',
       'Completed': 'success',
-      'Cancel': 'danger'
+      'Cancelled': 'danger',
+      'Cancel': 'danger'  // Handle database value
     };
     return colors[statusName] || 'secondary';
+  };
+
+  const formatStatusName = (statusName) => {
+    // Convert "Cancel" to "Cancelled" for display
+    if (statusName && statusName.toLowerCase() === 'cancel') {
+      return 'Cancelled';
+    }
+    return statusName;
   };
 
   const getMessageTypeBadge = (type) => {
@@ -587,7 +596,7 @@ const Complaint = () => {
                       if (lastStatus?.name) {
                         return (
                           <Badge bg={getStatusColor(lastStatus.name)}>
-                            {lastStatus.name}
+                            {formatStatusName(lastStatus.name)}
                           </Badge>
                         );
                       }
@@ -641,8 +650,8 @@ const Complaint = () => {
           {/* TABS */}
           <Card className="mb-4">
             <Card.Body>
-              {/* Custom Nav Tabs */}
-              <ul className="nav nav-tabs" style={{ borderBottom: '2px solid #dee2e6', marginBottom: '1.5rem' }}>
+              {/* Bootstrap Nav Tabs */}
+              <ul className="nav nav-tabs mb-3">
                 <li className="nav-item">
                   <a
                     className={`nav-link ${activeTab === 'messages' ? 'active' : ''}`}
@@ -651,17 +660,8 @@ const Complaint = () => {
                       e.preventDefault();
                       setActiveTab('messages');
                     }}
-                    style={{
-                      color: activeTab === 'messages' ? '#0d6efd' : '#6c757d',
-                      borderBottom: activeTab === 'messages' ? '3px solid #0d6efd' : '3px solid transparent',
-                      paddingBottom: '0.75rem',
-                      fontWeight: activeTab === 'messages' ? '600' : '500',
-                      cursor: 'pointer',
-                      marginBottom: '-2px',
-                      transition: 'all 0.3s ease'
-                    }}
                   >
-                    Comments ({messages.length})
+                    Comments
                   </a>
                 </li>
                 <li className="nav-item">
@@ -672,17 +672,8 @@ const Complaint = () => {
                       e.preventDefault();
                       setActiveTab('attachments');
                     }}
-                    style={{
-                      color: activeTab === 'attachments' ? '#0d6efd' : '#6c757d',
-                      borderBottom: activeTab === 'attachments' ? '3px solid #0d6efd' : '3px solid transparent',
-                      paddingBottom: '0.75rem',
-                      fontWeight: activeTab === 'attachments' ? '600' : '500',
-                      cursor: 'pointer',
-                      marginBottom: '-2px',
-                      transition: 'all 0.3s ease'
-                    }}
                   >
-                    Attachments ({attachments.length})
+                    Attachments
                   </a>
                 </li>
                 <li className="nav-item">
@@ -693,17 +684,8 @@ const Complaint = () => {
                       e.preventDefault();
                       setActiveTab('assignments');
                     }}
-                    style={{
-                      color: activeTab === 'assignments' ? '#0d6efd' : '#6c757d',
-                      borderBottom: activeTab === 'assignments' ? '3px solid #0d6efd' : '3px solid transparent',
-                      paddingBottom: '0.75rem',
-                      fontWeight: activeTab === 'assignments' ? '600' : '500',
-                      cursor: 'pointer',
-                      marginBottom: '-2px',
-                      transition: 'all 0.3s ease'
-                    }}
                   >
-                    Complaint Assignment ({assignments.length})
+                    Complaint Assignment
                   </a>
                 </li>
                 <li className="nav-item">
@@ -714,17 +696,8 @@ const Complaint = () => {
                       e.preventDefault();
                       setActiveTab('logs');
                     }}
-                    style={{
-                      color: activeTab === 'logs' ? '#0d6efd' : '#6c757d',
-                      borderBottom: activeTab === 'logs' ? '3px solid #0d6efd' : '3px solid transparent',
-                      paddingBottom: '0.75rem',
-                      fontWeight: activeTab === 'logs' ? '600' : '500',
-                      cursor: 'pointer',
-                      marginBottom: '-2px',
-                      transition: 'all 0.3s ease'
-                    }}
                   >
-                    Complaint Log ({logs.filter((l) => l.action !== 'Assigned').length})
+                    Complaint Log
                   </a>
                 </li>
               </ul>
