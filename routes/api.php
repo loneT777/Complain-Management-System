@@ -72,7 +72,7 @@ Route::put('/complaints/{id}/priority', [ComplaintController::class, 'updatePrio
 // Complaint Assignment SLA route
 Route::get('/complaint_assignments/sla/{complaintId}', [ComplaintAssignmentController::class, 'getComplaintSLA']);
 
-// Public attachment routes (for development/testing)
+// Public routes (for development/testing)
 Route::get('/public/attachments', [AttachmentController::class, 'index']);
 Route::post('/public/attachments', [AttachmentController::class, 'store']);
 Route::get('/public/attachments/{id}', [AttachmentController::class, 'show']);
@@ -81,6 +81,8 @@ Route::post('/public/attachments/{id}', [AttachmentController::class, 'update'])
 Route::delete('/public/attachments/{id}', [AttachmentController::class, 'destroy']);
 Route::get('/public/attachments/{id}/download', [AttachmentController::class, 'download']);
 Route::get('/public/attachments/{id}/view', [AttachmentController::class, 'view']);
+Route::get('/public/categories', [CategoryController::class, 'index']);
+Route::get('/public/divisions', [DivisionController::class, 'index']);
 
 // Attachment download and view
 Route::get('/attachments/{id}/download', [AttachmentController::class, 'download']);
