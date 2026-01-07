@@ -3,7 +3,7 @@ import { Container, Row, Col, Card, Button, Form, Alert, Pagination, InputGroup,
 import { Add, Search, CloudUpload } from '@mui/icons-material';
 import AttachmentTable from './AttachmentTable';
 import AttachmentForm from './AttachmentForm';
-import axios from 'axios';
+import axios from '../utils/axiosConfig';
 
 const Attachments = () => {
   const [attachments, setAttachments] = useState([]);
@@ -39,7 +39,7 @@ const Attachments = () => {
   const fetchAttachments = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('http://localhost:8000/api/public/attachments', {
+      const response = await axios.get('/public/attachments', {
         params: {
           page: page,
           per_page: rowsPerPage,
@@ -64,7 +64,7 @@ const Attachments = () => {
 
   const fetchComplaints = async () => {
     try {
-      const response = await axios.get('http://localhost:8000/api/complaints');
+      const response = await axios.get('/complaints');
       setComplaints(response.data.data || response.data || []);
     } catch (error) {
       console.error('Error fetching complaints:', error);
@@ -179,7 +179,7 @@ const Attachments = () => {
               formDataToSend.append('group_id', groupId);
             }
 
-            const response = await axios.post('http://localhost:8000/api/public/attachments', formDataToSend, {
+            const response = await axios.post('/public/attachments', formDataToSend, {
               headers: {
                 'Content-Type': 'multipart/form-data'
                 
@@ -235,7 +235,7 @@ const Attachments = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this attachment?')) {
       try {
-        await axios.delete(`http://localhost:8000/api/public/attachments/${id}`);
+        await axios.delete(`/public/attachments/${id}`);
         setSuccessMessage('Attachment deleted successfully');
         fetchAttachments();
       } catch (error) {

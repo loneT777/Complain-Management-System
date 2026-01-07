@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Form, Table, Alert, InputGroup, FormControl, Pagination } from 'react-bootstrap';
 import { Save, Search } from '@mui/icons-material';
-import axios from 'axios';
+import axios from '../../utils/axiosConfig';
 
 const RolePermissions = () => {
   const [roles, setRoles] = useState([]);
@@ -30,7 +30,7 @@ const RolePermissions = () => {
 
   const fetchRoles = async () => {
     try {
-      const response = await axios.get('http://localhost:8000/api/roles');
+      const response = await axios.get('/roles');
       setRoles(response.data.data || []);
     } catch (error) {
       console.error('Error fetching roles:', error);
@@ -40,7 +40,7 @@ const RolePermissions = () => {
   const fetchPermissions = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('http://localhost:8000/api/permissions');
+      const response = await axios.get('/permissions');
       const perms = response.data.data || [];
       setPermissions(perms);
     } catch (error) {
@@ -52,7 +52,7 @@ const RolePermissions = () => {
 
   const fetchAllRolePermissions = async () => {
     try {
-      const response = await axios.get('http://localhost:8000/api/roles-with-permissions');
+      const response = await axios.get('/roles-with-permissions');
       const rolesData = response.data.data || [];
       
       // Build a matrix object: { permissionId: { roleId: true/false } }
@@ -130,7 +130,7 @@ const RolePermissions = () => {
 
       // Save all role permissions
       for (const update of updates) {
-        await axios.post('http://localhost:8000/api/role-permissions', update);
+        await axios.post('/role-permissions', update);
       }
 
       setMessage({ type: 'success', text: 'All role permissions updated successfully!' });

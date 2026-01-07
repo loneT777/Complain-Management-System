@@ -22,7 +22,7 @@ import {
   Checkbox
 } from '@mui/material';
 import { Add, Edit, Delete, Close } from '@mui/icons-material';
-import axios from 'axios';
+import axios from '../utils/axiosConfig';
 
 const Divisions = () => {
   const [divisions, setDivisions] = useState([]);
@@ -51,7 +51,7 @@ const Divisions = () => {
   const fetchDivisions = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('http://localhost:8000/api/divisions');
+      const response = await axios.get('/divisions');
       setDivisions(response.data.data || []);
     } catch (error) {
       console.error('Error fetching divisions:', error);
@@ -131,8 +131,8 @@ const Divisions = () => {
   const handleSaveDivision = async () => {
     try {
       const url = editingDivision 
-        ? `http://localhost:8000/api/divisions/${editingDivision.id}` 
-        : 'http://localhost:8000/api/divisions';
+        ? `/divisions/${editingDivision.id}` 
+        : '/divisions';
       const method = editingDivision ? 'PUT' : 'POST';
 
       // Convert empty parent_id to null
@@ -166,7 +166,7 @@ const Divisions = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this division?')) {
       try {
-        await axios.delete(`http://localhost:8000/api/divisions/${id}`);
+        await axios.delete(`/divisions/${id}`);
         setSuccessMessage('Division deleted successfully');
         fetchDivisions();
       } catch (error) {

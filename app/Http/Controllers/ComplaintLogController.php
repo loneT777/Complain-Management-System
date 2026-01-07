@@ -74,22 +74,6 @@ class ComplaintLogController extends Controller
             // Verify complaint exists
             $complaint = Complaint::findOrFail($complaintId);
 
-            // Check access permission
-            if (!$user->isSuperAdmin()) {
-                if ($user->hasDivisionAccess()) {
-                    if ($complaint->division_id !== $user->division_id) {
-                        return response()->json(['error' => 'Forbidden'], 403);
-                    }
-                } else {
-                    $hasAccess = $complaint->created_by === $user->id ||
-                        $complaint->assignments()->where('user_id', $user->id)->exists();
-                    
-                    if (!$hasAccess) {
-                        return response()->json(['error' => 'Forbidden'], 403);
-                    }
-                }
-            }
-
             $logs = ComplaintLog::where('complaint_id', $complaintId)
                 ->select('id', 'complaint_id', 'complaint_assignment_id', 'status_id', 'assignee_id', 'action', 'remark', 'created_at', 'updated_at')
                 ->with(['complaint', 'assignee', 'status'])

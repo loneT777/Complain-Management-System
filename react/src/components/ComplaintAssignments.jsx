@@ -14,7 +14,7 @@ import {
   Chip
 } from '@mui/material';
 import { Visibility, Assignment } from '@mui/icons-material';
-import axios from 'axios';
+import axios from '../utils/axiosConfig';
 import AssignComplaintForm from './AssignComplaintForm';
 import ViewAssignmentDialog from './ViewAssignmentDialog';
 
@@ -34,7 +34,7 @@ const ComplaintAssignments = () => {
   const fetchComplaints = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('http://localhost:8000/api/complaints');
+      const response = await axios.get('/complaints');
       const complaintsData = response.data.data || [];
       setComplaints(complaintsData);
       await fetchAssignments(complaintsData.map((c) => c.id));
@@ -55,7 +55,7 @@ const ComplaintAssignments = () => {
       await Promise.all(
         complaintIds.map(async (complaintId) => {
           try {
-            const res = await axios.get('http://localhost:8000/api/complaint_assignments', {
+            const res = await axios.get('/complaint_assignments', {
               params: { complaint_id: complaintId }
             });
             if (res.data && res.data.length > 0) {

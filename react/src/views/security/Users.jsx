@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Modal, Form, Table, Badge, InputGroup, FormControl } from 'react-bootstrap';
 import { Add, Edit, Search } from '@mui/icons-material';
-import axios from 'axios';
+import axios from '../../utils/axiosConfig';
 
 const Users = () => {
   const [users, setUsers] = useState([]);
@@ -32,7 +32,7 @@ const Users = () => {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('http://localhost:8000/api/users');
+      const response = await axios.get('/users');
       setUsers(response.data.data || []);
       setFilteredUsers(response.data.data || []);
     } catch (error) {
@@ -44,7 +44,7 @@ const Users = () => {
 
   const fetchRoles = async () => {
     try {
-      const response = await axios.get('http://localhost:8000/api/roles');
+      const response = await axios.get('/roles');
       setRoles(response.data.data || []);
     } catch (error) {
       console.error('Error fetching roles:', error);
@@ -106,7 +106,7 @@ const Users = () => {
   const handleDeactivate = async (userId) => {
     if (window.confirm('Are you sure you want to deactivate this user?')) {
       try {
-        const response = await axios.put(`http://localhost:8000/api/users/${userId}`, { is_active: false });
+        const response = await axios.put(`/users/${userId}`, { is_active: false });
         alert(response.data.message || 'User deactivated successfully');
         fetchUsers();
       } catch (error) {
@@ -138,10 +138,10 @@ const Users = () => {
         if (!updateData.password || updateData.password.trim() === '') {
           delete updateData.password; // Don't update password if not provided
         }
-        const response = await axios.put(`http://localhost:8000/api/users/${currentUser.id}`, updateData);
+        const response = await axios.put(`/users/${currentUser.id}`, updateData);
         alert(response.data.message || 'User updated successfully');
       } else {
-        const response = await axios.post('http://localhost:8000/api/users', currentUser);
+        const response = await axios.post('/users', currentUser);
         alert(response.data.message || 'User created successfully');
       }
       fetchUsers();

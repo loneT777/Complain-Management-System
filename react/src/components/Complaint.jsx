@@ -17,7 +17,7 @@ import {
   MoreVert,
   AccountCircle
 } from '@mui/icons-material';
-import axios from 'axios';
+import axios from '../utils/axiosConfig';
 import MessageForm from './MessageForm';
 import AttachmentForm from './AttachmentForm';
 import AssignComplaintForm from './AssignComplaintForm';
@@ -92,7 +92,7 @@ const Complaint = () => {
   const fetchComplaint = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`http://localhost:8000/api/complaints/${id}`);
+      const response = await axios.get(`/complaints/${id}`);
       setComplaint(response.data);
     } catch (error) {
       console.error('Error fetching complaint:', error);
@@ -104,7 +104,7 @@ const Complaint = () => {
   const fetchMessages = async () => {
     setLoadingMessages(true);
     try {
-      const response = await axios.get(`http://localhost:8000/api/complaints/${id}/messages`);
+      const response = await axios.get(`/complaints/${id}/messages`);
       const messagesData = response.data.data || response.data || [];
       setMessages(Array.isArray(messagesData) ? messagesData : []);
     } catch (error) {
@@ -118,7 +118,7 @@ const Complaint = () => {
   const fetchAttachments = async () => {
     setLoadingAttachments(true);
     try {
-      const response = await axios.get(`http://localhost:8000/api/complaints/${id}/attachments`);
+      const response = await axios.get(`/complaints/${id}/attachments`);
       const attachmentsData = response.data.data || response.data || [];
       setAttachments(Array.isArray(attachmentsData) ? attachmentsData : []);
     } catch (error) {
@@ -132,7 +132,7 @@ const Complaint = () => {
   const fetchAssignments = async () => {
     setLoadingAssignments(true);
     try {
-      const response = await axios.get(`http://localhost:8000/api/complaints/${id}/assignments`);
+      const response = await axios.get(`/complaints/${id}/assignments`);
       console.log('Assignments response:', response.data);
 
       // Handle both wrapped and unwrapped responses
@@ -149,7 +149,7 @@ const Complaint = () => {
   const fetchLogs = async () => {
     setLoadingLogs(true);
     try {
-      const response = await axios.get(`http://localhost:8000/api/complaints/${id}/logs`);
+      const response = await axios.get(`/complaints/${id}/logs`);
       const logsData = Array.isArray(response.data) ? response.data : response.data.data || [];
       setLogs(logsData);
       console.log('Logs fetched:', logsData);
@@ -163,7 +163,7 @@ const Complaint = () => {
 
   const handleDownload = async (attachmentId, fileName) => {
     try {
-      const response = await axios.get(`http://localhost:8000/api/attachments/${attachmentId}/download`, {
+      const response = await axios.get(`/attachments/${attachmentId}/download`, {
         responseType: 'blob'
       });
       const url = window.URL.createObjectURL(new Blob([response.data]));
@@ -179,7 +179,7 @@ const Complaint = () => {
   };
 
   const handleView = (attachmentId) => {
-    window.open(`http://localhost:8000/api/attachments/${attachmentId}/view`, '_blank');
+    window.open(`${axios.defaults.baseURL}/attachments/${attachmentId}/view`, '_blank');
   };
 
   const handleEdit = () => {
@@ -193,7 +193,7 @@ const Complaint = () => {
 
     try {
       // First fetch available statuses to get the Cancel status ID
-      const statusesResponse = await axios.get('http://localhost:8000/api/complaint-statuses');
+      const statusesResponse = await axios.get('/complaint-statuses');
       const statuses = statusesResponse.data || [];
       const cancelStatus = statuses.find(s => s.name?.toLowerCase() === 'cancel' || s.code?.toLowerCase() === 'cancel');
       
@@ -202,7 +202,7 @@ const Complaint = () => {
         return;
       }
 
-      const response = await axios.put(`http://localhost:8000/api/complaints/${id}/status`, {
+      const response = await axios.put(`/complaints/${id}/status`, {
         status_id: cancelStatus.id,
         remark: 'Complaint cancelled by user'
       });
@@ -257,7 +257,7 @@ const Complaint = () => {
   const handleDeleteMessage = async (messageId) => {
     if (window.confirm('Are you sure you want to delete this message?')) {
       try {
-        await axios.delete(`http://localhost:8000/api/messages/${messageId}`);
+        await axios.delete(`/messages/${messageId}`);
         fetchMessages();
       } catch (error) {
         console.error('Error deleting message:', error);
@@ -278,9 +278,9 @@ const Complaint = () => {
     e.preventDefault();
     try {
       if (editingMessage) {
-        await axios.put(`http://localhost:8000/api/messages/${currentMessage.id}`, currentMessage);
+        await axios.put(`/messages/${currentMessage.id}`, currentMessage);
       } else {
-        await axios.post('http://localhost:8000/api/messages', currentMessage);
+        await axios.post('/messages', currentMessage);
       }
       setShowMessageModal(false);
       fetchMessages();
@@ -297,7 +297,7 @@ const Complaint = () => {
 
     try {
       const user = JSON.parse(localStorage.getItem('user') || '{}');
-      await axios.post('http://localhost:8000/api/messages', {
+      await axios.post('/messages', {
         complaint_id: parseInt(id),
         message: newComment.trim(),
         type: 'reply',
@@ -320,7 +320,7 @@ const Complaint = () => {
 
     try {
       const user = JSON.parse(localStorage.getItem('user') || '{}');
-      await axios.post('http://localhost:8000/api/messages', {
+      await axios.post('/messages', {
         complaint_id: parseInt(id),
         message: replyText.trim(),
         type: 'reply',
@@ -345,7 +345,7 @@ const Complaint = () => {
 
     try {
       const message = messages.find((m) => m.id === messageId);
-      await axios.put(`http://localhost:8000/api/messages/${messageId}`, {
+      await axios.put(`/messages/${messageId}`, {
         ...message,
         message: editText
       });
@@ -398,7 +398,7 @@ const Complaint = () => {
   const handleDeleteAttachment = async (attachmentId) => {
     if (window.confirm('Are you sure you want to delete this attachment?')) {
       try {
-        await axios.delete(`http://localhost:8000/api/public/attachments/${attachmentId}`);
+        await axios.delete(`/public/attachments/${attachmentId}`);
         fetchAttachments();
       } catch (error) {
         console.error('Error deleting attachment:', error);
@@ -409,7 +409,7 @@ const Complaint = () => {
 
   const handleAttachmentSubmit = async (formData) => {
     try {
-      await axios.post('http://localhost:8000/api/public/attachments', formData, {
+      await axios.post('/public/attachments', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }

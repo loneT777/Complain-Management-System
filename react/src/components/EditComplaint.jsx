@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Form, Badge } from 'react-bootstrap';
 import { ArrowBack, Save, Close, AttachFile } from '@mui/icons-material';
 import { useNavigate, useParams } from 'react-router-dom';
-import axios from 'axios';
+import axios from '../utils/axiosConfig';
 
 const EditComplaint = () => {
   const { id } = useParams();
@@ -31,7 +31,7 @@ const EditComplaint = () => {
   const fetchComplaintData = async () => {
     setFetchingData(true);
     try {
-      const response = await axios.get(`http://localhost:8000/api/complaints/${id}`);
+      const response = await axios.get(`/complaints/${id}`);
       const data = response.data;
       
       setComplaint({
@@ -59,7 +59,7 @@ const EditComplaint = () => {
 
   const fetchCategories = async () => {
     try {
-      const response = await axios.get('http://localhost:8000/api/public/categories');
+      const response = await axios.get('/public/categories');
       if (response.data.success) {
         setCategories(response.data.data);
       }
@@ -98,7 +98,7 @@ const EditComplaint = () => {
         category_ids: selectedCategories,
       };
 
-      await axios.put(`http://localhost:8000/api/complaints/${id}`, complaintData);
+      await axios.put(`/complaints/${id}`, complaintData);
       alert('Complaint updated successfully!');
       navigate(`/complaint/${id}`);
     } catch (error) {

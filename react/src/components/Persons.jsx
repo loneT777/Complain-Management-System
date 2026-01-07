@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button } from 'react-bootstrap';
 import { Add } from '@mui/icons-material';
-import axios from 'axios';
+import axios from '../utils/axiosConfig';
 import PersonTable from './PersonTable';
 import PersonForm from './PersonForm';
 
@@ -33,7 +33,7 @@ const Persons = () => {
   const fetchPersons = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('http://localhost:8000/api/persons');
+      const response = await axios.get('/persons');
       setPersons(response.data);
     } catch (error) {
       console.error('Error fetching persons:', error);
@@ -44,7 +44,7 @@ const Persons = () => {
 
   const fetchDivisions = async () => {
     try {
-      const response = await axios.get('http://localhost:8000/api/public/divisions');
+      const response = await axios.get('/public/divisions');
       setDivisions(response.data.data || []);
     } catch (error) {
       console.error('Error fetching divisions:', error);
@@ -102,9 +102,9 @@ const Persons = () => {
     e.preventDefault();
     try {
       if (editMode) {
-        await axios.put(`http://localhost:8000/api/persons/${currentPerson.id}`, currentPerson);
+        await axios.put(`/persons/${currentPerson.id}`, currentPerson);
       } else {
-        await axios.post('http://localhost:8000/api/persons', currentPerson);
+        await axios.post('/persons', currentPerson);
       }
       fetchPersons();
       handleCloseModal();
@@ -117,7 +117,7 @@ const Persons = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this person?')) {
       try {
-        await axios.delete(`http://localhost:8000/api/persons/${id}`);
+        await axios.delete(`/persons/${id}`);
         fetchPersons();
       } catch (error) {
         console.error('Error deleting person:', error);

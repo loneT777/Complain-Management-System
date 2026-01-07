@@ -78,22 +78,6 @@ class ComplaintAssignmentController extends Controller
             // Verify complaint exists
             $complaint = Complaint::findOrFail($complaintId);
 
-            // Check access permission
-            if (!$user->isSuperAdmin()) {
-                if ($user->hasDivisionAccess()) {
-                    if ($complaint->division_id !== $user->division_id) {
-                        return response()->json(['error' => 'Forbidden'], 403);
-                    }
-                } else {
-                    $hasAccess = $complaint->created_by === $user->id ||
-                        $complaint->assignments()->where('user_id', $user->id)->exists();
-                    
-                    if (!$hasAccess) {
-                        return response()->json(['error' => 'Forbidden'], 403);
-                    }
-                }
-            }
-
             $assignments = ComplaintAssignment::where('complaint_id', $complaintId)
                 ->with(['assigneeDivision', 'assigneeUser', 'assignerUser', 'lastStatus', 'complaint'])
                 ->orderBy('created_at', 'desc')

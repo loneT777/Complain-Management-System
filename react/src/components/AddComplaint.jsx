@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Form, Badge } from 'react-bootstrap';
 import { ArrowBack, Save, Close, AttachFile } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axios from '../utils/axiosConfig';
 
 const AddComplaint = () => {
   const navigate = useNavigate();
@@ -42,7 +42,7 @@ const AddComplaint = () => {
 
   const fetchCategories = async () => {
     try {
-      const response = await axios.get('http://localhost:8000/api/public/categories');
+      const response = await axios.get('/public/categories');
       console.log('Categories response:', response.data);
       if (response.data.success) {
         setCategories(response.data.data);
@@ -84,7 +84,7 @@ const AddComplaint = () => {
         category_ids: selectedCategories,
       };
 
-      await axios.post('http://localhost:8000/api/complaints', complaintData);
+      await axios.post('/complaints', complaintData);
       alert('Complaint added successfully!');
       navigate('/complaints');
     } catch (error) {

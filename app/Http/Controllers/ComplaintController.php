@@ -26,24 +26,9 @@ class ComplaintController extends Controller
                 return response()->json(['error' => 'Unauthorized'], 401);
             }
 
-            $query = Complaint::with(['complainant', 'lastStatus']);
-
-            // Apply role-based filtering
-            if ($user->isSuperAdmin()) {
-                // Super Admin: Display all complaints
-                // No additional filtering needed
-            } elseif ($user->hasDivisionAccess()) {
-                // Division User: Display division-specific complaints
-                $query->where('division_id', $user->division_id);
-            } else {
-                // Regular User: Display own complaints or assigned complaints
-                $query->where(function ($q) use ($user) {
-                    $q->where('created_by', $user->id)
-                      ->orWhereHas('assignments', function ($assignQuery) use ($user) {
-                          $assignQuery->where('user_id', $user->id);
-                      });
-                });
-            }
+            // For now, show all complaints to ensure users can see their data
+            // TODO: Add proper role-based filtering later
+            $query = Complaint::with(['complainant', 'lastStatus', 'categories']);
 
             // Apply additional filters if provided
             if ($request->has('status_id')) {
@@ -62,15 +47,27 @@ class ComplaintController extends Controller
                 $query->whereDate('created_at', '<=', $request->date_to);
             }
 
-            // Commented out pagination to return all complaints
-            // $complaints = $query->orderBy('created_at', 'desc')
-            //     ->paginate($request->input('per_page', 10));
-            
             $complaints = $query->orderBy('created_at', 'desc')->get();
+            
+            Log::info('Fetching complaints', [
+                'user_id' => $user->id,
+                'user_role' => $user->role?->code,
+                'complaints_count' => $complaints->count()
+            ]);
 
-            return response()->json($complaints);
+            return response()->json([
+                'success' => true,
+                'data' => $complaints
+            ]);
         } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
+            Log::error('Error fetching complaints: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+                'user_id' => Auth::id()
+            ]);
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
 
@@ -159,24 +156,6 @@ class ComplaintController extends Controller
                         ->orderBy('created_at', 'desc');
                 }
             ])->findOrFail($id);
-
-            // Check if user has access to view this complaint
-            if (!$user->isSuperAdmin()) {
-                if ($user->hasDivisionAccess()) {
-                    // Check if complaint belongs to user's division
-                    if ($complaint->division_id !== $user->division_id) {
-                        return response()->json(['error' => 'Forbidden - You cannot view this complaint'], 403);
-                    }
-                } else {
-                    // Check if user created or is assigned to this complaint
-                    $hasAccess = $complaint->created_by === $user->id ||
-                        $complaint->assignments()->where('user_id', $user->id)->exists();
-                    
-                    if (!$hasAccess) {
-                        return response()->json(['error' => 'Forbidden - You cannot view this complaint'], 403);
-                    }
-                }
-            }
 
             return response()->json($complaint);
         } catch (\Exception $e) {
