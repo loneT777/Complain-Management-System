@@ -21,7 +21,10 @@ const Complaints = () => {
   const fetchComplaints = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('http://localhost:8000/api/complaints');
+      const token = localStorage.getItem('authToken');
+      const response = await axios.get('http://localhost:8000/api/complaints', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       const complaintsData = response.data.data || response.data;
       setComplaints(complaintsData);
 
@@ -40,13 +43,15 @@ const Complaints = () => {
       return;
     }
     try {
+      const token = localStorage.getItem('authToken');
       // Fetch assignments for each complaint and aggregate
       const assignmentsMap = {};
       await Promise.all(
         complaintIds.map(async (complaintId) => {
           try {
             const res = await axios.get('http://localhost:8000/api/complaint_assignments', {
-              params: { complaint_id: complaintId }
+              params: { complaint_id: complaintId },
+              headers: { Authorization: `Bearer ${token}` }
             });
             if (res.data && res.data.length > 0) {
               // For simplicity take the first assignment (if multiple)

@@ -91,7 +91,23 @@ class User extends Authenticatable
      */
     public function isSuperAdmin(): bool
     {
-        return $this->role && strtolower($this->role->code) === 'super_admin';
+        return $this->role_id === 1;
+    }
+
+    /**
+     * Check if user is a Complaint Manager (Role 3)
+     */
+    public function isComplaintManager(): bool
+    {
+        return $this->role_id === 3;
+    }
+
+    /**
+     * Check if user has admin-level access (Super Admin or Complaint Manager)
+     */
+    public function hasAdminAccess(): bool
+    {
+        return $this->isSuperAdmin() || $this->isComplaintManager();
     }
 
     /**
@@ -99,7 +115,23 @@ class User extends Authenticatable
      */
     public function isEngineer(): bool
     {
-        return $this->role && strtolower($this->role->code) === 'engineer';
+        return $this->role_id === 5;
+    }
+
+    /**
+     * Check if user is a Division Manager
+     */
+    public function isDivisionManager(): bool
+    {
+        return $this->role_id === 2;
+    }
+
+    /**
+     * Check if user is a Complainant (Role 4 - Public User)
+     */
+    public function isComplainant(): bool
+    {
+        return $this->role_id === 4;
     }
 
     /**
@@ -119,8 +151,8 @@ class User extends Authenticatable
             return false;
         }
 
-        // Super admin has all permissions
-        if ($this->isSuperAdmin()) {
+        // Super admin and Complaint Manager have all permissions
+        if ($this->hasAdminAccess()) {
             return true;
         }
 
@@ -134,7 +166,7 @@ class User extends Authenticatable
      */
     public function canViewAllComplaints(): bool
     {
-        return $this->isSuperAdmin() || $this->hasPermission('complaint.read');
+        return $this->hasAdminAccess() || $this->hasPermission('complaint.read');
     }
 
     /**
@@ -154,13 +186,44 @@ class User extends Authenticatable
     }
 
     /**
+     * Get complaint IDs assigned to engineer
+     */
+    public function getAssignedComplaintIds(): array
+    {
+        // Get all complaint IDs where this user's person_id is in assignments
+        if (!$this->person_id) {
+            return [];
+        }
+
+        return ComplaintAssignment::where('assignee_id', $this->person_id)
+            ->distinct()
+            ->pluck('complaint_id')
+            ->toArray();
+    }
+
+    /**
      * Get accessible complaint IDs for the user based on role
      */
     public function getAccessibleComplaintIds(): array
     {
-        // Super admin can see all complaints
-        if ($this->isSuperAdmin()) {
+        // Super admin and Complaint Manager can see all complaints
+        if ($this->hasAdminAccess()) {
             return Complaint::pluck('id')->toArray();
+        }
+
+        // Engineer: see only assigned complaints
+        if ($this->isEngineer()) {
+            return $this->getAssignedComplaintIds();
+        }
+
+        // Complainant: see only their own complaints
+        if ($this->isComplainant()) {
+            if ($this->person_id) {
+                return Complaint::where('complainant_id', $this->person_id)
+                    ->pluck('id')
+                    ->toArray();
+            }
+            return [];
         }
 
         // Division-based access
@@ -177,4 +240,3 @@ class User extends Authenticatable
             ->toArray();
     }
 }
-

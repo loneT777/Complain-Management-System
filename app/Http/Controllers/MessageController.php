@@ -28,9 +28,19 @@ class MessageController extends Controller
             $query = Message::with(['complaint', 'parent', 'user']);
 
             // Apply role-based filtering
-            if ($user->isSuperAdmin()) {
-                // Super Admin: Display all messages
+            if ($user->hasAdminAccess()) {
+                // Super Admin & Complaint Manager: Display all messages
                 // No additional filtering needed
+            } elseif ($user->isComplainant()) {
+                // Complainant: Display messages only for their own complaints
+                if ($user->person_id) {
+                    $query->whereHas('complaint', function ($q) use ($user) {
+                        $q->where('complainant_id', $user->person_id);
+                    });
+                } else {
+                    // Fallback: no messages visible if no person_id
+                    $query->whereRaw('1 = 0');
+                }
             } elseif ($user->hasDivisionAccess()) {
                 // Division User: Display messages for division complaints
                 $query->whereHas('complaint', function ($q) use ($user) {

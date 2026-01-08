@@ -83,9 +83,13 @@ const AssignComplaintForm = ({ show, onClose, complaintId, assignment, onSuccess
   const fetchDivisions = async () => {
     try {
       const response = await axios.get('http://localhost:8000/api/divisions');
-      setDivisions(response.data.data || response.data || []);
+      // Handle the response structure: response.data has 'data' property with divisions array
+      const divisionData = response.data.data || [];
+      // Ensure it's an array before setting state
+      setDivisions(Array.isArray(divisionData) ? divisionData : []);
     } catch (error) {
       console.error('Failed to fetch divisions', error);
+      setDivisions([]);
     }
   };
 

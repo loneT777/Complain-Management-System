@@ -27,6 +27,10 @@ const ComplaintAssignments = () => {
   const [selectedAssignment, setSelectedAssignment] = useState(null);
   const [assignments, setAssignments] = useState({});
 
+  // Check if user is role 5 (Engineer)
+  const userData = JSON.parse(localStorage.getItem('user') || '{}');
+  const isEngineer = userData?.role_id === 5;
+
   useEffect(() => {
     fetchComplaints();
   }, []);
@@ -168,7 +172,8 @@ const ComplaintAssignments = () => {
                           size="small"
                           color="success"
                           onClick={() => handleAssignClick(complaint)}
-                          title={assignment ? "Reassign" : "Assign"}
+                          disabled={isEngineer}
+                          title={isEngineer ? 'Engineers cannot assign complaints' : assignment ? 'Reassign' : 'Assign'}
                         >
                           <Assignment />
                         </IconButton>
@@ -192,11 +197,7 @@ const ComplaintAssignments = () => {
       )}
 
       {showViewModal && selectedAssignment && (
-        <ViewAssignmentDialog
-          open={showViewModal}
-          handleClose={handleViewDialogClose}
-          assignment={selectedAssignment}
-        />
+        <ViewAssignmentDialog open={showViewModal} handleClose={handleViewDialogClose} assignment={selectedAssignment} />
       )}
     </Box>
   );

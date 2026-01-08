@@ -8,42 +8,17 @@ use App\Models\ComplaintLog;
 use App\Models\Status;
 use App\Config\PrioritySLA;
 use Illuminate\Http\Request;
-<<<<<<< Updated upstream
-use Illuminate\Support\Facades\Log;
-=======
->>>>>>> Stashed changes
 use Illuminate\Support\Facades\Auth;
 
 class ComplaintAssignmentController extends Controller
 {
     /**
-     * Display a listing of complaint assignments with role-based filtering
+     * Display a listing of complaint assignments
      */
     public function index(Request $request)
     {
         try {
-            $user = Auth::user();
-            
-            if (!$user) {
-                return response()->json(['error' => 'Unauthorized'], 401);
-            }
-
             $query = ComplaintAssignment::query();
-
-            // Apply role-based filtering
-            if ($user->isSuperAdmin()) {
-                // Super Admin: Display all assignments
-                // No additional filtering needed
-            } elseif ($user->hasDivisionAccess()) {
-                // Division User: Display assignments for division complaints
-                $query->whereHas('complaint', function ($q) use ($user) {
-                    $q->where('division_id', $user->division_id);
-                });
-            } else {
-                // Regular User: Display assignments for accessible complaints
-                $accessibleComplaintIds = $user->getAccessibleComplaintIds();
-                $query->whereIn('complaint_id', $accessibleComplaintIds);
-            }
 
             // Filter by complaint_id if provided
             if ($request->has('complaint_id')) {
@@ -60,43 +35,17 @@ class ComplaintAssignmentController extends Controller
 
             return response()->json($assignments);
         } catch (\Exception $e) {
-            Log::error('Error fetching complaint assignments: ' . $e->getMessage());
+            \Log::error('Error fetching complaint assignments: ' . $e->getMessage());
             return response()->json(['error' => 'Failed to fetch assignments', 'message' => $e->getMessage()], 500);
         }
     }
 
     /**
      * Get assignments for a specific complaint
-     * Checks if user has access to view this complaint's assignments
      */
     public function getByComplaint($complaintId)
     {
         try {
-            $user = Auth::user();
-            
-            if (!$user) {
-                return response()->json(['error' => 'Unauthorized'], 401);
-            }
-
-            // Verify complaint exists
-            $complaint = Complaint::findOrFail($complaintId);
-
-            // Check access permission
-            if (!$user->isSuperAdmin()) {
-                if ($user->hasDivisionAccess()) {
-                    if ($complaint->division_id !== $user->division_id) {
-                        return response()->json(['error' => 'Forbidden'], 403);
-                    }
-                } else {
-                    $hasAccess = $complaint->created_by === $user->id ||
-                        $complaint->assignments()->where('user_id', $user->id)->exists();
-                    
-                    if (!$hasAccess) {
-                        return response()->json(['error' => 'Forbidden'], 403);
-                    }
-                }
-            }
-
             $assignments = ComplaintAssignment::where('complaint_id', $complaintId)
                 ->with(['assigneeDivision', 'assigneeUser', 'assignerUser', 'lastStatus', 'complaint'])
                 ->orderBy('created_at', 'desc')
@@ -111,7 +60,7 @@ class ComplaintAssignmentController extends Controller
                         'complaint_id' => $assign->complaint_id,
                         'assignee_division_id' => $assign->assignee_division_id,
                         'assignee_user_id' => $assign->assignee_user_id,
-                        'assigner_id' => $assign->assigner_id,
+                        'assigner_user_id' => $assign->assigner_user_id,
                         'last_status_id' => $assign->last_status_id,
                         'due_at' => $assign->due_at,
                         'remark' => $assign->remark,
@@ -126,7 +75,7 @@ class ComplaintAssignmentController extends Controller
                 }),
             ]);
         } catch (\Exception $e) {
-            Log::error('Error fetching complaint assignments: ' . $e->getMessage());
+            \Log::error('Error fetching complaint assignments: ' . $e->getMessage());
             return response()->json(['error' => 'Failed to fetch assignments', 'message' => $e->getMessage()], 500);
         }
     }
@@ -146,72 +95,68 @@ class ComplaintAssignmentController extends Controller
                 'sla_days' => $slaDays,
             ]);
         } catch (\Exception $e) {
-            Log::error('Error fetching complaint SLA: ' . $e->getMessage());
+            \Log::error('Error fetching complaint SLA: ' . $e->getMessage());
             return response()->json(['error' => 'Failed to fetch complaint SLA', 'message' => $e->getMessage()], 500);
         }
     }
 
+    /**
+     * Store a newly created complaint assignment
+     */
     public function store(Request $request)
     {
-        try {
-            $request->validate([
-                'complaint_id' => 'required|exists:complaints,id',
-                'assignee_division_id' => 'nullable|exists:divisions,id',
-                'assignee_id' => 'nullable|exists:persons,id',
-                'due_at' => 'nullable|date',
-                'remark' => 'nullable|string',
-            ]);
+        $request->validate([
+            'complaint_id' => 'required|exists:complaints,id',
+            'assignee_division_id' => 'nullable|exists:divisions,id',
+            'assignee_user_id' => 'nullable|exists:persons,id',
+            'due_at' => 'nullable|date',
+            'remark' => 'nullable|string',
+        ]);
 
-            // Get the 'assigned' status
-            $assignedStatus = Status::where('code', 'assigned')->first();
+        // Create assignment
+        // Note: last_status_id is set to null as assignments track assignment status, 
+        // not complaint status. The complaint's status is tracked separately.
+        $assignment = ComplaintAssignment::create([
+            'complaint_id' => $request->input('complaint_id'),
+            'assignee_division_id' => $request->input('assignee_division_id'),
+            'assignee_id' => $request->input('assignee_user_id'),
+            'due_at' => $request->input('due_at'),
+            'remark' => $request->input('remark'),
+            'assigner_id' => Auth::user()->person_id ?? 1, // Use authenticated user's person_id
+            'last_status_id' => null,
+        ]);
 
-            // Create assignment
-            $assignment = ComplaintAssignment::create([
-                'complaint_id' => $request->input('complaint_id'),
-                'assignee_division_id' => $request->input('assignee_division_id'),
-                'assignee_id' => $request->input('assignee_id'),
-                'due_at' => $request->input('due_at'),
-                'remark' => $request->input('remark'),
-                'assigner_id' => 1, // TODO: Replace with auth()->user()->person_id
-                'last_status_id' => $assignedStatus ? $assignedStatus->id : null,
-            ]);
-
-            // Update the complaint's last_status_id to 'assigned'
-            $complaint = Complaint::findOrFail($request->input('complaint_id'));
-            if ($assignedStatus) {
-                $complaint->update(['last_status_id' => $assignedStatus->id]);
-            }
-
-            // Load relationships for response
-            $assignment->load([
-                'complaint',
-                'assigneeDivision',
-                'assigneeUser',
-                'assignerUser',
-                'lastStatus'
-            ]);
-
-            // Log the assignment
-            try {
-                ComplaintLog::create([
-                    'complaint_id' => $assignment->complaint_id,
-                    'complaint_assignment_id' => $assignment->id,
-                    'status_id' => $assignedStatus ? $assignedStatus->id : null,
-                    'action' => 'Assigned',
-                    'remark' => 'Assigned to ' . ($assignment->assigneeUser?->full_name ?? 'Division: ' . $assignment->assigneeDivision?->name)
-                ]);
-            } catch (\Exception $e) {
-                // Log creation failed but assignment is successful
-                Log::error('Failed to log assignment: ' . $e->getMessage());
-            }
-
-            return response()->json($assignment, 201);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json(['errors' => $e->errors()], 422);
-        } catch (\Exception $e) {
-            Log::error('Error creating assignment: ' . $e->getMessage() . ' - ' . $e->getFile() . ':' . $e->getLine());
-            return response()->json(['error' => $e->getMessage()], 500);
+        // Update the complaint's last_status_id to 'assigned'
+        $complaint = Complaint::findOrFail($request->input('complaint_id'));
+        $assignedStatus = Status::where('code', 'assigned')->first();
+        if ($assignedStatus) {
+            $complaint->update(['last_status_id' => $assignedStatus->id]);
         }
+
+        // Load relationships for response
+        $assignment->load([
+            'complaint',
+            'assigneeDivision',
+            'assigneeUser',
+            'assignerUser',
+            'lastStatus'
+        ]);
+
+        // Log the assignment
+        try {
+            ComplaintLog::create([
+                'complaint_id' => $assignment->complaint_id,
+                'complaint_assignment_id' => $assignment->id,
+                'status_id' => $assignedStatus ? $assignedStatus->id : null,
+                'action' => 'Assigned',
+                'remark' => 'Assigned to ' . ($assignment->assigneeUser?->full_name ?? 'Division: ' . $assignment->assigneeDivision?->name)
+            ]);
+        } catch (\Exception $e) {
+            // Log creation failed but assignment is successful
+            \Log::error('Failed to log assignment: ' . $e->getMessage());
+        }
+
+        return response()->json($assignment, 201);
     }
 
     /**
@@ -242,18 +187,27 @@ class ComplaintAssignmentController extends Controller
             'remark' => 'nullable|string',
         ]);
 
-        $assignment = ComplaintAssignment::findOrFail($id);
-        $assignment->update($request->only([
-            'assignee_division_id',
-            'assignee_user_id',
-            'due_at',
-            'remark'
-        ]));
+        $oldAssignment = ComplaintAssignment::findOrFail($id);
+        $complaintId = $oldAssignment->complaint_id;
+
+        // Create NEW assignment instead of updating (to keep history for blur/reassigned flag)
+        $assignmentData = [
+            'complaint_id' => $complaintId,
+            'assignee_division_id' => $request->input('assignee_division_id'),
+            'due_at' => $request->input('due_at'),
+            'remark' => $request->input('remark'),
+        ];
+
+        if ($request->has('assignee_user_id')) {
+            $assignmentData['assignee_id'] = $request->input('assignee_user_id');
+        }
+
+        $assignment = ComplaintAssignment::create($assignmentData);
 
         // Update complaint status to 'assigned' if it's being reassigned
         $assignedStatus = Status::where('code', 'assigned')->first();
         if ($assignedStatus) {
-            $complaint = Complaint::findOrFail($assignment->complaint_id);
+            $complaint = Complaint::findOrFail($complaintId);
             $complaint->update(['last_status_id' => $assignedStatus->id]);
         }
 
@@ -276,7 +230,7 @@ class ComplaintAssignmentController extends Controller
             ]);
         } catch (\Exception $e) {
             // Log creation failed but assignment update is successful
-            Log::error('Failed to log assignment update: ' . $e->getMessage());
+            \Log::error('Failed to log assignment update: ' . $e->getMessage());
         }
 
         return response()->json($assignment);
