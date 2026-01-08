@@ -30,30 +30,37 @@ class UserController extends Controller
     {
         $validated = $request->validate([
             'full_name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email|max:255',
+            'email' => 'nullable|email|unique:users,email|max:255',
             'password' => 'required|string|min:8',
             'role_id' => 'required|exists:roles,id',
             'designation' => 'nullable|string|max:255',
             'is_active' => 'boolean',
         ]);
 
-        // Create or find person with this name
-        $person = Person::firstOrCreate(
-            ['email' => $validated['email']],
-            [
-                'full_name' => $validated['full_name'],
-                'nic' => 'N/A-' . time(), // Temporary NIC for system users
-                'is_approved' => true,
-                'session_id' => 1,
-                'user_id' => 1,
-            ]
-        );
+        // Create new person
+        $person = Person::create([
+            'full_name' => $validated['full_name'],
+            'email' => $validated['email'],
+            'nic' => 'U' . substr(time(), -10), // U + 10 digits = 11 chars (fits in 12)
+            'is_approved' => true,
+            'session_id' => 1,
+            'user_id' => 1,
+        ]);
+
+        // Generate username
+        $baseUsername = $validated['email'] ? explode('@', $validated['email'])[0] : strtolower(str_replace(' ', '_', $validated['full_name']));
+        $username = $baseUsername;
+        $counter = 1;
+        while (User::where('username', $username)->exists()) {
+            $username = $baseUsername . $counter;
+            $counter++;
+        }
 
         // Create user
         $userData = [
             'person_id' => $person->id,
             'full_name' => $validated['full_name'],
-            'username' => explode('@', $validated['email'])[0], // Use email prefix as username
+            'username' => $username,
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
             'role_id' => $validated['role_id'],

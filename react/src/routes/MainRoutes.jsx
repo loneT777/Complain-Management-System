@@ -103,7 +103,7 @@ const MainRoutes = {
         { 
           path: 'persons', 
           element: (
-            <ProtectedRoute permission="setting.read">
+            <ProtectedRoute permission="security.read">
               <Persons />
             </ProtectedRoute>
           )
@@ -111,7 +111,7 @@ const MainRoutes = {
         { 
           path: 'divisions', 
           element: (
-            <ProtectedRoute permission="setting.read">
+            <ProtectedRoute permission="security.read">
               <Divisions />
             </ProtectedRoute>
           )
@@ -127,7 +127,7 @@ const MainRoutes = {
         { 
           path: 'categories', 
           element: (
-            <ProtectedRoute permission="setting.read">
+            <ProtectedRoute permission="category.read">
               <Categories />
             </ProtectedRoute>
           )
@@ -135,7 +135,7 @@ const MainRoutes = {
         { 
           path: 'messages', 
           element: (
-            <ProtectedRoute permission="messages">
+            <ProtectedRoute permission="message.read">
               <Messages />
             </ProtectedRoute>
           )
@@ -143,7 +143,7 @@ const MainRoutes = {
         { 
           path: 'attachments', 
           element: (
-            <ProtectedRoute permission="attachment">
+            <ProtectedRoute permission="attachment.read">
               <Attachments />
             </ProtectedRoute>
           )

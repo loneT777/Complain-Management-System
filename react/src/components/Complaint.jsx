@@ -23,11 +23,14 @@ import AttachmentForm from './AttachmentForm';
 import AssignComplaintForm from './AssignComplaintForm';
 import ComplaintLogForm from './ComplaintLogForm';
 import ComplaintStatusPriority from './ComplaintStatusPriority';
+import { useAuth } from '../contexts/AuthContext';
+import { Can } from './PermissionComponents';
 import './Complaint.css';
 
 const Complaint = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { hasPermission } = useAuth();
   const [complaint, setComplaint] = useState(null);
   const [loading, setLoading] = useState(true);
   const [messages, setMessages] = useState([]);
@@ -78,6 +81,19 @@ const Complaint = () => {
   const [currentAssignmentId, setCurrentAssignmentId] = useState(null);
   const [logs, setLogs] = useState([]);
   const [loadingLogs, setLoadingLogs] = useState(false);
+
+  // Set default active tab based on permissions
+  useEffect(() => {
+    if (hasPermission('messages')) {
+      setActiveTab('messages');
+    } else if (hasPermission('attachment')) {
+      setActiveTab('attachments');
+    } else if (hasPermission('complaint.assign.process')) {
+      setActiveTab('assignments');
+    } else if (hasPermission('log.view')) {
+      setActiveTab('logs');
+    }
+  }, [hasPermission]);
 
   useEffect(() => {
     if (id) {
@@ -498,9 +514,11 @@ const Complaint = () => {
             </div>
 
             <div>
-              <Button style={{ backgroundColor: '#3a4c4a', borderColor: '#3a4c4a' }} size="sm" onClick={handleEdit}>
-                <Edit fontSize="small" className="me-1" /> Edit
-              </Button>
+              <Can permission="complaint.update">
+                <Button style={{ backgroundColor: '#3a4c4a', borderColor: '#3a4c4a' }} size="sm" onClick={handleEdit}>
+                  <Edit fontSize="small" className="me-1" /> Edit
+                </Button>
+              </Can>
             </div>
           </div>
         </Col>
@@ -559,13 +577,15 @@ const Complaint = () => {
                       <Badge bg="secondary">Pending</Badge>
                     )}
                     {complaint?.lastStatus?.name !== 'Cancel' && (
-                      <Button
-                        variant="outline-danger"
-                        size="sm"
-                        onClick={handleCancelComplaint}
-                      >
-                        Cancel
-                      </Button>
+                      <Can permission="complaint.delete">
+                        <Button
+                          variant="outline-danger"
+                          size="sm"
+                          onClick={handleCancelComplaint}
+                        >
+                          Cancel
+                        </Button>
+                      </Can>
                     )}
                   </div>
                 </Col>
@@ -591,95 +611,104 @@ const Complaint = () => {
             <Card.Body>
               {/* Custom Nav Tabs */}
               <ul className="nav nav-tabs" style={{ borderBottom: '2px solid #dee2e6', marginBottom: '1.5rem' }}>
-                <li className="nav-item">
-                  <a
-                    className={`nav-link ${activeTab === 'messages' ? 'active' : ''}`}
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setActiveTab('messages');
-                    }}
-                    style={{
-                      color: activeTab === 'messages' ? '#0d6efd' : '#6c757d',
-                      borderBottom: activeTab === 'messages' ? '3px solid #0d6efd' : '3px solid transparent',
-                      paddingBottom: '0.75rem',
-                      fontWeight: activeTab === 'messages' ? '600' : '500',
-                      cursor: 'pointer',
-                      marginBottom: '-2px',
-                      transition: 'all 0.3s ease'
-                    }}
-                  >
-                    Comments ({messages.length})
-                  </a>
-                </li>
-                <li className="nav-item">
-                  <a
-                    className={`nav-link ${activeTab === 'attachments' ? 'active' : ''}`}
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setActiveTab('attachments');
-                    }}
-                    style={{
-                      color: activeTab === 'attachments' ? '#0d6efd' : '#6c757d',
-                      borderBottom: activeTab === 'attachments' ? '3px solid #0d6efd' : '3px solid transparent',
-                      paddingBottom: '0.75rem',
-                      fontWeight: activeTab === 'attachments' ? '600' : '500',
-                      cursor: 'pointer',
-                      marginBottom: '-2px',
-                      transition: 'all 0.3s ease'
-                    }}
-                  >
-                    Attachments ({attachments.length})
-                  </a>
-                </li>
-                <li className="nav-item">
-                  <a
-                    className={`nav-link ${activeTab === 'assignments' ? 'active' : ''}`}
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setActiveTab('assignments');
-                    }}
-                    style={{
-                      color: activeTab === 'assignments' ? '#0d6efd' : '#6c757d',
-                      borderBottom: activeTab === 'assignments' ? '3px solid #0d6efd' : '3px solid transparent',
-                      paddingBottom: '0.75rem',
-                      fontWeight: activeTab === 'assignments' ? '600' : '500',
-                      cursor: 'pointer',
-                      marginBottom: '-2px',
-                      transition: 'all 0.3s ease'
-                    }}
-                  >
-                    Complaint Assignment ({assignments.length})
-                  </a>
-                </li>
-                <li className="nav-item">
-                  <a
-                    className={`nav-link ${activeTab === 'logs' ? 'active' : ''}`}
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setActiveTab('logs');
-                    }}
-                    style={{
-                      color: activeTab === 'logs' ? '#0d6efd' : '#6c757d',
-                      borderBottom: activeTab === 'logs' ? '3px solid #0d6efd' : '3px solid transparent',
-                      paddingBottom: '0.75rem',
-                      fontWeight: activeTab === 'logs' ? '600' : '500',
-                      cursor: 'pointer',
-                      marginBottom: '-2px',
-                      transition: 'all 0.3s ease'
-                    }}
-                  >
-                    Complaint Log ({logs.filter((l) => l.action !== 'Assigned').length})
-                  </a>
-                </li>
+                <Can permission="messages">
+                  <li className="nav-item">
+                    <a
+                      className={`nav-link ${activeTab === 'messages' ? 'active' : ''}`}
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setActiveTab('messages');
+                      }}
+                      style={{
+                        color: activeTab === 'messages' ? '#0d6efd' : '#6c757d',
+                        borderBottom: activeTab === 'messages' ? '3px solid #0d6efd' : '3px solid transparent',
+                        paddingBottom: '0.75rem',
+                        fontWeight: activeTab === 'messages' ? '600' : '500',
+                        cursor: 'pointer',
+                        marginBottom: '-2px',
+                        transition: 'all 0.3s ease'
+                      }}
+                    >
+                      Comments ({messages.length})
+                    </a>
+                  </li>
+                </Can>
+                <Can permission="attachment">
+                  <li className="nav-item">
+                    <a
+                      className={`nav-link ${activeTab === 'attachments' ? 'active' : ''}`}
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setActiveTab('attachments');
+                      }}
+                      style={{
+                        color: activeTab === 'attachments' ? '#0d6efd' : '#6c757d',
+                        borderBottom: activeTab === 'attachments' ? '3px solid #0d6efd' : '3px solid transparent',
+                        paddingBottom: '0.75rem',
+                        fontWeight: activeTab === 'attachments' ? '600' : '500',
+                        cursor: 'pointer',
+                        marginBottom: '-2px',
+                        transition: 'all 0.3s ease'
+                      }}
+                    >
+                      Attachments ({attachments.length})
+                    </a>
+                  </li>
+                </Can>
+                <Can permission="complaint.assign.process">
+                  <li className="nav-item">
+                    <a
+                      className={`nav-link ${activeTab === 'assignments' ? 'active' : ''}`}
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setActiveTab('assignments');
+                      }}
+                      style={{
+                        color: activeTab === 'assignments' ? '#0d6efd' : '#6c757d',
+                        borderBottom: activeTab === 'assignments' ? '3px solid #0d6efd' : '3px solid transparent',
+                        paddingBottom: '0.75rem',
+                        fontWeight: activeTab === 'assignments' ? '600' : '500',
+                        cursor: 'pointer',
+                        marginBottom: '-2px',
+                        transition: 'all 0.3s ease'
+                      }}
+                    >
+                      Complaint Assignment ({assignments.length})
+                    </a>
+                  </li>
+                </Can>
+                <Can permission="log.view">
+                  <li className="nav-item">
+                    <a
+                      className={`nav-link ${activeTab === 'logs' ? 'active' : ''}`}
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setActiveTab('logs');
+                      }}
+                      style={{
+                        color: activeTab === 'logs' ? '#0d6efd' : '#6c757d',
+                        borderBottom: activeTab === 'logs' ? '3px solid #0d6efd' : '3px solid transparent',
+                        paddingBottom: '0.75rem',
+                        fontWeight: activeTab === 'logs' ? '600' : '500',
+                        cursor: 'pointer',
+                        marginBottom: '-2px',
+                        transition: 'all 0.3s ease'
+                      }}
+                    >
+                      Complaint Log ({logs.filter((l) => l.action !== 'Assigned').length})
+                    </a>
+                  </li>
+                </Can>
               </ul>
 
               {/* Tab Content */}
-              {activeTab === 'messages' && (
-                  <div className="py-4">
+              <Can permission="messages">
+                {activeTab === 'messages' && (
+                    <div className="py-4">
                     {/* Comment Input Box */}
                     <div className="fb-comment-box mb-4">
                       <div className="d-flex gap-3">
@@ -1010,9 +1039,11 @@ const Complaint = () => {
                       </div>
                     )}
                   </div>
-              )}
+                )}
+              </Can>
 
-              {activeTab === 'attachments' && (
+              <Can permission="attachment">
+                {activeTab === 'attachments' && (
                 <div className="py-4">
                   <div className="d-flex justify-content-between align-items-center mb-3">
                     <h5 className="mb-0">Complaint Attachments</h5>
@@ -1098,9 +1129,11 @@ const Complaint = () => {
                       </div>
                     )}
                   </div>
-              )}
+                )}
+              </Can>
 
-              {activeTab === 'assignments' && (
+              <Can permission="complaint.assign.process">
+                {activeTab === 'assignments' && (
                 <div className="py-4">
                   <div className="d-flex justify-content-between align-items-center mb-3">
                       <h5 className="mb-0">Assignments</h5>
@@ -1185,19 +1218,21 @@ const Complaint = () => {
                                 <div style={{ fontSize: '0.9rem', color: '#666', fontWeight: '400' }}>{assign.remark || '-'}</div>
                                 <div style={{ display: 'flex', gap: '4px', fontSize: '0.75rem' }}>
                                   {idx === 0 ? (
-                                    <Button
-                                      size="sm"
-                                      variant="outline-info"
-                                      style={{ padding: '3px 8px', fontSize: '0.75rem' }}
-                                      onClick={() => {
-                                        setEditingLog(null);
-                                        setCurrentAssignmentId(assign.id);
-                                        setShowLogForm(true);
-                                      }}
-                                      title="Add Log"
-                                    >
-                                      + Log
-                                    </Button>
+                                    <Can permission="log.process">
+                                      <Button
+                                        size="sm"
+                                        variant="outline-info"
+                                        style={{ padding: '3px 8px', fontSize: '0.75rem' }}
+                                        onClick={() => {
+                                          setEditingLog(null);
+                                          setCurrentAssignmentId(assign.id);
+                                          setShowLogForm(true);
+                                        }}
+                                        title="Add Log"
+                                      >
+                                        + Log
+                                      </Button>
+                                    </Can>
                                   ) : null}
                                 </div>
                               </div>
@@ -1262,25 +1297,29 @@ const Complaint = () => {
                       </div>
                     )}
                   </div>
-              )}
+                )}
+              </Can>
 
-              {activeTab === 'logs' && (
+              <Can permission="log.view">
+                {activeTab === 'logs' && (
                 <div className="py-4">
                   <div className="d-flex justify-content-between align-items-center mb-3">
                     <h5 className="mb-0">Complaint Logs</h5>
                     {assignments.length > 0 ? (
-                      <Button
-                        variant="info"
-                        size="sm"
-                        onClick={() => {
-                          setEditingLog(null);
-                          setCurrentAssignmentId(assignments[0]?.id);
-                          setShowLogForm(true);
-                        }}
-                      >
-                        <Add fontSize="small" className="me-1" />
-                        Add Log Entry
-                      </Button>
+                      <Can permission="log.process">
+                        <Button
+                          variant="info"
+                          size="sm"
+                          onClick={() => {
+                            setEditingLog(null);
+                            setCurrentAssignmentId(assignments[0]?.id);
+                            setShowLogForm(true);
+                          }}
+                        >
+                          <Add fontSize="small" className="me-1" />
+                          Add Log Entry
+                        </Button>
+                      </Can>
                     ) : (
                       <Alert variant="warning" className="mb-0" style={{ fontSize: '14px' }}>
                         📋 Please create an assignment first before adding logs
@@ -1387,6 +1426,7 @@ const Complaint = () => {
                   )}
                 </div>
               )}
+              </Can>
             </Card.Body>
           </Card>
         </Col>

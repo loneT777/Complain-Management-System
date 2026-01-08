@@ -22,7 +22,7 @@ export const AuthProvider = ({ children }) => {
           setIsAuthenticated(true);
           
           // Fetch fresh user data
-          const response = await axios.get('/api/me');
+          const response = await axios.get('/me');
           if (response.data) {
             setUser(response.data.user);
             setPermissions(response.data.permissions || []);
@@ -61,7 +61,7 @@ export const AuthProvider = ({ children }) => {
 
   const refreshPermissions = async () => {
     try {
-      const response = await axios.get('/api/me');
+      const response = await axios.get('/me');
       if (response.data) {
         setUser(response.data.user);
         setPermissions(response.data.permissions || []);

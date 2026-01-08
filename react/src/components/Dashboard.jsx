@@ -38,7 +38,11 @@ const Dashboard = () => {
       setError(null);
     } catch (err) {
       console.error('Error fetching dashboard stats:', err);
-      setError('Failed to load dashboard statistics. Please try again later.');
+      if (err.response?.status === 403) {
+        setError('You do not have permission to view dashboard statistics. Please contact your administrator.');
+      } else {
+        setError('Failed to load dashboard statistics. Please try again later.');
+      }
     } finally {
       setLoading(false);
     }

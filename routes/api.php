@@ -59,12 +59,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
     Route::get('/login-history', [AuthController::class, 'loginHistory']);
     
-    // Dashboard (requires dashboard.view)
-    Route::middleware('permission:dashboard.view')->group(function () {
-        Route::get('/dashboard-stats', [ComplaintController::class, 'getDashboardStats']);
-        Route::get('/complaint-statuses', [ComplaintController::class, 'getStatuses']);
-        Route::get('/complaint-priorities', [ComplaintController::class, 'getPriorities']);
-    });
+    // Dashboard - Accessible to all authenticated users
+    Route::get('/dashboard-stats', [ComplaintController::class, 'getDashboardStats']);
+    Route::get('/complaint-statuses', [ComplaintController::class, 'getStatuses']);
+    Route::get('/complaint-priorities', [ComplaintController::class, 'getPriorities']);
 
     // Complaints Module
     Route::middleware('permission:complaint.read')->group(function () {
@@ -87,11 +85,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('permission:message.read')->group(function () {
         Route::get('messages', [MessageController::class, 'index']);
         Route::get('messages/{id}', [MessageController::class, 'show']);
+        Route::post('messages', [MessageController::class, 'store']);
+        Route::put('messages/{id}', [MessageController::class, 'update']);
+        Route::patch('messages/{id}', [MessageController::class, 'update']);
+        Route::delete('messages/{id}', [MessageController::class, 'destroy']);
     });
-    Route::post('messages', [MessageController::class, 'store'])->middleware('permission:message.create');
-    Route::put('messages/{id}', [MessageController::class, 'update'])->middleware('permission:message.update');
-    Route::patch('messages/{id}', [MessageController::class, 'update'])->middleware('permission:message.update');
-    Route::delete('messages/{id}', [MessageController::class, 'destroy'])->middleware('permission:message.delete');
 
     // Categories Module
     Route::middleware('permission:category.read')->group(function () {
@@ -105,34 +103,34 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('categories/{id}', [CategoryController::class, 'destroy'])->middleware('permission:category.delete');
 
     // Roles Module
-    Route::middleware('permission:role.read')->group(function () {
+    Route::middleware('permission:security.read')->group(function () {
         Route::get('roles', [RoleController::class, 'index']);
         Route::get('roles/{id}', [RoleController::class, 'show']);
     });
-    Route::post('roles', [RoleController::class, 'store'])->middleware('permission:role.create');
-    Route::put('roles/{id}', [RoleController::class, 'update'])->middleware('permission:role.update');
-    Route::patch('roles/{id}', [RoleController::class, 'update'])->middleware('permission:role.update');
-    Route::delete('roles/{id}', [RoleController::class, 'destroy'])->middleware('permission:role.delete');
+    Route::post('roles', [RoleController::class, 'store'])->middleware('permission:security.create');
+    Route::put('roles/{id}', [RoleController::class, 'update'])->middleware('permission:security.update');
+    Route::patch('roles/{id}', [RoleController::class, 'update'])->middleware('permission:security.update');
+    Route::delete('roles/{id}', [RoleController::class, 'destroy'])->middleware('permission:security.delete');
 
     // Divisions Module
-    Route::middleware('permission:division.read')->group(function () {
+    Route::middleware('permission:security.read')->group(function () {
         Route::get('divisions', [DivisionController::class, 'index']);
         Route::get('divisions/{id}', [DivisionController::class, 'show']);
     });
-    Route::post('divisions', [DivisionController::class, 'store'])->middleware('permission:division.create');
-    Route::put('divisions/{id}', [DivisionController::class, 'update'])->middleware('permission:division.update');
-    Route::patch('divisions/{id}', [DivisionController::class, 'update'])->middleware('permission:division.update');
-    Route::delete('divisions/{id}', [DivisionController::class, 'destroy'])->middleware('permission:division.delete');
+    Route::post('divisions', [DivisionController::class, 'store'])->middleware('permission:security.create');
+    Route::put('divisions/{id}', [DivisionController::class, 'update'])->middleware('permission:security.update');
+    Route::patch('divisions/{id}', [DivisionController::class, 'update'])->middleware('permission:security.update');
+    Route::delete('divisions/{id}', [DivisionController::class, 'destroy'])->middleware('permission:security.delete');
 
     // Persons Module
-    Route::middleware('permission:person.read')->group(function () {
+    Route::middleware('permission:security.read')->group(function () {
         Route::get('persons', [PersonController::class, 'index']);
         Route::get('persons/{id}', [PersonController::class, 'show']);
     });
-    Route::post('persons', [PersonController::class, 'store'])->middleware('permission:person.create');
-    Route::put('persons/{id}', [PersonController::class, 'update'])->middleware('permission:person.update');
-    Route::patch('persons/{id}', [PersonController::class, 'update'])->middleware('permission:person.update');
-    Route::delete('persons/{id}', [PersonController::class, 'destroy'])->middleware('permission:person.delete');
+    Route::post('persons', [PersonController::class, 'store'])->middleware('permission:security.create');
+    Route::put('persons/{id}', [PersonController::class, 'update'])->middleware('permission:security.update');
+    Route::patch('persons/{id}', [PersonController::class, 'update'])->middleware('permission:security.update');
+    Route::delete('persons/{id}', [PersonController::class, 'destroy'])->middleware('permission:security.delete');
 
     // Attachments Module
     Route::middleware('permission:attachment.read')->group(function () {
@@ -140,11 +138,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('attachments/{id}', [AttachmentController::class, 'show']);
         Route::get('/attachments/{id}/download', [AttachmentController::class, 'download']);
         Route::get('/attachments/{id}/view', [AttachmentController::class, 'view']);
+        Route::post('attachments', [AttachmentController::class, 'store']);
+        Route::put('attachments/{id}', [AttachmentController::class, 'update']);
+        Route::patch('attachments/{id}', [AttachmentController::class, 'update']);
+        Route::delete('attachments/{id}', [AttachmentController::class, 'destroy']);
     });
-    Route::post('attachments', [AttachmentController::class, 'store'])->middleware('permission:attachment.create');
-    Route::put('attachments/{id}', [AttachmentController::class, 'update'])->middleware('permission:attachment.update');
-    Route::patch('attachments/{id}', [AttachmentController::class, 'update'])->middleware('permission:attachment.update');
-    Route::delete('attachments/{id}', [AttachmentController::class, 'destroy'])->middleware('permission:attachment.delete');
 
     // Complaint Assignments
     Route::middleware('permission:complaint.assign.view')->group(function () {

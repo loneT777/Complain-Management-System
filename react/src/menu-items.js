@@ -12,7 +12,6 @@ const menuItems = {
           icon: 'material-icons-two-tone',
           iconname: 'home',
           url: '/dashboard/summary'
-          // No permission required - accessible to all authenticated users
         },
         {
           id: 'complaints',
@@ -45,7 +44,7 @@ const menuItems = {
           icon: 'material-icons-two-tone',
           iconname: 'person',
           url: '/persons',
-          permission: 'setting.read'
+          permission: 'security.read'
         },
         {
           id: 'divisions',
@@ -54,7 +53,7 @@ const menuItems = {
           icon: 'material-icons-two-tone',
           iconname: 'account_tree',
           url: '/divisions',
-          permission: 'setting.read'
+          permission: 'security.read'
         },
         {
           id: 'roles',
@@ -72,7 +71,7 @@ const menuItems = {
           icon: 'material-icons-two-tone',
           iconname: 'category',
           url: '/categories',
-          permission: 'setting.read'
+          permission: 'category.read'
         },
         {
           id: 'complaint-assignments',
@@ -82,24 +81,6 @@ const menuItems = {
           iconname: 'assignment',
           url: '/complaint-assignments',
           permission: 'complaint.assign.view'
-        },
-        {
-          id: 'messages',
-          title: 'Messages',
-          type: 'item',
-          icon: 'material-icons-two-tone',
-          iconname: 'message',
-          url: '/messages',
-          permission: 'messages'
-        },
-        {
-          id: 'attachments',
-          title: 'Attachments',
-          type: 'item',
-          icon: 'material-icons-two-tone',
-          iconname: 'attach_file',
-          url: '/attachments',
-          permission: 'attachment'
         },
         {
           id: 'security',
