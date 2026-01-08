@@ -4,6 +4,7 @@ import { Add } from '@mui/icons-material';
 import CategoryTable from './CategoryTable';
 import CategoryForm from './CategoryForm';
 import axios from '../utils/axiosConfig';
+import { Can } from './PermissionComponents';
 
 const Categories = () => {
   const [categories, setCategories] = useState([]);
@@ -142,9 +143,11 @@ const Categories = () => {
           <Card>
             <Card.Header className="d-flex justify-content-between align-items-center">
               <h4 className="mb-0">Categories</h4>
-              <Button style={{ backgroundColor: '#3a4c4a', borderColor: '#3a4c4a' }} onClick={() => handleOpenModal()}>
-                <Add className="me-1" /> Add Category
-              </Button>
+              <Can permission="setting.create">
+                <Button style={{ backgroundColor: '#3a4c4a', borderColor: '#3a4c4a' }} onClick={() => handleOpenModal()}>
+                  <Add className="me-1" /> Add Category
+                </Button>
+              </Can>
             </Card.Header>
             <Card.Body>
               {successMessage && (

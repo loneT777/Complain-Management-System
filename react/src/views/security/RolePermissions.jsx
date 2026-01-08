@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Form, Table, Alert, InputGroup, FormControl, Pagination } from 'react-bootstrap';
-import { Save, Search } from '@mui/icons-material';
+import { Save, Search, Refresh } from '@mui/icons-material';
 import axios from '../../utils/axiosConfig';
+import { useAuth } from '../../contexts/AuthContext';
 
 const RolePermissions = () => {
+  const { refreshPermissions } = useAuth();
   const [roles, setRoles] = useState([]);
   const [permissions, setPermissions] = useState([]);
   const [filteredPermissions, setFilteredPermissions] = useState([]);
@@ -133,7 +135,13 @@ const RolePermissions = () => {
         await axios.post('/role-permissions', update);
       }
 
-      setMessage({ type: 'success', text: 'All role permissions updated successfully!' });
+      // Refresh current user's permissions if their role was changed
+      await refreshPermissions();
+
+      setMessage({ 
+        type: 'success', 
+        text: 'All role permissions updated successfully! Permissions refreshed for current session.' 
+      });
     } catch (error) {
       console.error('Error saving role permissions:', error);
       setMessage({ type: 'danger', text: 'Error saving role permissions. Please try again.' });
@@ -200,19 +208,39 @@ const RolePermissions = () => {
 
   return (
     <Container fluid className="p-4">
+      <Row className="mb-3">
+        <Col>
+          <Alert variant="info" className="mb-0">
+            <strong>How it works:</strong> Changes made here will reflect immediately for your current session. 
+            Other users will see the changes after they refresh the page or log back in.
+          </Alert>
+        </Col>
+      </Row>
       <Row className="mb-4">
         <Col>
           <Card>
             <Card.Body>
               <div className="d-flex justify-content-between align-items-center mb-4">
                 <h4 className="mb-0">Role Permissions</h4>
-                <Button
-                  style={{ backgroundColor: '#7c4dff', borderColor: '#7c4dff' }}
-                  onClick={handleSave}
-                  disabled={saving}
-                >
-                  <Save style={{ marginRight: '5px' }} /> {saving ? 'Saving...' : 'Save All'}
-                </Button>
+                <div>
+                  <Button
+                    variant="outline-secondary"
+                    onClick={() => {
+                      fetchAllRolePermissions();
+                      setMessage({ type: 'info', text: 'Permissions reloaded from database' });
+                    }}
+                    className="me-2"
+                  >
+                    <Refresh style={{ marginRight: '5px' }} /> Reload
+                  </Button>
+                  <Button
+                    style={{ backgroundColor: '#7c4dff', borderColor: '#7c4dff' }}
+                    onClick={handleSave}
+                    disabled={saving}
+                  >
+                    <Save style={{ marginRight: '5px' }} /> {saving ? 'Saving...' : 'Save All'}
+                  </Button>
+                </div>
               </div>
 
               {message.text && (

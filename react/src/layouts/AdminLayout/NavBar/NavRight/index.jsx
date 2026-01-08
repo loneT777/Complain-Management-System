@@ -2,6 +2,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { ListGroup, Dropdown, Form } from 'react-bootstrap';
 import FeatherIcon from 'feather-icons-react';
+import { useAuth } from '../../../../contexts/AuthContext';
 import administrativeOfficerAvatar from 'assets/images/user/administrative-officer.png';
 import executiveOfficerAvatar from 'assets/images/user/executive-officer.png';
 import privilegeOfficerAvatar from 'assets/images/user/privilege-officer.png';
@@ -13,6 +14,7 @@ const API_URL = import.meta.env.VITE_API_URL;
 
 export default function NavRight() {
   const navigate = useNavigate();
+  const { user: authUser, logout: authLogout } = useAuth();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [user, setUser] = useState({
     name: 'User',
@@ -33,19 +35,26 @@ export default function NavRight() {
     return roleAvatars[userRole] || superAdminAvatar;
   };
 
-  // Get user data from localStorage on component mount
+  // Get user data from AuthContext or localStorage
   useEffect(() => {
-    const userData = localStorage.getItem('user');
+    if (authUser) {
+      setUser({
+        name: authUser.full_name || 'User',
+        role: authUser.role?.name || 'User'
+      });
+    } else {
+      const userData = localStorage.getItem('user');
 
-    if (userData) {
-      try {
-        const parsedUser = JSON.parse(userData);
-        setUser({
-          name: parsedUser.full_name || 'User',
-          role: 'User'
-        });
-      } catch (e) {
-        console.error('Error parsing user data:', e);
+      if (userData) {
+        try {
+          const parsedUser = JSON.parse(userData);
+          setUser({
+            name: parsedUser.full_name || 'User',
+            role: parsedUser.role?.name || 'User'
+          });
+        } catch (e) {
+          console.error('Error parsing user data:', e);
+        }
       }
     }
 
@@ -54,39 +63,21 @@ export default function NavRight() {
     if (token) {
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     }
-  }, []);
+  }, [authUser]);
 
   const handleLogout = async (e) => {
     e.preventDefault();
     setIsLoggingOut(true);
 
     try {
-      const token = localStorage.getItem('authToken');
-
-      if (token) {
-        const headers = {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        };
-
-        await axios.post(`${API_URL}/logout`, {}, { headers });
-      }
-    } catch (error) {
-      console.error('Logout API error:', error);
-    } finally {
-      // Clear localStorage
-      localStorage.removeItem('authToken');
-      localStorage.removeItem('userRole');
-      localStorage.removeItem('user');
-      localStorage.removeItem('login_session_id');
-      localStorage.removeItem('sessionId');
-      localStorage.removeItem('userPermissions');
-
-      delete axios.defaults.headers.common['Authorization'];
-      delete axios.defaults.headers.common['X-Login-Session-ID'];
-
+      // Use AuthContext logout which handles token and API call
+      await authLogout();
+      
       // Redirect to login page
       navigate('/login');
+    } catch (error) {
+      console.error('Logout failed:', error);
+    } finally {
       setIsLoggingOut(false);
     }
   };

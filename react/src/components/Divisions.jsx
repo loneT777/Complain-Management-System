@@ -23,6 +23,7 @@ import {
 } from '@mui/material';
 import { Add, Edit, Delete, Close } from '@mui/icons-material';
 import axios from '../utils/axiosConfig';
+import { Can } from './PermissionComponents';
 
 const Divisions = () => {
   const [divisions, setDivisions] = useState([]);
@@ -180,9 +181,11 @@ const Divisions = () => {
     <Box sx={{ p: 3 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h4">Divisions</Typography>
-        <Button variant="contained" color="primary" startIcon={<Add />} onClick={() => handleOpenDialog()}>
-          Add Division
-        </Button>
+        <Can permission="setting.create">
+          <Button variant="contained" color="primary" startIcon={<Add />} onClick={() => handleOpenDialog()}>
+            Add Division
+          </Button>
+        </Can>
       </Box>
 
       {successMessage && (
@@ -242,12 +245,16 @@ const Divisions = () => {
                       )}
                     </TableCell>
                     <TableCell sx={{ textAlign: 'center' }}>
-                      <IconButton size="small" color="primary" onClick={() => handleOpenDialog(division)} title="Edit">
-                        <Edit />
-                      </IconButton>
-                      <IconButton size="small" color="error" onClick={() => handleDelete(division.id)} title="Delete">
-                        <Delete />
-                      </IconButton>
+                      <Can permission="setting.update">
+                        <IconButton size="small" color="primary" onClick={() => handleOpenDialog(division)} title="Edit">
+                          <Edit />
+                        </IconButton>
+                      </Can>
+                      <Can permission="setting.delete">
+                        <IconButton size="small" color="error" onClick={() => handleDelete(division.id)} title="Delete">
+                          <Delete />
+                        </IconButton>
+                      </Can>
                     </TableCell>
                   </TableRow>
                 ))

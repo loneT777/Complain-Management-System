@@ -17,6 +17,7 @@ import { Visibility, Assignment } from '@mui/icons-material';
 import axios from '../utils/axiosConfig';
 import AssignComplaintForm from './AssignComplaintForm';
 import ViewAssignmentDialog from './ViewAssignmentDialog';
+import { Can } from './PermissionComponents';
 
 const ComplaintAssignments = () => {
   const [complaints, setComplaints] = useState([]);
@@ -154,24 +155,28 @@ const ComplaintAssignments = () => {
                       </TableCell>
                       <TableCell sx={{ textAlign: 'center' }}>
                         {assignment && (
+                          <Can permission="complaint.assign.view">
+                            <IconButton
+                              size="small"
+                              color="primary"
+                              onClick={() => handleViewClick(complaint)}
+                              title="View Assignment"
+                              sx={{ mr: 1 }}
+                            >
+                              <Visibility />
+                            </IconButton>
+                          </Can>
+                        )}
+                        <Can permission="complaint.assign.process">
                           <IconButton
                             size="small"
-                            color="primary"
-                            onClick={() => handleViewClick(complaint)}
-                            title="View Assignment"
-                            sx={{ mr: 1 }}
+                            color="success"
+                            onClick={() => handleAssignClick(complaint)}
+                            title={assignment ? "Reassign" : "Assign"}
                           >
-                            <Visibility />
+                            <Assignment />
                           </IconButton>
-                        )}
-                        <IconButton
-                          size="small"
-                          color="success"
-                          onClick={() => handleAssignClick(complaint)}
-                          title={assignment ? "Reassign" : "Assign"}
-                        >
-                          <Assignment />
-                        </IconButton>
+                        </Can>
                       </TableCell>
                     </TableRow>
                   );

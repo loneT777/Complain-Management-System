@@ -6,10 +6,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use App\Traits\HasPermissions;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable, HasApiTokens;
+    use HasFactory, Notifiable, HasApiTokens, HasPermissions;
 
     protected $fillable = [
         'role_id',

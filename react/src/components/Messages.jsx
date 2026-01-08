@@ -6,6 +6,7 @@ import MessageForm from './MessageForm';
 import MessageThread from './MessageThread';
 import axios from 'axios';
 import { useSearchParams } from 'react-router-dom';
+import { Can } from './PermissionComponents';
 
 const Messages = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -203,10 +204,12 @@ const Messages = () => {
           <Card>
             <Card.Header className="d-flex justify-content-between align-items-center bg-white">
               <h4 className="mb-0">Messages</h4>
-              <Button variant="primary" onClick={() => handleOpenModal()}>
-                <Add className="me-2" fontSize="small" />
-                Add Message
-              </Button>
+              <Can permission="messages">
+                <Button variant="primary" onClick={() => handleOpenModal()}>
+                  <Add className="me-2" fontSize="small" />
+                  Add Message
+                </Button>
+              </Can>
             </Card.Header>
             <Card.Body>
               {successMessage && (

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Table, Spinner, Button, Badge } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
+import { Can } from './PermissionComponents';
 
 const ComplaintTable = ({ complaints, loading, assignments = {}, onAssign }) => {
   const navigate = useNavigate();
@@ -116,9 +117,11 @@ const ComplaintTable = ({ complaints, loading, assignments = {}, onAssign }) => 
                   View
                 </Button>
 
-                <Button style={{ backgroundColor: '#011e1bff', borderColor: '#011e1bff' }} size="sm" onClick={() => onAssign(complaint)}>
-                  Assign
-                </Button>
+                <Can permission="complaint.assign.process">
+                  <Button style={{ backgroundColor: '#011e1bff', borderColor: '#011e1bff' }} size="sm" onClick={() => onAssign(complaint)}>
+                    Assign
+                  </Button>
+                </Can>
               </div>
             </td>
           </tr>

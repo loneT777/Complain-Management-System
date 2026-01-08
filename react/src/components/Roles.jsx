@@ -4,6 +4,7 @@ import { Add } from '@mui/icons-material';
 import axios from '../utils/axiosConfig';
 import RoleTable from './RoleTable';
 import RoleForm from './RoleForm';
+import { Can } from './PermissionComponents';
 
 const Roles = () => {
   const [roles, setRoles] = useState([]);
@@ -94,12 +95,14 @@ const Roles = () => {
           <Card>
             <Card.Header className="d-flex justify-content-between align-items-center">
               <h4 className="mb-0">Roles</h4>
-              <Button
-                style={{ backgroundColor: '#3a4c4a', borderColor: '#3a4c4a' }}
-                onClick={() => handleOpenModal()}
-              >
-                <Add className="me-1" /> Add Role
-              </Button>
+              <Can permission="security.create">
+                <Button
+                  style={{ backgroundColor: '#7c4dff', borderColor: '#7c4dff' }}
+                  onClick={() => handleOpenModal()}
+                >
+                  <Add className="me-1" /> Add Role
+                </Button>
+              </Can>
             </Card.Header>
             <Card.Body>
               <RoleTable

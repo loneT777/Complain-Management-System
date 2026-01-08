@@ -58,25 +58,130 @@ const MainRoutes = {
           element: <DashboardSales />
         },
         // Complaint-related routes
-        { path: 'complaints', element: <Complaints /> },
-        { path: 'add-complaint', element: <AddComplaint /> },
-        { path: 'complaint/:id', element: <Complaint /> },
-        { path: 'edit-complaint/:id', element: <EditComplaint /> },
-        { path: 'complaint-assignments', element: <ComplaintAssignments /> },
+        { 
+          path: 'complaints', 
+          element: (
+            <ProtectedRoute permission="complaint.read">
+              <Complaints />
+            </ProtectedRoute>
+          )
+        },
+        { 
+          path: 'add-complaint', 
+          element: (
+            <ProtectedRoute permission="complaint.create">
+              <AddComplaint />
+            </ProtectedRoute>
+          )
+        },
+        { 
+          path: 'complaint/:id', 
+          element: (
+            <ProtectedRoute permission="complaint.read">
+              <Complaint />
+            </ProtectedRoute>
+          )
+        },
+        { 
+          path: 'edit-complaint/:id', 
+          element: (
+            <ProtectedRoute permission="complaint.update">
+              <EditComplaint />
+            </ProtectedRoute>
+          )
+        },
+        { 
+          path: 'complaint-assignments', 
+          element: (
+            <ProtectedRoute permission="complaint.assign.view">
+              <ComplaintAssignments />
+            </ProtectedRoute>
+          )
+        },
 
         // Other entity routes
-        { path: 'persons', element: <Persons /> },
-        { path: 'divisions', element: <Divisions /> },
-        { path: 'roles', element: <Roles /> },
-        { path: 'categories', element: <Categories /> },
-        { path: 'messages', element: <Messages /> },
-        { path: 'attachments', element: <Attachments /> },
+        { 
+          path: 'persons', 
+          element: (
+            <ProtectedRoute permission="setting.read">
+              <Persons />
+            </ProtectedRoute>
+          )
+        },
+        { 
+          path: 'divisions', 
+          element: (
+            <ProtectedRoute permission="setting.read">
+              <Divisions />
+            </ProtectedRoute>
+          )
+        },
+        { 
+          path: 'roles', 
+          element: (
+            <ProtectedRoute permission="security.read">
+              <Roles />
+            </ProtectedRoute>
+          )
+        },
+        { 
+          path: 'categories', 
+          element: (
+            <ProtectedRoute permission="setting.read">
+              <Categories />
+            </ProtectedRoute>
+          )
+        },
+        { 
+          path: 'messages', 
+          element: (
+            <ProtectedRoute permission="messages">
+              <Messages />
+            </ProtectedRoute>
+          )
+        },
+        { 
+          path: 'attachments', 
+          element: (
+            <ProtectedRoute permission="attachment">
+              <Attachments />
+            </ProtectedRoute>
+          )
+        },
 
         // Security Management routes
-        { path: 'security/users', element: <Users /> },
-        { path: 'security/roles', element: <RolesManagement /> },
-        { path: 'security/permissions', element: <Permissions /> },
-        { path: 'security/role-permissions', element: <RolePermissions /> },
+        { 
+          path: 'security/users', 
+          element: (
+            <ProtectedRoute permission="security.read">
+              <Users />
+            </ProtectedRoute>
+          )
+        },
+        { 
+          path: 'security/roles', 
+          element: (
+            <ProtectedRoute permission="security.read">
+              <RolesManagement />
+            </ProtectedRoute>
+          )
+        },
+        { 
+          path: 'security/permissions', 
+          element: (
+            <ProtectedRoute permission="security.read">
+              <Permissions />
+            </ProtectedRoute>
+          )
+        },
+        { 
+          path: 'security/role-permissions', 
+          element: (
+            <ProtectedRoute permission="security.read">
+              <RolePermissions />
+            </ProtectedRoute>
+          )
+        },
 
         // Catch-all for undefined routes
         {

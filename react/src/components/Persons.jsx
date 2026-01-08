@@ -4,6 +4,7 @@ import { Add } from '@mui/icons-material';
 import axios from '../utils/axiosConfig';
 import PersonTable from './PersonTable';
 import PersonForm from './PersonForm';
+import { Can } from './PermissionComponents';
 
 const Persons = () => {
   const [persons, setPersons] = useState([]);
@@ -132,12 +133,14 @@ const Persons = () => {
           <Card>
             <Card.Header className="d-flex justify-content-between align-items-center">
               <h4 className="mb-0">Persons</h4>
-              <Button
-                style={{ backgroundColor: '#3a4c4a', borderColor: '#3a4c4a' }}
-                onClick={() => handleOpenModal()}
-              >
-                <Add className="me-1" /> Add Person
-              </Button>
+              <Can permission="setting.create">
+                <Button
+                  style={{ backgroundColor: '#3a4c4a', borderColor: '#3a4c4a' }}
+                  onClick={() => handleOpenModal()}
+                >
+                  <Add className="me-1" /> Add Person
+                </Button>
+              </Can>
             </Card.Header>
             <Card.Body>
               <PersonTable

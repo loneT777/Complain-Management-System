@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from '../utils/axiosConfig';
 import ComplaintTable from './ComplaintTable';
 import AssignComplaintForm from './AssignComplaintForm';
+import { Can } from './PermissionComponents';
 
 const Complaints = () => {
   const navigate = useNavigate();
@@ -93,9 +94,11 @@ const Complaints = () => {
           <Card>
             <Card.Header className="d-flex justify-content-between align-items-center">
               <h4 className="mb-0">Complaints</h4>
-              <Button style={{ backgroundColor: '#3a4c4a', borderColor: '#3a4c4a' }} onClick={() => navigate('/add-complaint')}>
-                <Add className="me-1" /> Add New Complaint
-              </Button>
+              <Can permission="complaint.create">
+                <Button style={{ backgroundColor: '#3a4c4a', borderColor: '#3a4c4a' }} onClick={() => navigate('/add-complaint')}>
+                  <Add className="me-1" /> Add New Complaint
+                </Button>
+              </Can>
             </Card.Header>
 
             <Card.Body>

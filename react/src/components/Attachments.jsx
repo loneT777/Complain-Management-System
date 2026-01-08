@@ -4,6 +4,7 @@ import { Add, Search, CloudUpload } from '@mui/icons-material';
 import AttachmentTable from './AttachmentTable';
 import AttachmentForm from './AttachmentForm';
 import axios from '../utils/axiosConfig';
+import { Can } from './PermissionComponents';
 
 const Attachments = () => {
   const [attachments, setAttachments] = useState([]);
@@ -327,10 +328,12 @@ const Attachments = () => {
                 <CloudUpload className="me-2" />
                 Attachments
               </h4>
-              <Button variant="primary" onClick={() => handleOpenModal()}>
-                <Add className="me-2" fontSize="small" />
-                Upload Attachment
-              </Button>
+              <Can permission="attachment">
+                <Button variant="primary" onClick={() => handleOpenModal()}>
+                  <Add className="me-2" fontSize="small" />
+                  Upload Attachment
+                </Button>
+              </Can>
             </Card.Header>
             <Card.Body>
               {successMessage && (

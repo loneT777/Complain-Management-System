@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Modal, Form, Table, Badge, InputGroup, FormControl } from 'react-bootstrap';
 import { Add, Edit, Search } from '@mui/icons-material';
 import axios from '../../utils/axiosConfig';
+import { Can } from '../../components/PermissionComponents';
 
 const Users = () => {
   const [users, setUsers] = useState([]);
@@ -168,22 +169,24 @@ const Users = () => {
               {/* Page Header */}
               <div className="d-flex justify-content-between align-items-center mb-4">
                 <h4 className="mb-0" style={{ fontWeight: '600', color: '#1e293b' }}>Users</h4>
-                <Button
-                  style={{ 
-                    backgroundColor: '#6366f1', 
-                    borderColor: '#6366f1',
-                    borderRadius: '8px',
-                    padding: '10px 20px',
-                    fontWeight: '500',
-                    boxShadow: '0 2px 4px rgba(99,102,241,0.3)',
-                    transition: 'all 0.2s'
-                  }}
-                  onClick={() => handleOpenModal()}
-                  onMouseEnter={(e) => e.target.style.backgroundColor = '#4f46e5'}
-                  onMouseLeave={(e) => e.target.style.backgroundColor = '#6366f1'}
-                >
-                  <Add style={{ marginRight: '5px' }} /> Add User
-                </Button>
+                <Can permission="security.create">
+                  <Button
+                    style={{ 
+                      backgroundColor: '#6366f1', 
+                      borderColor: '#6366f1',
+                      borderRadius: '8px',
+                      padding: '10px 20px',
+                      fontWeight: '500',
+                      boxShadow: '0 2px 4px rgba(99,102,241,0.3)',
+                      transition: 'all 0.2s'
+                    }}
+                    onClick={() => handleOpenModal()}
+                    onMouseEnter={(e) => e.target.style.backgroundColor = '#4f46e5'}
+                    onMouseLeave={(e) => e.target.style.backgroundColor = '#6366f1'}
+                  >
+                    <Add style={{ marginRight: '5px' }} /> Add User
+                  </Button>
+                </Can>
               </div>
 
               {/* Search Bar */}
@@ -312,49 +315,52 @@ const Users = () => {
                             </td>
                             <td style={{ textAlign: 'right', padding: '16px 12px' }}>
                               <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', alignItems: 'center' }}>
-                                <Button
-                                  style={{ 
-                                    backgroundColor: '#6366f1', 
-                                    borderColor: '#6366f1',
-                                    fontSize: '13px',
-                                    padding: '8px 16px',
-                                    borderRadius: '6px',
-                                    fontWeight: '500',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '6px',
-                                    transition: 'all 0.2s',
-                                    border: 'none'
-                                  }}
-                                  size="sm"
-                                  onClick={() => handleOpenModal(user)}
-                                  onMouseEnter={(e) => {
-                                    e.currentTarget.style.backgroundColor = '#4f46e5';
-                                    e.currentTarget.style.transform = 'translateY(-1px)';
-                                    e.currentTarget.style.boxShadow = '0 4px 6px rgba(99, 102, 241, 0.3)';
-                                  }}
-                                  onMouseLeave={(e) => {
-                                    e.currentTarget.style.backgroundColor = '#6366f1';
-                                    e.currentTarget.style.transform = 'translateY(0)';
-                                    e.currentTarget.style.boxShadow = 'none';
-                                  }}
-                                >
-                                  <Edit style={{ fontSize: '16px' }} />
-                                  Edit
-                                </Button>
-                                <Button
-                                  style={{ 
-                                    backgroundColor: '#ef4444', 
-                                    borderColor: '#ef4444',
-                                    fontSize: '13px',
-                                    padding: '8px 16px',
-                                    borderRadius: '6px',
-                                    fontWeight: '500',
-                                    transition: 'all 0.2s',
-                                    border: 'none'
-                                  }}
-                                  size="sm"
-                                  onClick={() => handleDeactivate(user.id)}
+                                <Can permission="security.update">
+                                  <Button
+                                    style={{ 
+                                      backgroundColor: '#6366f1', 
+                                      borderColor: '#6366f1',
+                                      fontSize: '13px',
+                                      padding: '8px 16px',
+                                      borderRadius: '6px',
+                                      fontWeight: '500',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      gap: '6px',
+                                      transition: 'all 0.2s',
+                                      border: 'none'
+                                    }}
+                                    size="sm"
+                                    onClick={() => handleOpenModal(user)}
+                                    onMouseEnter={(e) => {
+                                      e.currentTarget.style.backgroundColor = '#4f46e5';
+                                      e.currentTarget.style.transform = 'translateY(-1px)';
+                                      e.currentTarget.style.boxShadow = '0 4px 6px rgba(99, 102, 241, 0.3)';
+                                    }}
+                                    onMouseLeave={(e) => {
+                                      e.currentTarget.style.backgroundColor = '#6366f1';
+                                      e.currentTarget.style.transform = 'translateY(0)';
+                                      e.currentTarget.style.boxShadow = 'none';
+                                    }}
+                                  >
+                                    <Edit style={{ fontSize: '16px' }} />
+                                    Edit
+                                  </Button>
+                                </Can>
+                                <Can permission="security.delete">
+                                  <Button
+                                    style={{ 
+                                      backgroundColor: '#ef4444', 
+                                      borderColor: '#ef4444',
+                                      fontSize: '13px',
+                                      padding: '8px 16px',
+                                      borderRadius: '6px',
+                                      fontWeight: '500',
+                                      transition: 'all 0.2s',
+                                      border: 'none'
+                                    }}
+                                    size="sm"
+                                    onClick={() => handleDeactivate(user.id)}
                                   onMouseEnter={(e) => {
                                     e.currentTarget.style.backgroundColor = '#dc2626';
                                     e.currentTarget.style.transform = 'translateY(-1px)';
@@ -368,6 +374,7 @@ const Users = () => {
                                 >
                                   Deactivate
                                 </Button>
+                                </Can>
                               </div>
                             </td>
                           </tr>

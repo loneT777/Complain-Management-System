@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Card, Row, Col, Button, Form, InputGroup } from "react-bootstrap";
 import FeatherIcon from "feather-icons-react";
 import axios from "axios";
+import { useAuth } from "../../contexts/AuthContext";
 const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 // assets
@@ -10,6 +11,7 @@ import logoDark from 'assets/images/logo-dark.png';
 
 export default function SignIn1() {
   const navigate = useNavigate();
+  const { login: authLogin } = useAuth();
 
   const [credentials, setCredentials] = useState({
     username: '',
@@ -73,10 +75,10 @@ export default function SignIn1() {
         password: credentials.password
       });
 
-      const { token, user, session_id } = data;
+      const { token, user, session_id, permissions } = data;
 
-      localStorage.setItem('authToken', token);
-      localStorage.setItem('user', JSON.stringify(user));
+      // Use AuthContext login
+      authLogin(user, permissions, token);
       localStorage.setItem('sessionId', session_id);
 
       navigate('/dashboard/summary');
