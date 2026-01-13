@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Modal, Button, Form, Alert, Spinner } from 'react-bootstrap';
 import { CloudUpload } from '@mui/icons-material';
-import axios from 'axios';
+import axios from '../utils/axiosConfig';
 
 const AttachmentForm = ({ show, handleClose, attachment, handleSubmit, editMode }) => {
   const [complaints, setComplaints] = useState([]);
@@ -51,7 +51,7 @@ const AttachmentForm = ({ show, handleClose, attachment, handleSubmit, editMode 
   const fetchComplaints = async () => {
     setLoadingComplaints(true);
     try {
-      const response = await axios.get('http://localhost:8000/api/complaints', {
+      const response = await axios.get('/complaints', {
         params: { per_page: 100 }
       });
       setComplaints(response.data.data || []);

@@ -5,6 +5,8 @@ import GuestLayout from 'layouts/GuestLayout';
 import ProtectedRoute from '../components/ProtectedRoute';
 
 const Login = lazy(() => import('../views/auth/login'));
+const ForgotPassword = lazy(() => import('../views/auth/ForgotPassword'));
+const ResetPassword = lazy(() => import('../views/auth/ResetPassword'));
 const DashboardSales = lazy(() => import('../views/dashboard/DashSales/index'));
 const Complaints = lazy(() => import('../components/Complaints'));
 const Complaint = lazy(() => import('../components/Complaint'));
@@ -39,6 +41,18 @@ const MainRoutes = {
       element: <Login />
     },
 
+    // FORGOT PASSWORD ROUTE (PUBLIC)
+    {
+      path: 'forgot-password',
+      element: <ForgotPassword />
+    },
+
+    // RESET PASSWORD ROUTE (PUBLIC)
+    {
+      path: 'reset-password',
+      element: <ResetPassword />
+    },
+
     // PROTECTED ADMIN ROUTES
     {
       path: '/',
@@ -58,25 +72,130 @@ const MainRoutes = {
           element: <DashboardSales />
         },
         // Complaint-related routes
-        { path: 'complaints', element: <Complaints /> },
-        { path: 'add-complaint', element: <AddComplaint /> },
-        { path: 'complaint/:id', element: <Complaint /> },
-        { path: 'edit-complaint/:id', element: <EditComplaint /> },
-        { path: 'complaint-assignments', element: <ComplaintAssignments /> },
+        { 
+          path: 'complaints', 
+          element: (
+            <ProtectedRoute permission="complaint.read">
+              <Complaints />
+            </ProtectedRoute>
+          )
+        },
+        { 
+          path: 'add-complaint', 
+          element: (
+            <ProtectedRoute permission="complaint.create">
+              <AddComplaint />
+            </ProtectedRoute>
+          )
+        },
+        { 
+          path: 'complaint/:id', 
+          element: (
+            <ProtectedRoute permission="complaint.read">
+              <Complaint />
+            </ProtectedRoute>
+          )
+        },
+        { 
+          path: 'edit-complaint/:id', 
+          element: (
+            <ProtectedRoute permission="complaint.update">
+              <EditComplaint />
+            </ProtectedRoute>
+          )
+        },
+        { 
+          path: 'complaint-assignments', 
+          element: (
+            <ProtectedRoute permission="complaint.assign.view">
+              <ComplaintAssignments />
+            </ProtectedRoute>
+          )
+        },
 
         // Other entity routes
-        { path: 'persons', element: <Persons /> },
-        { path: 'divisions', element: <Divisions /> },
-        { path: 'roles', element: <Roles /> },
-        { path: 'categories', element: <Categories /> },
-        { path: 'messages', element: <Messages /> },
-        { path: 'attachments', element: <Attachments /> },
+        { 
+          path: 'persons', 
+          element: (
+            <ProtectedRoute permission="security.read">
+              <Persons />
+            </ProtectedRoute>
+          )
+        },
+        { 
+          path: 'divisions', 
+          element: (
+            <ProtectedRoute permission="security.read">
+              <Divisions />
+            </ProtectedRoute>
+          )
+        }, 
+        { 
+          path: 'roles', 
+          element: (
+            <ProtectedRoute permission="security.read">
+              <Roles />
+            </ProtectedRoute>
+          )
+        },
+        { 
+          path: 'categories', 
+          element: (
+            <ProtectedRoute permission="category.read">
+              <Categories />
+            </ProtectedRoute>
+          )
+        },
+        { 
+          path: 'messages', 
+          element: (
+            <ProtectedRoute permission="message.read">
+              <Messages />
+            </ProtectedRoute>
+          )
+        },
+        { 
+          path: 'attachments', 
+          element: (
+            <ProtectedRoute permission="attachment.read">
+              <Attachments />
+            </ProtectedRoute>
+          )
+        },
 
         // Security Management routes
-        { path: 'security/users', element: <Users /> },
-        { path: 'security/roles', element: <RolesManagement /> },
-        { path: 'security/permissions', element: <Permissions /> },
-        { path: 'security/role-permissions', element: <RolePermissions /> },
+        { 
+          path: 'security/users', 
+          element: (
+            <ProtectedRoute permission="security.read">
+              <Users />
+            </ProtectedRoute>
+          )
+        },
+        { 
+          path: 'security/roles', 
+          element: (
+            <ProtectedRoute permission="security.read">
+              <RolesManagement />
+            </ProtectedRoute>
+          )
+        },
+        { 
+          path: 'security/permissions', 
+          element: (
+            <ProtectedRoute permission="security.read">
+              <Permissions />
+            </ProtectedRoute>
+          )
+        },
+        { 
+          path: 'security/role-permissions', 
+          element: (
+            <ProtectedRoute permission="security.read">
+              <RolePermissions />
+            </ProtectedRoute>
+          )
+        },
 
         // Catch-all for undefined routes
         {

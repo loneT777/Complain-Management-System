@@ -2,13 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Form, Badge } from 'react-bootstrap';
 import { ArrowBack, Save, Close, AttachFile } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axios from '../utils/axiosConfig';
 
 const AddComplaint = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState([]);
   const [selectedCategories, setSelectedCategories] = useState([]);
+  const [error, setError] = useState('');
 
   // Bootstrap color variant mapping to hex colors
   const bootstrapColors = {
@@ -42,7 +43,7 @@ const AddComplaint = () => {
 
   const fetchCategories = async () => {
     try {
-      const response = await axios.get('http://localhost:8000/api/public/categories');
+      const response = await axios.get('/public/categories');
       console.log('Categories response:', response.data);
       if (response.data.success) {
         setCategories(response.data.data);
@@ -51,6 +52,7 @@ const AddComplaint = () => {
       }
     } catch (error) {
       console.error('Error fetching categories:', error);
+      setError('Failed to fetch categories. Please refresh the page.');
     }
   };
 
@@ -73,6 +75,7 @@ const AddComplaint = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setError('');
 
     try {
       // Get user data to include their person_id as complainant
@@ -84,21 +87,20 @@ const AddComplaint = () => {
         complainant_id: userData?.person_id // Set the logged-in user as the complainant
       };
 
-      // Get token from localStorage and ensure it's sent
-      const token = localStorage.getItem('authToken');
-      const config = {
-        headers: {
-          Authorization: token ? `Bearer ${token}` : '',
-          'Content-Type': 'application/json'
-        }
-      };
-
-      await axios.post('http://localhost:8000/api/complaints', complaintData, config);
-      alert('Complaint added successfully!');
-      navigate('/complaints');
+      // Using relative path with axios config that handles authentication
+      const response = await axios.post('/complaints', complaintData);
+      
+      if (response.data.success) {
+        alert('Complaint added successfully!');
+        navigate('/complaints');
+      } else {
+        setError(response.data.message || 'Failed to add complaint. Please try again.');
+      }
     } catch (error) {
       console.error('Error adding complaint:', error);
-      alert('Failed to add complaint. Please try again.');
+      const errorMessage = error.response?.data?.message || 'Failed to add complaint. Please try again.';
+      setError(errorMessage);
+      alert(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -115,6 +117,14 @@ const AddComplaint = () => {
           </div>
         </Col>
       </Row>
+
+      {error && (
+        <Row className="mb-3">
+          <Col>
+            <div className="alert alert-danger">{error}</div>
+          </Col>
+        </Row>
+      )}
 
       <Row>
         <Col lg={8}>
@@ -271,6 +281,14 @@ const AddComplaint = () => {
                     </Form.Group>
                   </Col>
 
+                  {/* Complainant Phone */}
+                  <Col md={6} className="mb-3">
+                    <Form.Group>
+                      <Form.Label>Complainant Phone</Form.Label>
+                      <Form.Control type="text" name="complainant_phone" value={complaint.complainant_phone} onChange={handleChange} />
+                    </Form.Group>
+                  </Col>
+
                   {/* Confidentiality */}
                   <Col md={6} className="mb-3">
                     <Form.Group>
@@ -372,11 +390,11 @@ const AddComplaint = () => {
             </Card.Header>
             <Card.Body>
               <div className="mb-3">
-                <strong className="text-danger">Urgent:</strong>
+                <strong className="text-danger">Very Urgent:</strong>
                 <p className="mb-0 small">Requires immediate attention</p>
               </div>
               <div className="mb-3">
-                <strong className="text-warning">High:</strong>
+                <strong className="text-warning">Urgent:</strong>
                 <p className="mb-0 small">Should be addressed within 24 hours</p>
               </div>
               <div className="mb-3">

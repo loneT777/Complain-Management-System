@@ -2,6 +2,7 @@ import React from 'react';
 import { Table, Spinner } from 'react-bootstrap';
 import { Edit, Delete } from '@mui/icons-material';
 import { IconButton } from '@mui/material';
+import { Can } from './PermissionComponents';
 
 const RoleTable = ({ roles, loading, handleEdit, handleDelete }) => {
   if (loading) {
@@ -39,20 +40,24 @@ const RoleTable = ({ roles, loading, handleEdit, handleDelete }) => {
             <td>{role.name}</td>
             <td>{role.description || '-'}</td>
             <td className="text-center">
-              <IconButton
-                color="primary"
-                size="small"
-                onClick={() => handleEdit(role)}
-              >
-                <Edit fontSize="small" />
-              </IconButton>
-              <IconButton
-                color="error"
-                size="small"
-                onClick={() => handleDelete(role.id)}
-              >
-                <Delete fontSize="small" />
-              </IconButton>
+              <Can permission="security.update">
+                <IconButton
+                  color="primary"
+                  size="small"
+                  onClick={() => handleEdit(role)}
+                >
+                  <Edit fontSize="small" />
+                </IconButton>
+              </Can>
+              <Can permission="security.delete">
+                <IconButton
+                  color="error"
+                  size="small"
+                  onClick={() => handleDelete(role.id)}
+                >
+                  <Delete fontSize="small" />
+                </IconButton>
+              </Can>
             </td>
           </tr>
         ))}

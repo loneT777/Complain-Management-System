@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Modal, Form, Table, InputGroup, FormControl, Pagination } from 'react-bootstrap';
 import { Add, Edit, Search } from '@mui/icons-material';
-import axios from 'axios';
+import axios from '../../utils/axiosConfig';
 
 const Permissions = () => {
   const [permissions, setPermissions] = useState([]);
@@ -33,7 +33,7 @@ const Permissions = () => {
   const fetchPermissions = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('http://localhost:8000/api/permissions');
+      const response = await axios.get('/permissions');
       setPermissions(response.data.data || []);
     } catch (error) {
       console.error('Error fetching permissions:', error);
@@ -103,9 +103,9 @@ const Permissions = () => {
     e.preventDefault();
     try {
       if (editMode) {
-        await axios.put(`http://localhost:8000/api/permissions/${currentPermission.id}`, currentPermission);
+        await axios.put(`/permissions/${currentPermission.id}`, currentPermission);
       } else {
-        await axios.post('http://localhost:8000/api/permissions', currentPermission);
+        await axios.post('/permissions', currentPermission);
       }
       fetchPermissions();
       handleCloseModal();

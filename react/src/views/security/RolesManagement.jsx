@@ -16,7 +16,7 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Modal, Form, Table, InputGroup, FormControl } from 'react-bootstrap';
 import { Add, Edit, Search } from '@mui/icons-material';
-import axios from 'axios';
+import axios from '../../utils/axiosConfig';
 
 const RolesManagement = () => {
   // State management for roles data
@@ -57,7 +57,7 @@ const RolesManagement = () => {
   const fetchRoles = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('http://localhost:8000/api/roles');
+      const response = await axios.get('/roles');
       setRoles(response.data.data || []);
       setFilteredRoles(response.data.data || []);
     } catch (error) {
@@ -138,10 +138,10 @@ const RolesManagement = () => {
     try {
       if (editMode) {
         // Update existing role
-        await axios.put(`http://localhost:8000/api/roles/${currentRole.id}`, currentRole);
+        await axios.put(`/roles/${currentRole.id}`, currentRole);
       } else {
         // Create new role
-        await axios.post('http://localhost:8000/api/roles', currentRole);
+        await axios.post('/roles', currentRole);
       }
       fetchRoles(); // Refresh the roles list
       handleCloseModal(); // Close the modal

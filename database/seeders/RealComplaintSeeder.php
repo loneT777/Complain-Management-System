@@ -30,10 +30,11 @@ class RealComplaintSeeder extends Seeder
         if (!$person) {
             $this->command->error('No persons found. Creating a sample person...');
             $person = \App\Models\Person::create([
+                'full_name' => 'John Doe',
                 'first_name' => 'John',
                 'last_name' => 'Doe',
-                'email' => 'john.doe@example.com',
-                'phone' => '1234567890',
+                'nic' => '198812345678',
+                'office_phone' => '1234567890',
             ]);
         }
 

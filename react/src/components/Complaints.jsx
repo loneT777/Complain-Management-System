@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button } from 'react-bootstrap';
 import { Add } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axios from '../utils/axiosConfig';
 import ComplaintTable from './ComplaintTable';
 import AssignComplaintForm from './AssignComplaintForm';
+import { Can } from './PermissionComponents';
 
 const Complaints = () => {
   const navigate = useNavigate();
@@ -21,11 +22,13 @@ const Complaints = () => {
   const fetchComplaints = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('authToken');
-      const response = await axios.get('http://localhost:8000/api/complaints', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await axios.get('/complaints');
+      console.log('Complaints API Response:', response.data);
+      
       const complaintsData = response.data.data || response.data;
+      console.log('Complaints Data:', complaintsData);
+      console.log('Complaints Count:', complaintsData?.length);
+      
       setComplaints(complaintsData);
 
       // Fetch assignments for all complaints
@@ -43,15 +46,13 @@ const Complaints = () => {
       return;
     }
     try {
-      const token = localStorage.getItem('authToken');
       // Fetch assignments for each complaint and aggregate
       const assignmentsMap = {};
       await Promise.all(
         complaintIds.map(async (complaintId) => {
           try {
-            const res = await axios.get('http://localhost:8000/api/complaint_assignments', {
-              params: { complaint_id: complaintId },
-              headers: { Authorization: `Bearer ${token}` }
+            const res = await axios.get('/complaint_assignments', {
+              params: { complaint_id: complaintId }
             });
             if (res.data && res.data.length > 0) {
               // For simplicity take the first assignment (if multiple)
@@ -93,9 +94,11 @@ const Complaints = () => {
           <Card>
             <Card.Header className="d-flex justify-content-between align-items-center">
               <h4 className="mb-0">Complaints</h4>
-              <Button style={{ backgroundColor: '#3a4c4a', borderColor: '#3a4c4a' }} onClick={() => navigate('/add-complaint')}>
-                <Add className="me-1" /> Add New Complaint
-              </Button>
+              <Can permission="complaint.create">
+                <Button style={{ backgroundColor: '#3a4c4a', borderColor: '#3a4c4a' }} onClick={() => navigate('/add-complaint')}>
+                  <Add className="me-1" /> Add New Complaint
+                </Button>
+              </Can>
             </Card.Header>
 
             <Card.Body>

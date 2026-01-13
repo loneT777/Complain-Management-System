@@ -48,7 +48,7 @@ class ComplaintController extends Controller
                     // Show complaints where user is assigned OR user received the complaint
                     $query->where(function ($q) use ($user) {
                         $q->whereHas('assignments', function ($assignQuery) use ($user) {
-                            $assignQuery->where('assignee_id', $user->person_id);
+                            $assignQuery->where('assignee_user_id', $user->person_id);
                         })
                             ->orWhere('user_received_id', $user->id);
                     });
@@ -88,7 +88,7 @@ class ComplaintController extends Controller
                 $query->where(function ($q) use ($user) {
                     $q->where('user_received_id', $user->id)
                         ->orWhereHas('assignments', function ($assignQuery) use ($user) {
-                            $assignQuery->where('assignee_id', $user->person_id ?? $user->id);
+                            $assignQuery->where('assignee_user_id', $user->person_id ?? $user->id);
                         });
                 });
             }
@@ -111,6 +111,12 @@ class ComplaintController extends Controller
             }
 
             $complaints = $query->orderBy('created_at', 'desc')->get();
+            
+            Log::info('Fetching complaints', [
+                'user_id' => $user->id,
+                'user_role' => $user->role?->code,
+                'complaints_count' => $complaints->count()
+            ]);
 
             // Add is_reassigned_away flag for Role 5 users and Role 2 Division Managers
             if ($user->isEngineer()) {
@@ -125,10 +131,19 @@ class ComplaintController extends Controller
                 });
             }
 
-            return response()->json($complaints);
+            return response()->json([
+                'success' => true,
+                'data' => $complaints
+            ]);
         } catch (\Exception $e) {
-            \Log::error('Error fetching complaints: ' . $e->getMessage() . "\n" . $e->getTraceAsString());
-            return response()->json(['error' => 'Failed to fetch complaints: ' . $e->getMessage()], 500);
+            Log::error('Error fetching complaints: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+                'user_id' => Auth::id()
+            ]);
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
 
@@ -200,13 +215,17 @@ class ComplaintController extends Controller
             DB::commit();
 
             return response()->json([
+                'success' => true,
                 'message' => 'Complaint created successfully',
                 'data' => $complaint->load(['categories', 'complainant', 'lastStatus'])
             ], 201);
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Failed to create complaint: ' . $e->getMessage());
-            return response()->json(['error' => 'Failed to create complaint: ' . $e->getMessage()], 500);
+            return response()->json([
+                'success' => false,
+                'error' => 'Failed to create complaint: ' . $e->getMessage()
+            ], 500);
         }
     }
 
@@ -249,7 +268,7 @@ class ComplaintController extends Controller
                 }
 
                 $isAssigned = $complaint->assignments()
-                    ->where('assignee_id', $user->person_id)
+                    ->where('assignee_user_id', $user->person_id)
                     ->exists();
 
                 $isReceived = $complaint->user_received_id === $user->id;
@@ -304,9 +323,15 @@ class ComplaintController extends Controller
                 $complaint->is_reassigned_away = $this->isReassignedAwayFromDivision($complaint, $user);
             }
 
-            return response()->json($complaint);
+            return response()->json([
+                'success' => true,
+                'data' => $complaint
+            ]);
         } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
 
@@ -362,14 +387,21 @@ class ComplaintController extends Controller
             // Update logs are not created at this stage
 
             return response()->json([
+                'success' => true,
                 'message' => 'Complaint updated successfully',
                 'data' => $complaint->load(['categories', 'complainant', 'lastStatus'])
             ]);
         } catch (ModelNotFoundException $e) {
-            return response()->json(['message' => 'Complaint not found'], 404);
+            return response()->json([
+                'success' => false,
+                'message' => 'Complaint not found'
+            ], 404);
         } catch (\Exception $e) {
             Log::error('Failed to update complaint: ' . $e->getMessage());
-            return response()->json(['error' => 'Failed to update complaint: ' . $e->getMessage()], 500);
+            return response()->json([
+                'success' => false,
+                'error' => 'Failed to update complaint: ' . $e->getMessage()
+            ], 500);
         }
     }
 
@@ -390,14 +422,23 @@ class ComplaintController extends Controller
 
             DB::commit();
 
-            return response()->json(['message' => 'Complaint deleted successfully']);
+            return response()->json([
+                'success' => true,
+                'message' => 'Complaint deleted successfully'
+            ]);
         } catch (ModelNotFoundException $e) {
             DB::rollBack();
-            return response()->json(['message' => 'Complaint not found'], 404);
+            return response()->json([
+                'success' => false,
+                'message' => 'Complaint not found'
+            ], 404);
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Failed to delete complaint: ' . $e->getMessage());
-            return response()->json(['error' => 'Failed to delete complaint: ' . $e->getMessage()], 500);
+            return response()->json([
+                'success' => false,
+                'error' => 'Failed to delete complaint: ' . $e->getMessage()
+            ], 500);
         }
     }
 
@@ -435,16 +476,23 @@ class ComplaintController extends Controller
             DB::commit();
 
             return response()->json([
+                'success' => true,
                 'message' => 'Complaint status updated successfully',
                 'data' => $complaint->load(['lastStatus'])
             ]);
         } catch (ModelNotFoundException $e) {
             DB::rollBack();
-            return response()->json(['message' => 'Complaint not found'], 404);
+            return response()->json([
+                'success' => false,
+                'message' => 'Complaint not found'
+            ], 404);
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Failed to update complaint status: ' . $e->getMessage());
-            return response()->json(['error' => 'Failed to update complaint status'], 500);
+            return response()->json([
+                'success' => false,
+                'error' => 'Failed to update complaint status'
+            ], 500);
         }
     }
 
@@ -480,16 +528,23 @@ class ComplaintController extends Controller
             DB::commit();
 
             return response()->json([
+                'success' => true,
                 'message' => 'Complaint priority updated successfully',
                 'data' => $complaint
             ]);
         } catch (ModelNotFoundException $e) {
             DB::rollBack();
-            return response()->json(['message' => 'Complaint not found'], 404);
+            return response()->json([
+                'success' => false,
+                'message' => 'Complaint not found'
+            ], 404);
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Failed to update complaint priority: ' . $e->getMessage());
-            return response()->json(['error' => 'Failed to update complaint priority'], 500);
+            return response()->json([
+                'success' => false,
+                'error' => 'Failed to update complaint priority'
+            ], 500);
         }
     }
 
@@ -500,9 +555,15 @@ class ComplaintController extends Controller
     {
         try {
             $priorities = \App\Models\Priority::all();
-            return response()->json($priorities);
+            return response()->json([
+                'success' => true,
+                'data' => $priorities
+            ]);
         } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
 
@@ -513,9 +574,15 @@ class ComplaintController extends Controller
     {
         try {
             $statuses = \App\Models\Status::all();
-            return response()->json($statuses);
+            return response()->json([
+                'success' => true,
+                'data' => $statuses
+            ]);
         } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
 
@@ -585,19 +652,25 @@ class ComplaintController extends Controller
             ];
 
             return response()->json([
-                'status_stats' => $statusStats,
-                'priority_stats' => $priorityStats,
-                'total_complaints' => $totalComplaints,
-                'pending_count' => $pendingCount,
-                'assigned_count' => $assignedCount,
-                'completed_count' => $completedCount,
-                'low_count' => $lowCount,
-                'medium_count' => $mediumCount,
-                'urgent_count' => $urgentCount,
-                'very_urgent_count' => $veryUrgentCount
+                'success' => true,
+                'data' => [
+                    'status_stats' => $statusStats,
+                    'priority_stats' => $priorityStats,
+                    'total_complaints' => $totalComplaints,
+                    'pending_count' => $pendingCount,
+                    'assigned_count' => $assignedCount,
+                    'completed_count' => $completedCount,
+                    'low_count' => $lowCount,
+                    'medium_count' => $mediumCount,
+                    'urgent_count' => $urgentCount,
+                    'very_urgent_count' => $veryUrgentCount
+                ]
             ]);
         } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
 
@@ -623,7 +696,7 @@ class ComplaintController extends Controller
         $userWasPreviouslyAssigned = false;
 
         foreach ($assignments as $assignment) {
-            if ($assignment->assignee_id == $user->person_id && $assignment->id !== $currentAssignee->id) {
+            if ($assignment->assignee_user_id == $user->person_id && $assignment->id !== $currentAssignee->id) {
                 $userWasPreviouslyAssigned = true;
                 break;
             }

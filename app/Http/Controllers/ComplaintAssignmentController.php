@@ -8,6 +8,7 @@ use App\Models\ComplaintLog;
 use App\Models\Status;
 use App\Config\PrioritySLA;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 
 class ComplaintAssignmentController extends Controller
@@ -46,6 +47,15 @@ class ComplaintAssignmentController extends Controller
     public function getByComplaint($complaintId)
     {
         try {
+            $user = Auth::user();
+            
+            if (!$user) {
+                return response()->json(['error' => 'Unauthorized'], 401);
+            }
+
+            // Verify complaint exists
+            $complaint = Complaint::findOrFail($complaintId);
+
             $assignments = ComplaintAssignment::where('complaint_id', $complaintId)
                 ->with(['assigneeDivision', 'assigneeUser', 'assignerUser', 'lastStatus', 'complaint'])
                 ->orderBy('created_at', 'desc')
@@ -119,10 +129,10 @@ class ComplaintAssignmentController extends Controller
         $assignment = ComplaintAssignment::create([
             'complaint_id' => $request->input('complaint_id'),
             'assignee_division_id' => $request->input('assignee_division_id'),
-            'assignee_id' => $request->input('assignee_user_id'),
+            'assignee_user_id' => $request->input('assignee_user_id'), // Fixed: changed from assignee_id to assignee_user_id
             'due_at' => $request->input('due_at'),
             'remark' => $request->input('remark'),
-            'assigner_id' => Auth::user()->person_id ?? 1, // Use authenticated user's person_id
+            'assigner_user_id' => Auth::user()->person_id ?? 1, // Fixed: changed from assigner_id to assigner_user_id
             'last_status_id' => null,
         ]);
 
@@ -194,13 +204,12 @@ class ComplaintAssignmentController extends Controller
         $assignmentData = [
             'complaint_id' => $complaintId,
             'assignee_division_id' => $request->input('assignee_division_id'),
+            'assignee_user_id' => $request->input('assignee_user_id'), // Fixed: changed from assignee_id to assignee_user_id
             'due_at' => $request->input('due_at'),
             'remark' => $request->input('remark'),
+            'assigner_user_id' => Auth::user()->person_id ?? 1, // Fixed: added missing assigner_user_id
+            'last_status_id' => $oldAssignment->last_status_id, // Fixed: added missing last_status_id
         ];
-
-        if ($request->has('assignee_user_id')) {
-            $assignmentData['assignee_id'] = $request->input('assignee_user_id');
-        }
 
         $assignment = ComplaintAssignment::create($assignmentData);
 

@@ -17,17 +17,20 @@ import {
   MoreVert,
   AccountCircle
 } from '@mui/icons-material';
-import axios from 'axios';
+import axios from '../utils/axiosConfig';
 import MessageForm from './MessageForm';
 import AttachmentForm from './AttachmentForm';
 import AssignComplaintForm from './AssignComplaintForm';
 import ComplaintLogForm from './ComplaintLogForm';
 import ComplaintStatusPriority from './ComplaintStatusPriority';
+import { useAuth } from '../contexts/AuthContext';
+import { Can } from './PermissionComponents';
 import './Complaint.css';
 
 const Complaint = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { hasPermission } = useAuth();
   const [complaint, setComplaint] = useState(null);
   const [loading, setLoading] = useState(true);
   const [messages, setMessages] = useState([]);
@@ -83,6 +86,19 @@ const Complaint = () => {
   const [logs, setLogs] = useState([]);
   const [loadingLogs, setLoadingLogs] = useState(false);
 
+  // Set default active tab based on permissions
+  useEffect(() => {
+    if (hasPermission('messages')) {
+      setActiveTab('messages');
+    } else if (hasPermission('attachment')) {
+      setActiveTab('attachments');
+    } else if (hasPermission('complaint.assign.process')) {
+      setActiveTab('assignments');
+    } else if (hasPermission('log.view')) {
+      setActiveTab('logs');
+    }
+  }, [hasPermission]);
+
   useEffect(() => {
     if (id) {
       fetchComplaint();
@@ -96,10 +112,7 @@ const Complaint = () => {
   const fetchComplaint = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('authToken');
-      const response = await axios.get(`http://localhost:8000/api/complaints/${id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await axios.get(`/complaints/${id}`);
       setComplaint(response.data);
     } catch (error) {
       console.error('Error fetching complaint:', error);
@@ -111,10 +124,7 @@ const Complaint = () => {
   const fetchMessages = async () => {
     setLoadingMessages(true);
     try {
-      const token = localStorage.getItem('authToken');
-      const response = await axios.get(`http://localhost:8000/api/complaints/${id}/messages`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await axios.get(`/complaints/${id}/messages`);
       const messagesData = response.data.data || response.data || [];
       setMessages(Array.isArray(messagesData) ? messagesData : []);
     } catch (error) {
@@ -128,10 +138,7 @@ const Complaint = () => {
   const fetchAttachments = async () => {
     setLoadingAttachments(true);
     try {
-      const token = localStorage.getItem('authToken');
-      const response = await axios.get(`http://localhost:8000/api/complaints/${id}/attachments`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await axios.get(`/complaints/${id}/attachments`);
       const attachmentsData = response.data.data || response.data || [];
       setAttachments(Array.isArray(attachmentsData) ? attachmentsData : []);
     } catch (error) {
@@ -145,10 +152,7 @@ const Complaint = () => {
   const fetchAssignments = async () => {
     setLoadingAssignments(true);
     try {
-      const token = localStorage.getItem('authToken');
-      const response = await axios.get(`http://localhost:8000/api/complaints/${id}/assignments`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await axios.get(`/complaints/${id}/assignments`);
       console.log('Assignments response:', response.data);
 
       // Handle both wrapped and unwrapped responses
@@ -165,10 +169,7 @@ const Complaint = () => {
   const fetchLogs = async () => {
     setLoadingLogs(true);
     try {
-      const token = localStorage.getItem('authToken');
-      const response = await axios.get(`http://localhost:8000/api/complaints/${id}/logs`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await axios.get(`/complaints/${id}/logs`);
       const logsData = Array.isArray(response.data) ? response.data : response.data.data || [];
       setLogs(logsData);
       console.log('Logs fetched:', logsData);
@@ -182,7 +183,7 @@ const Complaint = () => {
 
   const handleDownload = async (attachmentId, fileName) => {
     try {
-      const response = await axios.get(`http://localhost:8000/api/attachments/${attachmentId}/download`, {
+      const response = await axios.get(`/attachments/${attachmentId}/download`, {
         responseType: 'blob'
       });
       const url = window.URL.createObjectURL(new Blob([response.data]));
@@ -198,7 +199,7 @@ const Complaint = () => {
   };
 
   const handleView = (attachmentId) => {
-    window.open(`http://localhost:8000/api/attachments/${attachmentId}/view`, '_blank');
+    window.open(`${axios.defaults.baseURL}/attachments/${attachmentId}/view`, '_blank');
   };
 
   const handleEdit = () => {
@@ -212,7 +213,7 @@ const Complaint = () => {
 
     try {
       // First fetch available statuses to get the Cancel status ID
-      const statusesResponse = await axios.get('http://localhost:8000/api/complaint-statuses');
+      const statusesResponse = await axios.get('/complaint-statuses');
       const statuses = statusesResponse.data || [];
       const cancelStatus = statuses.find((s) => s.name?.toLowerCase() === 'cancel' || s.code?.toLowerCase() === 'cancel');
 
@@ -221,7 +222,7 @@ const Complaint = () => {
         return;
       }
 
-      const response = await axios.put(`http://localhost:8000/api/complaints/${id}/status`, {
+      const response = await axios.put(`/complaints/${id}/status`, {
         status_id: cancelStatus.id,
         remark: 'Complaint cancelled by user'
       });
@@ -276,7 +277,7 @@ const Complaint = () => {
   const handleDeleteMessage = async (messageId) => {
     if (window.confirm('Are you sure you want to delete this message?')) {
       try {
-        await axios.delete(`http://localhost:8000/api/messages/${messageId}`);
+        await axios.delete(`/messages/${messageId}`);
         fetchMessages();
       } catch (error) {
         console.error('Error deleting message:', error);
@@ -297,9 +298,9 @@ const Complaint = () => {
     e.preventDefault();
     try {
       if (editingMessage) {
-        await axios.put(`http://localhost:8000/api/messages/${currentMessage.id}`, currentMessage);
+        await axios.put(`/messages/${currentMessage.id}`, currentMessage);
       } else {
-        await axios.post('http://localhost:8000/api/messages', currentMessage);
+        await axios.post('/messages', currentMessage);
       }
       setShowMessageModal(false);
       fetchMessages();
@@ -316,7 +317,7 @@ const Complaint = () => {
 
     try {
       const user = JSON.parse(localStorage.getItem('user') || '{}');
-      await axios.post('http://localhost:8000/api/messages', {
+      await axios.post('/messages', {
         complaint_id: parseInt(id),
         message: newComment.trim(),
         type: 'reply',
@@ -339,7 +340,7 @@ const Complaint = () => {
 
     try {
       const user = JSON.parse(localStorage.getItem('user') || '{}');
-      await axios.post('http://localhost:8000/api/messages', {
+      await axios.post('/messages', {
         complaint_id: parseInt(id),
         message: replyText.trim(),
         type: 'reply',
@@ -364,7 +365,7 @@ const Complaint = () => {
 
     try {
       const message = messages.find((m) => m.id === messageId);
-      await axios.put(`http://localhost:8000/api/messages/${messageId}`, {
+      await axios.put(`/messages/${messageId}`, {
         ...message,
         message: editText
       });
@@ -417,7 +418,7 @@ const Complaint = () => {
   const handleDeleteAttachment = async (attachmentId) => {
     if (window.confirm('Are you sure you want to delete this attachment?')) {
       try {
-        await axios.delete(`http://localhost:8000/api/public/attachments/${attachmentId}`);
+        await axios.delete(`/public/attachments/${attachmentId}`);
         fetchAttachments();
       } catch (error) {
         console.error('Error deleting attachment:', error);
@@ -428,7 +429,7 @@ const Complaint = () => {
 
   const handleAttachmentSubmit = async (formData) => {
     try {
-      await axios.post('http://localhost:8000/api/public/attachments', formData, {
+      await axios.post('/public/attachments', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
@@ -552,14 +553,16 @@ const Complaint = () => {
             </div>
 
             <div>
-              <Button
-                style={{ backgroundColor: '#3a4c4a', borderColor: '#3a4c4a' }}
-                size="sm"
-                onClick={handleEdit}
-                disabled={complaint.is_reassigned_away}
-              >
-                <Edit fontSize="small" className="me-1" /> Edit
-              </Button>
+              <Can permission="complaint.update">
+                <Button
+                  style={{ backgroundColor: '#3a4c4a', borderColor: '#3a4c4a' }}
+                  size="sm"
+                  onClick={handleEdit}
+                  disabled={complaint.is_reassigned_away}
+                >
+                  <Edit fontSize="small" className="me-1" /> Edit
+                </Button>
+              </Can>
             </div>
           </div>
         </Col>
@@ -621,9 +624,11 @@ const Complaint = () => {
                       <Badge bg="secondary">Pending</Badge>
                     )}
                     {complaint?.lastStatus?.name !== 'Cancel' && (
-                      <Button variant="outline-danger" size="sm" onClick={handleCancelComplaint}>
-                        Cancel
-                      </Button>
+                      <Can permission="complaint.delete">
+                        <Button variant="outline-danger" size="sm" onClick={handleCancelComplaint}>
+                          Cancel
+                        </Button>
+                      </Can>
                     )}
                   </div>
                 </Col>
@@ -649,49 +654,53 @@ const Complaint = () => {
             <Card.Body>
               {/* Custom Nav Tabs */}
               <ul className="nav nav-tabs" style={{ borderBottom: '2px solid #dee2e6', marginBottom: '1.5rem' }}>
-                <li className="nav-item">
-                  <a
-                    className={`nav-link ${activeTab === 'messages' ? 'active' : ''}`}
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setActiveTab('messages');
-                    }}
-                    style={{
-                      color: activeTab === 'messages' ? '#0d6efd' : '#6c757d',
-                      borderBottom: activeTab === 'messages' ? '3px solid #0d6efd' : '3px solid transparent',
-                      paddingBottom: '0.75rem',
-                      fontWeight: activeTab === 'messages' ? '600' : '500',
-                      cursor: 'pointer',
-                      marginBottom: '-2px',
-                      transition: 'all 0.3s ease'
-                    }}
-                  >
-                    Comments ({messages.length})
-                  </a>
-                </li>
-                <li className="nav-item">
-                  <a
-                    className={`nav-link ${activeTab === 'attachments' ? 'active' : ''}`}
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setActiveTab('attachments');
-                    }}
-                    style={{
-                      color: activeTab === 'attachments' ? '#0d6efd' : '#6c757d',
-                      borderBottom: activeTab === 'attachments' ? '3px solid #0d6efd' : '3px solid transparent',
-                      paddingBottom: '0.75rem',
-                      fontWeight: activeTab === 'attachments' ? '600' : '500',
-                      cursor: 'pointer',
-                      marginBottom: '-2px',
-                      transition: 'all 0.3s ease'
-                    }}
-                  >
-                    Attachments ({attachments.length})
-                  </a>
-                </li>
-                {!isEngineer && (
+                <Can permission="messages">
+                  <li className="nav-item">
+                    <a
+                      className={`nav-link ${activeTab === 'messages' ? 'active' : ''}`}
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setActiveTab('messages');
+                      }}
+                      style={{
+                        color: activeTab === 'messages' ? '#0d6efd' : '#6c757d',
+                        borderBottom: activeTab === 'messages' ? '3px solid #0d6efd' : '3px solid transparent',
+                        paddingBottom: '0.75rem',
+                        fontWeight: activeTab === 'messages' ? '600' : '500',
+                        cursor: 'pointer',
+                        marginBottom: '-2px',
+                        transition: 'all 0.3s ease'
+                      }}
+                    >
+                      Comments ({messages.length})
+                    </a>
+                  </li>
+                </Can>
+                <Can permission="attachment">
+                  <li className="nav-item">
+                    <a
+                      className={`nav-link ${activeTab === 'attachments' ? 'active' : ''}`}
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setActiveTab('attachments');
+                      }}
+                      style={{
+                        color: activeTab === 'attachments' ? '#0d6efd' : '#6c757d',
+                        borderBottom: activeTab === 'attachments' ? '3px solid #0d6efd' : '3px solid transparent',
+                        paddingBottom: '0.75rem',
+                        fontWeight: activeTab === 'attachments' ? '600' : '500',
+                        cursor: 'pointer',
+                        marginBottom: '-2px',
+                        transition: 'all 0.3s ease'
+                      }}
+                    >
+                      Attachments ({attachments.length})
+                    </a>
+                  </li>
+                </Can>
+                <Can permission="complaint.assign.process">
                   <li className="nav-item">
                     <a
                       className={`nav-link ${activeTab === 'assignments' ? 'active' : ''}`}
@@ -713,726 +722,745 @@ const Complaint = () => {
                       Complaint Assignment ({assignments.length})
                     </a>
                   </li>
-                )}
-                <li className="nav-item">
-                  <a
-                    className={`nav-link ${activeTab === 'logs' ? 'active' : ''}`}
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setActiveTab('logs');
-                    }}
-                    style={{
-                      color: activeTab === 'logs' ? '#0d6efd' : '#6c757d',
-                      borderBottom: activeTab === 'logs' ? '3px solid #0d6efd' : '3px solid transparent',
-                      paddingBottom: '0.75rem',
-                      fontWeight: activeTab === 'logs' ? '600' : '500',
-                      cursor: 'pointer',
-                      marginBottom: '-2px',
-                      transition: 'all 0.3s ease'
-                    }}
-                  >
-                    Complaint Log ({logs.filter((l) => l.action !== 'Assigned').length})
-                  </a>
-                </li>
+                </Can>
+                <Can permission="log.view">
+                  <li className="nav-item">
+                    <a
+                      className={`nav-link ${activeTab === 'logs' ? 'active' : ''}`}
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setActiveTab('logs');
+                      }}
+                      style={{
+                        color: activeTab === 'logs' ? '#0d6efd' : '#6c757d',
+                        borderBottom: activeTab === 'logs' ? '3px solid #0d6efd' : '3px solid transparent',
+                        paddingBottom: '0.75rem',
+                        fontWeight: activeTab === 'logs' ? '600' : '500',
+                        cursor: 'pointer',
+                        marginBottom: '-2px',
+                        transition: 'all 0.3s ease'
+                      }}
+                    >
+                      Complaint Log ({logs.filter((l) => l.action !== 'Assigned').length})
+                    </a>
+                  </li>
+                </Can>
               </ul>
 
               {/* Tab Content */}
-              {activeTab === 'messages' && (
-                <div className="py-4">
-                  {/* Comment Input Box */}
-                  <div className="fb-comment-box mb-4">
-                    <div className="d-flex gap-3">
-                      <div className="fb-avatar">
-                        <AccountCircle style={{ fontSize: 42, color: '#1877f2' }} />
-                      </div>
-                      <div className="flex-grow-1">
-                        <InputGroup>
-                          <Form.Control
-                            as="textarea"
-                            rows={2}
-                            placeholder="💭 What's on your mind? Share your thoughts..."
-                            value={newComment}
-                            onChange={(e) => setNewComment(e.target.value)}
-                            className="fb-comment-input"
-                            style={{
-                              resize: 'none',
-                              borderRadius: '20px',
-                              backgroundColor: '#f0f2f5',
-                              border: '2px solid transparent'
-                            }}
-                            onKeyPress={(e) => {
-                              if (e.key === 'Enter' && e.ctrlKey) {
-                                handleQuickComment();
-                              }
-                            }}
-                          />
-                        </InputGroup>
-                        {newComment && (
-                          <div className="d-flex justify-content-between align-items-center mt-2">
-                            <small className="text-muted" style={{ fontSize: '11px' }}>
-                              💡 Press Ctrl+Enter to post quickly
-                            </small>
-                            <div className="d-flex gap-2">
-                              <Button
-                                size="sm"
-                                variant="outline-secondary"
-                                onClick={() => setNewComment('')}
-                                style={{ borderRadius: '20px' }}
-                              >
-                                Cancel
-                              </Button>
-                              <Button
-                                size="sm"
-                                style={{
-                                  backgroundColor: '#1877f2',
-                                  borderColor: '#1877f2',
-                                  borderRadius: '20px',
-                                  fontWeight: '600',
-                                  padding: '6px 20px'
-                                }}
-                                onClick={handleQuickComment}
-                              >
-                                <Send fontSize="small" className="me-1" />
-                                Post Comment
-                              </Button>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Comments List */}
-                  {loadingMessages ? (
-                    <div className="text-center py-4">
-                      <Spinner animation="border" size="sm" style={{ color: '#1877f2' }} />
-                      <p className="text-muted mt-2">Loading comments...</p>
-                    </div>
-                  ) : messages.length > 0 ? (
-                    <div className="fb-comments-list">
-                      {getTopLevelMessages().map((msg) => {
-                        const replies = getMessageReplies(msg.id);
-                        const isEditing = editingId === msg.id;
-
-                        return (
-                          <div key={msg.id} className="fb-comment-item mb-3">
-                            {/* Main Comment */}
-                            <div className="d-flex gap-2">
-                              <div className="fb-avatar">
-                                <AccountCircle style={{ fontSize: 40, color: '#65676b' }} />
+              <Can permission="messages">
+                {activeTab === 'messages' && (
+                  <div className="py-4">
+                    {/* Comment Input Box */}
+                    <div className="fb-comment-box mb-4">
+                      <div className="d-flex gap-3">
+                        <div className="fb-avatar">
+                          <AccountCircle style={{ fontSize: 42, color: '#1877f2' }} />
+                        </div>
+                        <div className="flex-grow-1">
+                          <InputGroup>
+                            <Form.Control
+                              as="textarea"
+                              rows={2}
+                              placeholder="💭 What's on your mind? Share your thoughts..."
+                              value={newComment}
+                              onChange={(e) => setNewComment(e.target.value)}
+                              className="fb-comment-input"
+                              style={{
+                                resize: 'none',
+                                borderRadius: '20px',
+                                backgroundColor: '#f0f2f5',
+                                border: '2px solid transparent'
+                              }}
+                              onKeyPress={(e) => {
+                                if (e.key === 'Enter' && e.ctrlKey) {
+                                  handleQuickComment();
+                                }
+                              }}
+                            />
+                          </InputGroup>
+                          {newComment && (
+                            <div className="d-flex justify-content-between align-items-center mt-2">
+                              <small className="text-muted" style={{ fontSize: '11px' }}>
+                                💡 Press Ctrl+Enter to post quickly
+                              </small>
+                              <div className="d-flex gap-2">
+                                <Button
+                                  size="sm"
+                                  variant="outline-secondary"
+                                  onClick={() => setNewComment('')}
+                                  style={{ borderRadius: '20px' }}
+                                >
+                                  Cancel
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  style={{
+                                    backgroundColor: '#1877f2',
+                                    borderColor: '#1877f2',
+                                    borderRadius: '20px',
+                                    fontWeight: '600',
+                                    padding: '6px 20px'
+                                  }}
+                                  onClick={handleQuickComment}
+                                >
+                                  <Send fontSize="small" className="me-1" />
+                                  Post Comment
+                                </Button>
                               </div>
-                              <div className="flex-grow-1">
-                                <div className="fb-comment-content">
-                                  <div className="fb-comment-bubble">
-                                    <div className="d-flex justify-content-between align-items-start mb-1">
-                                      <div className="d-flex align-items-center gap-2">
-                                        <strong className="fb-comment-author">
-                                          {msg.user?.full_name || msg.user?.username || 'System'}
-                                        </strong>
-                                        {msg.type && (
-                                          <Badge
-                                            bg={msg.type === 'initial' ? 'primary' : msg.type === 'escalation' ? 'danger' : 'success'}
-                                            style={{
-                                              fontSize: '9px',
-                                              padding: '3px 8px',
-                                              borderRadius: '10px',
-                                              fontWeight: '600',
-                                              letterSpacing: '0.3px'
-                                            }}
-                                          >
-                                            {msg.type === 'initial'
-                                              ? '📝 Initial'
-                                              : msg.type === 'escalation'
-                                                ? '⚠️ Escalated'
-                                                : '💬 Reply'}
-                                          </Badge>
-                                        )}
-                                      </div>
-                                    </div>
-                                    {isEditing ? (
-                                      <div className="mt-2">
-                                        <Form.Control
-                                          as="textarea"
-                                          rows={3}
-                                          value={editText}
-                                          onChange={(e) => setEditText(e.target.value)}
-                                          autoFocus
-                                          style={{
-                                            borderRadius: '12px',
-                                            border: '2px solid #1877f2',
-                                            padding: '10px'
-                                          }}
-                                        />
-                                        <div className="d-flex gap-2 mt-2">
-                                          <Button
-                                            size="sm"
-                                            variant="outline-secondary"
-                                            onClick={cancelEditing}
-                                            style={{ borderRadius: '16px' }}
-                                          >
-                                            Cancel
-                                          </Button>
-                                          <Button
-                                            size="sm"
-                                            onClick={() => handleQuickEdit(msg.id)}
-                                            style={{
-                                              backgroundColor: '#1877f2',
-                                              borderColor: '#1877f2',
-                                              borderRadius: '16px',
-                                              fontWeight: '600'
-                                            }}
-                                          >
-                                            ✓ Save Changes
-                                          </Button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Comments List */}
+                    {loadingMessages ? (
+                      <div className="text-center py-4">
+                        <Spinner animation="border" size="sm" style={{ color: '#1877f2' }} />
+                        <p className="text-muted mt-2">Loading comments...</p>
+                      </div>
+                    ) : messages.length > 0 ? (
+                      <div className="fb-comments-list">
+                        {getTopLevelMessages().map((msg) => {
+                          const replies = getMessageReplies(msg.id);
+                          const isEditing = editingId === msg.id;
+
+                          return (
+                            <div key={msg.id} className="fb-comment-item mb-3">
+                              {/* Main Comment */}
+                              <div className="d-flex gap-2">
+                                <div className="fb-avatar">
+                                  <AccountCircle style={{ fontSize: 40, color: '#65676b' }} />
+                                </div>
+                                <div className="flex-grow-1">
+                                  <div className="fb-comment-content">
+                                    <div className="fb-comment-bubble">
+                                      <div className="d-flex justify-content-between align-items-start mb-1">
+                                        <div className="d-flex align-items-center gap-2">
+                                          <strong className="fb-comment-author">
+                                            {msg.user?.full_name || msg.user?.username || 'System'}
+                                          </strong>
+                                          {msg.type && (
+                                            <Badge
+                                              bg={msg.type === 'initial' ? 'primary' : msg.type === 'escalation' ? 'danger' : 'success'}
+                                              style={{
+                                                fontSize: '9px',
+                                                padding: '3px 8px',
+                                                borderRadius: '10px',
+                                                fontWeight: '600',
+                                                letterSpacing: '0.3px'
+                                              }}
+                                            >
+                                              {msg.type === 'initial'
+                                                ? '📝 Initial'
+                                                : msg.type === 'escalation'
+                                                  ? '⚠️ Escalated'
+                                                  : '💬 Reply'}
+                                            </Badge>
+                                          )}
                                         </div>
                                       </div>
-                                    ) : (
-                                      <p className="mb-0 mt-1" style={{ lineHeight: '1.6' }}>
-                                        {msg.message}
-                                      </p>
-                                    )}
-                                  </div>
-
-                                  {/* Action Buttons */}
-                                  <div className="fb-comment-actions">
-                                    <small className="text-muted" style={{ fontWeight: '500', fontSize: '11px' }}>
-                                      🕒{' '}
-                                      {new Date(msg.created_at).toLocaleString('en-US', {
-                                        month: 'short',
-                                        day: 'numeric',
-                                        hour: 'numeric',
-                                        minute: '2-digit'
-                                      })}
-                                    </small>
-                                    <span className="text-muted mx-1">•</span>
-                                    <Button variant="link" size="sm" className="fb-action-btn" onClick={() => setReplyingTo(msg.id)}>
-                                      💬 Reply
-                                    </Button>
-                                    {replies.length === 0 && (
-                                      <Button variant="link" size="sm" className="fb-action-btn" onClick={() => startEditing(msg)}>
-                                        ✏️ Edit
-                                      </Button>
-                                    )}
-                                    <Button
-                                      variant="link"
-                                      size="sm"
-                                      className="fb-action-btn text-danger"
-                                      onClick={() => handleDeleteMessage(msg.id)}
-                                    >
-                                      🗑️ Delete
-                                    </Button>
-                                  </div>
-
-                                  {/* Reply Input */}
-                                  {replyingTo === msg.id && (
-                                    <div className="d-flex gap-2 mt-2">
-                                      <div className="fb-avatar-small">
-                                        <AccountCircle style={{ fontSize: 32, color: '#1877f2' }} />
-                                      </div>
-                                      <div className="flex-grow-1">
-                                        <InputGroup>
+                                      {isEditing ? (
+                                        <div className="mt-2">
                                           <Form.Control
                                             as="textarea"
-                                            rows={2}
-                                            placeholder="Write a reply..."
-                                            value={replyText}
-                                            onChange={(e) => setReplyText(e.target.value)}
+                                            rows={3}
+                                            value={editText}
+                                            onChange={(e) => setEditText(e.target.value)}
                                             autoFocus
-                                            style={{ resize: 'none', borderRadius: '18px', backgroundColor: '#f0f2f5' }}
-                                          />
-                                        </InputGroup>
-                                        <div className="d-flex gap-2 mt-2">
-                                          <Button
-                                            size="sm"
-                                            variant="light"
-                                            onClick={() => {
-                                              setReplyingTo(null);
-                                              setReplyText('');
+                                            style={{
+                                              borderRadius: '12px',
+                                              border: '2px solid #1877f2',
+                                              padding: '10px'
                                             }}
-                                          >
-                                            Cancel
-                                          </Button>
-                                          <Button
-                                            size="sm"
-                                            style={{ backgroundColor: '#1877f2', borderColor: '#1877f2' }}
-                                            onClick={() => handleQuickReply(msg.id)}
-                                          >
-                                            <Send fontSize="small" />
-                                          </Button>
+                                          />
+                                          <div className="d-flex gap-2 mt-2">
+                                            <Button
+                                              size="sm"
+                                              variant="outline-secondary"
+                                              onClick={cancelEditing}
+                                              style={{ borderRadius: '16px' }}
+                                            >
+                                              Cancel
+                                            </Button>
+                                            <Button
+                                              size="sm"
+                                              onClick={() => handleQuickEdit(msg.id)}
+                                              style={{
+                                                backgroundColor: '#1877f2',
+                                                borderColor: '#1877f2',
+                                                borderRadius: '16px',
+                                                fontWeight: '600'
+                                              }}
+                                            >
+                                              ✓ Save Changes
+                                            </Button>
+                                          </div>
                                         </div>
-                                      </div>
+                                      ) : (
+                                        <p className="mb-0 mt-1" style={{ lineHeight: '1.6' }}>
+                                          {msg.message}
+                                        </p>
+                                      )}
                                     </div>
-                                  )}
 
-                                  {/* Replies Section */}
-                                  {replies.length > 0 && (
-                                    <div className="fb-replies mt-3">
-                                      {!showReplies[msg.id] && (
-                                        <Button variant="link" size="sm" className="fb-show-replies" onClick={() => toggleReplies(msg.id)}>
-                                          <Reply fontSize="small" className="me-2" />
-                                          View {replies.length} {replies.length === 1 ? 'reply' : 'replies'}
+                                    {/* Action Buttons */}
+                                    <div className="fb-comment-actions">
+                                      <small className="text-muted" style={{ fontWeight: '500', fontSize: '11px' }}>
+                                        🕒{' '}
+                                        {new Date(msg.created_at).toLocaleString('en-US', {
+                                          month: 'short',
+                                          day: 'numeric',
+                                          hour: 'numeric',
+                                          minute: '2-digit'
+                                        })}
+                                      </small>
+                                      <span className="text-muted mx-1">•</span>
+                                      <Button variant="link" size="sm" className="fb-action-btn" onClick={() => setReplyingTo(msg.id)}>
+                                        💬 Reply
+                                      </Button>
+                                      {replies.length === 0 && (
+                                        <Button variant="link" size="sm" className="fb-action-btn" onClick={() => startEditing(msg)}>
+                                          ✏️ Edit
                                         </Button>
                                       )}
-
-                                      {showReplies[msg.id] && (
-                                        <>
-                                          <Button
-                                            variant="link"
-                                            size="sm"
-                                            className="fb-show-replies mb-3"
-                                            onClick={() => toggleReplies(msg.id)}
-                                            style={{ backgroundColor: 'transparent' }}
-                                          >
-                                            ⬆️ Hide {replies.length} {replies.length === 1 ? 'reply' : 'replies'}
-                                          </Button>
-                                          {replies.map((reply) => (
-                                            <div key={reply.id} className="d-flex gap-2 mb-2">
-                                              <div className="fb-avatar-small">
-                                                <AccountCircle style={{ fontSize: 32, color: '#65676b' }} />
-                                              </div>
-                                              <div className="flex-grow-1">
-                                                <div className="fb-comment-bubble-small">
-                                                  <strong className="fb-comment-author-small">
-                                                    {reply.user?.full_name || reply.user?.username || 'System'}
-                                                  </strong>
-                                                  <p className="mb-0" style={{ lineHeight: '1.6' }}>
-                                                    {reply.message}
-                                                  </p>
-                                                </div>
-                                                <div className="fb-comment-actions" style={{ paddingLeft: '8px', marginTop: '4px' }}>
-                                                  <small className="text-muted" style={{ fontWeight: '500', fontSize: '10px' }}>
-                                                    {new Date(reply.created_at).toLocaleString('en-US', {
-                                                      month: 'short',
-                                                      day: 'numeric',
-                                                      hour: 'numeric',
-                                                      minute: '2-digit'
-                                                    })}
-                                                  </small>
-                                                  <span className="text-muted mx-1">•</span>
-                                                  <Button
-                                                    variant="link"
-                                                    size="sm"
-                                                    className="fb-action-btn text-danger"
-                                                    onClick={() => handleDeleteMessage(reply.id)}
-                                                    style={{ padding: '2px 6px !important' }}
-                                                  >
-                                                    🗑️ Delete
-                                                  </Button>
-                                                </div>
-                                              </div>
-                                            </div>
-                                          ))}
-                                        </>
-                                      )}
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <div
-                      className="text-center py-5"
-                      style={{
-                        background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
-                        borderRadius: '16px',
-                        padding: '40px'
-                      }}
-                    >
-                      <div
-                        style={{
-                          background: 'linear-gradient(135deg, #1877f2 0%, #0d6efd 100%)',
-                          width: '80px',
-                          height: '80px',
-                          borderRadius: '50%',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          margin: '0 auto 20px',
-                          boxShadow: '0 8px 24px rgba(24, 119, 242, 0.3)'
-                        }}
-                      >
-                        <Message style={{ fontSize: 40, color: '#fff' }} />
-                      </div>
-                      <h5 style={{ color: '#1c1e21', fontWeight: '700', marginBottom: '8px' }}>No comments yet</h5>
-                      <p className="text-muted" style={{ fontSize: '14px' }}>
-                        💬 Be the first to share your thoughts and start the conversation!
-                      </p>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {activeTab === 'attachments' && (
-                <div className="py-4">
-                  <div className="d-flex justify-content-between align-items-center mb-3">
-                    <h5 className="mb-0">Complaint Attachments</h5>
-                    <Button variant="primary" size="sm" onClick={handleAddAttachment}>
-                      <Add fontSize="small" className="me-1" />
-                      Upload Files
-                    </Button>
-                  </div>
-                  {loadingAttachments ? (
-                    <div className="text-center">
-                      <Spinner animation="border" size="sm" />
-                      <p className="text-muted mt-2">Loading attachments...</p>
-                    </div>
-                  ) : attachments.length > 0 ? (
-                    <>
-                      <Alert variant="info" className="mb-3">
-                        <AttachFile className="me-2" />
-                        <strong>Total Attachments:</strong> {attachments.length} file(s)
-                      </Alert>
-                      <Table hover responsive className="mb-0">
-                        <thead>
-                          <tr>
-                            <th>#</th>
-                            <th>File Name</th>
-                            <th>Type</th>
-                            <th>Size</th>
-                            <th>Uploaded</th>
-                            <th>Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {attachments.map((att, index) => (
-                            <tr key={att.id}>
-                              <td>{index + 1}</td>
-                              <td>
-                                <div className="d-flex align-items-center">
-                                  <AttachFile className="me-2 text-muted" fontSize="small" />
-                                  <strong>{att.file_name}</strong>
-                                </div>
-                                {att.description && <small className="text-muted d-block ms-4">{att.description}</small>}
-                              </td>
-                              <td>
-                                <Badge bg="light" text="dark">
-                                  {att.file_type || 'N/A'}
-                                </Badge>
-                              </td>
-                              <td>{att.file_size ? `${(att.file_size / 1024).toFixed(2)} KB` : 'N/A'}</td>
-                              <td>
-                                <small>{new Date(att.created_at).toLocaleDateString()}</small>
-                              </td>
-                              <td>
-                                <div className="d-flex gap-2">
-                                  <Button size="sm" variant="outline-primary" onClick={() => handleView(att.id)} title="View">
-                                    <Visibility fontSize="small" />
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="outline-success"
-                                    onClick={() => handleDownload(att.id, att.file_name)}
-                                    title="Download"
-                                  >
-                                    <Download fontSize="small" />
-                                  </Button>
-                                  <Button size="sm" variant="outline-danger" onClick={() => handleDeleteAttachment(att.id)} title="Delete">
-                                    <Delete fontSize="small" />
-                                  </Button>
-                                </div>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </Table>
-                    </>
-                  ) : (
-                    <div className="text-center text-muted py-4">
-                      <AttachFile style={{ fontSize: 48, opacity: 0.3 }} />
-                      <p className="mt-3">No attachments</p>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {!isEngineer && activeTab === 'assignments' && (
-                <div className="py-4">
-                  <div className="d-flex justify-content-between align-items-center mb-3">
-                    <h5 className="mb-0">Assignments</h5>
-                    <Button
-                      variant="success"
-                      size="sm"
-                      onClick={() => {
-                        setEditingAssignment(null);
-                        setShowAssignForm(true);
-                      }}
-                    >
-                      <Add fontSize="small" className="me-1" />
-                      Add Assignment
-                    </Button>
-                  </div>
-
-                  {loadingAssignments ? (
-                    <div className="text-center py-4">
-                      <Spinner animation="border" size="sm" />
-                    </div>
-                  ) : assignments.length > 0 ? (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                      {assignments.map((assign, idx) => {
-                        const assignmentLogs = logs.filter((log) => log.complaint_assignment_id === assign.id && log.action !== 'Assigned');
-                        return (
-                          <div
-                            key={assign.id}
-                            style={{
-                              border: '1px solid #e0e0e0',
-                              borderRadius: '8px',
-                              overflow: 'hidden'
-                            }}
-                          >
-                            {/* Header Row */}
-                            <div
-                              style={{
-                                display: 'grid',
-                                gridTemplateColumns: '1fr 1fr 110px 80px 1fr 100px',
-                                gap: '8px',
-                                padding: '12px 15px',
-                                backgroundColor: '#f5f5f5',
-                                fontWeight: '600',
-                                borderBottom: '1px solid #ddd'
-                              }}
-                            >
-                              <div>Division</div>
-                              <div>Assignee</div>
-                              <div>Due Date</div>
-                              <div>Status</div>
-                              <div>Remark</div>
-                              <div>Actions</div>
-                            </div>
-
-                            {/* Assignment Data Row */}
-                            <div
-                              style={{
-                                display: 'grid',
-                                gridTemplateColumns: '1fr 1fr 110px 80px 1fr 100px',
-                                gap: '8px',
-                                padding: '12px 15px',
-                                backgroundColor: '#fff',
-                                borderBottom: '1px solid #e0e0e0',
-                                alignItems: 'center'
-                              }}
-                            >
-                              <div>
-                                {assign.assigneeDivision?.name ||
-                                  assign.division?.name ||
-                                  (assign.assignee_division_id ? `Division #${assign.assignee_division_id}` : '-')}
-                              </div>
-                              <div>
-                                {assign.assigneeUser?.full_name ||
-                                  assign.assignee?.full_name ||
-                                  (assign.assignee_user_id ? `Person #${assign.assignee_user_id}` : '-')}
-                              </div>
-                              <div>{assign.due_at ? new Date(assign.due_at).toLocaleDateString() : '-'}</div>
-                              <div>
-                                <Badge bg={idx === 0 ? 'success' : 'secondary'}>{idx === 0 ? 'Current' : 'Reassigned'}</Badge>
-                              </div>
-                              <div style={{ fontSize: '0.9rem', color: '#666', fontWeight: '400' }}>{assign.remark || '-'}</div>
-                              <div style={{ display: 'flex', gap: '4px', fontSize: '0.75rem' }}>
-                                {idx === 0 ? (
-                                  <Button
-                                    size="sm"
-                                    variant="outline-info"
-                                    style={{ padding: '3px 8px', fontSize: '0.75rem' }}
-                                    onClick={() => {
-                                      setEditingLog(null);
-                                      setCurrentAssignmentId(assign.id);
-                                      setShowLogForm(true);
-                                    }}
-                                    title="Add Log"
-                                  >
-                                    + Log
-                                  </Button>
-                                ) : null}
-                              </div>
-                            </div>
-
-                            {/* Logs Section */}
-                            <div
-                              style={{
-                                backgroundColor: '#f9f9f9',
-                                padding: '12px 15px',
-                                borderLeft: '3px solid #2196F3'
-                              }}
-                            >
-                              <div style={{ fontWeight: '600', marginBottom: '8px', fontSize: '0.9rem', color: '#333' }}>
-                                Logs ({assignmentLogs.length})
-                              </div>
-                              {assignmentLogs.length > 0 ? (
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                  {assignmentLogs.map((log) => (
-                                    <div
-                                      key={log.id}
-                                      style={{
-                                        padding: '10px 12px',
-                                        backgroundColor: '#fff',
-                                        border: '1px solid #e0e0e0',
-                                        borderRadius: '4px',
-                                        fontSize: '0.85rem'
-                                      }}
-                                    >
-                                      <div
-                                        style={{
-                                          display: 'flex',
-                                          justifyContent: 'space-between',
-                                          alignItems: 'flex-start',
-                                          marginBottom: '4px'
-                                        }}
+                                      <Button
+                                        variant="link"
+                                        size="sm"
+                                        className="fb-action-btn text-danger"
+                                        onClick={() => handleDeleteMessage(msg.id)}
                                       >
-                                        <div style={{ fontWeight: '600', color: '#1976D2' }}>{log.action}</div>
-                                        <div style={{ color: '#999', fontSize: '0.75rem', marginLeft: '8px', whiteSpace: 'nowrap' }}>
-                                          {new Date(log.created_at).toLocaleString()}
+                                        🗑️ Delete
+                                      </Button>
+                                    </div>
+
+                                    {/* Reply Input */}
+                                    {replyingTo === msg.id && (
+                                      <div className="d-flex gap-2 mt-2">
+                                        <div className="fb-avatar-small">
+                                          <AccountCircle style={{ fontSize: 32, color: '#1877f2' }} />
+                                        </div>
+                                        <div className="flex-grow-1">
+                                          <InputGroup>
+                                            <Form.Control
+                                              as="textarea"
+                                              rows={2}
+                                              placeholder="Write a reply..."
+                                              value={replyText}
+                                              onChange={(e) => setReplyText(e.target.value)}
+                                              autoFocus
+                                              style={{ resize: 'none', borderRadius: '18px', backgroundColor: '#f0f2f5' }}
+                                            />
+                                          </InputGroup>
+                                          <div className="d-flex gap-2 mt-2">
+                                            <Button
+                                              size="sm"
+                                              variant="light"
+                                              onClick={() => {
+                                                setReplyingTo(null);
+                                                setReplyText('');
+                                              }}
+                                            >
+                                              Cancel
+                                            </Button>
+                                            <Button
+                                              size="sm"
+                                              style={{ backgroundColor: '#1877f2', borderColor: '#1877f2' }}
+                                              onClick={() => handleQuickReply(msg.id)}
+                                            >
+                                              <Send fontSize="small" />
+                                            </Button>
+                                          </div>
                                         </div>
                                       </div>
-                                      {log.remark && (
-                                        <div style={{ color: '#555', fontSize: '0.85rem', marginBottom: '0px' }}>{log.remark}</div>
-                                      )}
-                                    </div>
-                                  ))}
-                                </div>
-                              ) : (
-                                <div style={{ color: '#999', fontSize: '0.85rem', padding: '8px 0', fontStyle: 'italic' }}>
-                                  No logs yet for this assignment
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <div className="text-center text-muted py-4">
-                      <Person style={{ fontSize: 48, opacity: 0.3 }} />
-                      <p className="mt-3">No assignments yet</p>
-                    </div>
-                  )}
-                </div>
-              )}
+                                    )}
 
-              {activeTab === 'logs' && (
-                <div className="py-4">
-                  <div className="d-flex justify-content-between align-items-center mb-3">
-                    <h5 className="mb-0">Complaint Logs</h5>
-                    {assignments.length > 0 ? (
+                                    {/* Replies Section */}
+                                    {replies.length > 0 && (
+                                      <div className="fb-replies mt-3">
+                                        {!showReplies[msg.id] && (
+                                          <Button variant="link" size="sm" className="fb-show-replies" onClick={() => toggleReplies(msg.id)}>
+                                            <Reply fontSize="small" className="me-2" />
+                                            View {replies.length} {replies.length === 1 ? 'reply' : 'replies'}
+                                          </Button>
+                                        )}
+
+                                        {showReplies[msg.id] && (
+                                          <>
+                                            <Button
+                                              variant="link"
+                                              size="sm"
+                                              className="fb-show-replies mb-3"
+                                              onClick={() => toggleReplies(msg.id)}
+                                              style={{ backgroundColor: 'transparent' }}
+                                            >
+                                              ⬆️ Hide {replies.length} {replies.length === 1 ? 'reply' : 'replies'}
+                                            </Button>
+                                            {replies.map((reply) => (
+                                              <div key={reply.id} className="d-flex gap-2 mb-2">
+                                                <div className="fb-avatar-small">
+                                                  <AccountCircle style={{ fontSize: 32, color: '#65676b' }} />
+                                                </div>
+                                                <div className="flex-grow-1">
+                                                  <div className="fb-comment-bubble-small">
+                                                    <strong className="fb-comment-author-small">
+                                                      {reply.user?.full_name || reply.user?.username || 'System'}
+                                                    </strong>
+                                                    <p className="mb-0" style={{ lineHeight: '1.6' }}>
+                                                      {reply.message}
+                                                    </p>
+                                                  </div>
+                                                  <div className="fb-comment-actions" style={{ paddingLeft: '8px', marginTop: '4px' }}>
+                                                    <small className="text-muted" style={{ fontWeight: '500', fontSize: '10px' }}>
+                                                      {new Date(reply.created_at).toLocaleString('en-US', {
+                                                        month: 'short',
+                                                        day: 'numeric',
+                                                        hour: 'numeric',
+                                                        minute: '2-digit'
+                                                      })}
+                                                    </small>
+                                                    <span className="text-muted mx-1">•</span>
+                                                    <Button
+                                                      variant="link"
+                                                      size="sm"
+                                                      className="fb-action-btn text-danger"
+                                                      onClick={() => handleDeleteMessage(reply.id)}
+                                                      style={{ padding: '2px 6px !important' }}
+                                                    >
+                                                      🗑️ Delete
+                                                    </Button>
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            ))}
+                                          </>
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div
+                        className="text-center py-5"
+                        style={{
+                          background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
+                          borderRadius: '16px',
+                          padding: '40px'
+                        }}
+                      >
+                        <div
+                          style={{
+                            background: 'linear-gradient(135deg, #1877f2 0%, #0d6efd 100%)',
+                            width: '80px',
+                            height: '80px',
+                            borderRadius: '50%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            margin: '0 auto 20px',
+                            boxShadow: '0 8px 24px rgba(24, 119, 242, 0.3)'
+                          }}
+                        >
+                          <Message style={{ fontSize: 40, color: '#fff' }} />
+                        </div>
+                        <h5 style={{ color: '#1c1e21', fontWeight: '700', marginBottom: '8px' }}>No comments yet</h5>
+                        <p className="text-muted" style={{ fontSize: '14px' }}>
+                          💬 Be the first to share your thoughts and start the conversation!
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </Can>
+
+              <Can permission="attachment">
+                {activeTab === 'attachments' && (
+                  <div className="py-4">
+                    <div className="d-flex justify-content-between align-items-center mb-3">
+                      <h5 className="mb-0">Complaint Attachments</h5>
+                      <Button variant="primary" size="sm" onClick={handleAddAttachment}>
+                        <Add fontSize="small" className="me-1" />
+                        Upload Files
+                      </Button>
+                    </div>
+                    {loadingAttachments ? (
+                      <div className="text-center">
+                        <Spinner animation="border" size="sm" />
+                        <p className="text-muted mt-2">Loading attachments...</p>
+                      </div>
+                    ) : attachments.length > 0 ? (
+                      <>
+                        <Alert variant="info" className="mb-3">
+                          <AttachFile className="me-2" />
+                          <strong>Total Attachments:</strong> {attachments.length} file(s)
+                        </Alert>
+                        <Table hover responsive className="mb-0">
+                          <thead>
+                            <tr>
+                              <th>#</th>
+                              <th>File Name</th>
+                              <th>Type</th>
+                              <th>Size</th>
+                              <th>Uploaded</th>
+                              <th>Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {attachments.map((att, index) => (
+                              <tr key={att.id}>
+                                <td>{index + 1}</td>
+                                <td>
+                                  <div className="d-flex align-items-center">
+                                    <AttachFile className="me-2 text-muted" fontSize="small" />
+                                    <strong>{att.file_name}</strong>
+                                  </div>
+                                  {att.description && <small className="text-muted d-block ms-4">{att.description}</small>}
+                                </td>
+                                <td>
+                                  <Badge bg="light" text="dark">
+                                    {att.file_type || 'N/A'}
+                                  </Badge>
+                                </td>
+                                <td>{att.file_size ? `${(att.file_size / 1024).toFixed(2)} KB` : 'N/A'}</td>
+                                <td>
+                                  <small>{new Date(att.created_at).toLocaleDateString()}</small>
+                                </td>
+                                <td>
+                                  <div className="d-flex gap-2">
+                                    <Button size="sm" variant="outline-primary" onClick={() => handleView(att.id)} title="View">
+                                      <Visibility fontSize="small" />
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="outline-success"
+                                      onClick={() => handleDownload(att.id, att.file_name)}
+                                      title="Download"
+                                    >
+                                      <Download fontSize="small" />
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="outline-danger"
+                                      onClick={() => handleDeleteAttachment(att.id)}
+                                      title="Delete"
+                                    >
+                                      <Delete fontSize="small" />
+                                    </Button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </Table>
+                      </>
+                    ) : (
+                      <div className="text-center text-muted py-4">
+                        <AttachFile style={{ fontSize: 48, opacity: 0.3 }} />
+                        <p className="mt-3">No attachments</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </Can>
+
+              <Can permission="complaint.assign.process">
+                {activeTab === 'assignments' && (
+                  <div className="py-4">
+                    <div className="d-flex justify-content-between align-items-center mb-3">
+                      <h5 className="mb-0">Assignments</h5>
                       <Button
-                        variant="info"
+                        variant="success"
                         size="sm"
                         onClick={() => {
-                          setEditingLog(null);
-                          setCurrentAssignmentId(assignments[0]?.id);
-                          setShowLogForm(true);
+                          setEditingAssignment(null);
+                          setShowAssignForm(true);
                         }}
                       >
                         <Add fontSize="small" className="me-1" />
-                        Add Log Entry
+                        Add Assignment
                       </Button>
+                    </div>
+
+                    {loadingAssignments ? (
+                      <div className="text-center py-4">
+                        <Spinner animation="border" size="sm" />
+                      </div>
+                    ) : assignments.length > 0 ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        {assignments.map((assign, idx) => {
+                          const assignmentLogs = logs.filter((log) => log.complaint_assignment_id === assign.id && log.action !== 'Assigned');
+                          return (
+                            <div
+                              key={assign.id}
+                              style={{
+                                border: '1px solid #e0e0e0',
+                                borderRadius: '8px',
+                                overflow: 'hidden'
+                              }}
+                            >
+                              {/* Header Row */}
+                              <div
+                                style={{
+                                  display: 'grid',
+                                  gridTemplateColumns: '1fr 1fr 110px 80px 1fr 100px',
+                                  gap: '8px',
+                                  padding: '12px 15px',
+                                  backgroundColor: '#f5f5f5',
+                                  fontWeight: '600',
+                                  borderBottom: '1px solid #ddd'
+                                }}
+                              >
+                                <div>Division</div>
+                                <div>Assignee</div>
+                                <div>Due Date</div>
+                                <div>Status</div>
+                                <div>Remark</div>
+                                <div>Actions</div>
+                              </div>
+
+                              {/* Assignment Data Row */}
+                              <div
+                                style={{
+                                  display: 'grid',
+                                  gridTemplateColumns: '1fr 1fr 110px 80px 1fr 100px',
+                                  gap: '8px',
+                                  padding: '12px 15px',
+                                  backgroundColor: '#fff',
+                                  borderBottom: '1px solid #e0e0e0',
+                                  alignItems: 'center'
+                                }}
+                              >
+                                <div>
+                                  {assign.assigneeDivision?.name ||
+                                    assign.division?.name ||
+                                    (assign.assignee_division_id ? `Division #${assign.assignee_division_id}` : '-')}
+                                </div>
+                                <div>
+                                  {assign.assigneeUser?.full_name ||
+                                    assign.assignee?.full_name ||
+                                    (assign.assignee_user_id ? `Person #${assign.assignee_user_id}` : '-')}
+                                </div>
+                                <div>{assign.due_at ? new Date(assign.due_at).toLocaleDateString() : '-'}</div>
+                                <div>
+                                  <Badge bg={idx === 0 ? 'success' : 'secondary'}>{idx === 0 ? 'Current' : 'Reassigned'}</Badge>
+                                </div>
+                                <div style={{ fontSize: '0.9rem', color: '#666', fontWeight: '400' }}>{assign.remark || '-'}</div>
+                                <div style={{ display: 'flex', gap: '4px', fontSize: '0.75rem' }}>
+                                  {idx === 0 ? (
+                                    <Can permission="log.process">
+                                      <Button
+                                        size="sm"
+                                        variant="outline-info"
+                                        style={{ padding: '3px 8px', fontSize: '0.75rem' }}
+                                        onClick={() => {
+                                          setEditingLog(null);
+                                          setCurrentAssignmentId(assign.id);
+                                          setShowLogForm(true);
+                                        }}
+                                        title="Add Log"
+                                      >
+                                        + Log
+                                      </Button>
+                                    </Can>
+                                  ) : null}
+                                </div>
+                              </div>
+
+                              {/* Logs Section */}
+                              <div
+                                style={{
+                                  backgroundColor: '#f9f9f9',
+                                  padding: '12px 15px',
+                                  borderLeft: '3px solid #2196F3'
+                                }}
+                              >
+                                <div style={{ fontWeight: '600', marginBottom: '8px', fontSize: '0.9rem', color: '#333' }}>
+                                  Logs ({assignmentLogs.length})
+                                </div>
+                                {assignmentLogs.length > 0 ? (
+                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                    {assignmentLogs.map((log) => (
+                                      <div
+                                        key={log.id}
+                                        style={{
+                                          padding: '10px 12px',
+                                          backgroundColor: '#fff',
+                                          border: '1px solid #e0e0e0',
+                                          borderRadius: '4px',
+                                          fontSize: '0.85rem'
+                                        }}
+                                      >
+                                        <div
+                                          style={{
+                                            display: 'flex',
+                                            justifyContent: 'space-between',
+                                            alignItems: 'flex-start',
+                                            marginBottom: '4px'
+                                          }}
+                                        >
+                                          <div style={{ fontWeight: '600', color: '#1976D2' }}>{log.action}</div>
+                                          <div style={{ color: '#999', fontSize: '0.75rem', marginLeft: '8px', whiteSpace: 'nowrap' }}>
+                                            {new Date(log.created_at).toLocaleString()}
+                                          </div>
+                                        </div>
+                                        {log.remark && (
+                                          <div style={{ color: '#555', fontSize: '0.85rem', marginBottom: '0px' }}>{log.remark}</div>
+                                        )}
+                                      </div>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <div style={{ color: '#999', fontSize: '0.85rem', padding: '8px 0', fontStyle: 'italic' }}>
+                                    No logs yet for this assignment
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
                     ) : (
-                      <Alert variant="warning" className="mb-0" style={{ fontSize: '14px' }}>
-                        📋 Please create an assignment first before adding logs
-                      </Alert>
+                      <div className="text-center text-muted py-4">
+                        <Person style={{ fontSize: 48, opacity: 0.3 }} />
+                        <p className="mt-3">No assignments yet</p>
+                      </div>
                     )}
                   </div>
+                )}
+              </Can>
 
-                  {loadingLogs ? (
-                    <div className="text-center py-4">
-                      <Spinner animation="border" size="sm" />
-                    </div>
-                  ) : logs.filter((l) => l.action !== 'Assigned').length > 0 ? (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                      {assignments.map((assign) => {
-                        const assignmentLogs = logs.filter((log) => log.complaint_assignment_id === assign.id && log.action !== 'Assigned');
-
-                        if (assignmentLogs.length === 0) return null;
-
-                        return (
-                          <div
-                            key={assign.id}
-                            style={{
-                              border: '1px solid #e0e0e0',
-                              borderRadius: '8px',
-                              overflow: 'hidden'
+              <Can permission="log.view">
+                {activeTab === 'logs' && (
+                  <div className="py-4">
+                    <div className="d-flex justify-content-between align-items-center mb-3">
+                      <h5 className="mb-0">Complaint Logs</h5>
+                      {assignments.length > 0 ? (
+                        <Can permission="log.process">
+                          <Button
+                            variant="info"
+                            size="sm"
+                            onClick={() => {
+                              setEditingLog(null);
+                              setCurrentAssignmentId(assignments[0]?.id);
+                              setShowLogForm(true);
                             }}
                           >
-                            {/* Assignment Header */}
+                            <Add fontSize="small" className="me-1" />
+                            Add Log Entry
+                          </Button>
+                        </Can>
+                      ) : (
+                        <Alert variant="warning" className="mb-0" style={{ fontSize: '14px' }}>
+                          📋 Please create an assignment first before adding logs
+                        </Alert>
+                      )}
+                    </div>
+
+                    {loadingLogs ? (
+                      <div className="text-center py-4">
+                        <Spinner animation="border" size="sm" />
+                      </div>
+                    ) : logs.filter((l) => l.action !== 'Assigned').length > 0 ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        {assignments.map((assign) => {
+                          const assignmentLogs = logs.filter((log) => log.complaint_assignment_id === assign.id && log.action !== 'Assigned');
+
+                          if (assignmentLogs.length === 0) return null;
+
+                          return (
                             <div
+                              key={assign.id}
                               style={{
-                                backgroundColor: '#f5f5f5',
-                                color: '#333',
-                                padding: '8px 12px',
-                                fontWeight: '600',
-                                fontSize: '0.9rem',
-                                borderBottom: '1px solid #ddd'
+                                border: '1px solid #e0e0e0',
+                                borderRadius: '8px',
+                                overflow: 'hidden'
                               }}
                             >
-                              👤 {assign.assigneeUser?.full_name || assign.assignee?.full_name || 'Unassigned'}
-                              {assign.assigneeDivision?.name && ` (${assign.assigneeDivision.name})`}
-                            </div>
-
-                            {/* Logs Grid Header */}
-                            <div
-                              style={{
-                                display: 'grid',
-                                gridTemplateColumns: '100px 1fr 140px',
-                                gap: '15px',
-                                padding: '8px 12px',
-                                backgroundColor: '#f5f5f5',
-                                fontWeight: '600',
-                                fontSize: '0.85rem',
-                                borderBottom: '1px solid #ddd'
-                              }}
-                            >
-                              <div>Action</div>
-                              <div>Remark</div>
-                              <div>Date</div>
-                            </div>
-
-                            {/* Logs Data */}
-                            {assignmentLogs.map((log, idx) => (
+                              {/* Assignment Header */}
                               <div
-                                key={log.id}
+                                style={{
+                                  backgroundColor: '#f5f5f5',
+                                  color: '#333',
+                                  padding: '8px 12px',
+                                  fontWeight: '600',
+                                  fontSize: '0.9rem',
+                                  borderBottom: '1px solid #ddd'
+                                }}
+                              >
+                                👤 {assign.assigneeUser?.full_name || assign.assignee?.full_name || 'Unassigned'}
+                                {assign.assigneeDivision?.name && ` (${assign.assigneeDivision.name})`}
+                              </div>
+
+                              {/* Logs Grid Header */}
+                              <div
                                 style={{
                                   display: 'grid',
                                   gridTemplateColumns: '100px 1fr 140px',
                                   gap: '15px',
                                   padding: '8px 12px',
-                                  backgroundColor: '#fff',
-                                  borderBottom: idx < assignmentLogs.length - 1 ? '1px solid #f0f0f0' : 'none',
-                                  alignItems: 'flex-start'
+                                  backgroundColor: '#f5f5f5',
+                                  fontWeight: '600',
+                                  fontSize: '0.85rem',
+                                  borderBottom: '1px solid #ddd'
                                 }}
                               >
-                                <div style={{ fontWeight: '500', minWidth: '100px', fontSize: '0.9rem' }}>{log.action || '-'}</div>
+                                <div>Action</div>
+                                <div>Remark</div>
+                                <div>Date</div>
+                              </div>
+
+                              {/* Logs Data */}
+                              {assignmentLogs.map((log, idx) => (
                                 <div
+                                  key={log.id}
                                   style={{
-                                    color: '#666',
-                                    wordWrap: 'break-word',
-                                    overflowWrap: 'break-word',
-                                    whiteSpace: 'pre-wrap',
-                                    minWidth: '0',
-                                    fontSize: '0.9rem'
+                                    display: 'grid',
+                                    gridTemplateColumns: '100px 1fr 140px',
+                                    gap: '15px',
+                                    padding: '8px 12px',
+                                    backgroundColor: '#fff',
+                                    borderBottom: idx < assignmentLogs.length - 1 ? '1px solid #f0f0f0' : 'none',
+                                    alignItems: 'flex-start'
                                   }}
                                 >
-                                  {log.remark || '-'}
+                                  <div style={{ fontWeight: '500', minWidth: '100px', fontSize: '0.9rem' }}>{log.action || '-'}</div>
+                                  <div
+                                    style={{
+                                      color: '#666',
+                                      wordWrap: 'break-word',
+                                      overflowWrap: 'break-word',
+                                      whiteSpace: 'pre-wrap',
+                                      minWidth: '0',
+                                      fontSize: '0.9rem'
+                                    }}
+                                  >
+                                    {log.remark || '-'}
+                                  </div>
+                                  <div style={{ fontSize: '0.8rem', color: '#999', minWidth: '140px' }}>
+                                    {new Date(log.updated_at).toLocaleString()}
+                                  </div>
                                 </div>
-                                <div style={{ fontSize: '0.8rem', color: '#999', minWidth: '140px' }}>
-                                  {new Date(log.updated_at).toLocaleString()}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <div className="text-center text-muted py-4">
-                      <AccessTime style={{ fontSize: 48, opacity: 0.3 }} />
-                      <p className="mt-3">No logs yet</p>
-                    </div>
-                  )}
-                </div>
-              )}
+                              ))}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="text-center text-muted py-4">
+                        <AccessTime style={{ fontSize: 48, opacity: 0.3 }} />
+                        <p className="mt-3">No logs yet</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </Can>
             </Card.Body>
           </Card>
         </Col>
