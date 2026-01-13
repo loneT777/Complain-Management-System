@@ -1,35 +1,18 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { Card, Row, Col, Button, Form, InputGroup } from "react-bootstrap";
+import React, { useState } from "react";
+import { Link } from "react-router-dom";
+import { Card, Row, Col, Button, Form, InputGroup, Alert } from "react-bootstrap";
 import FeatherIcon from "feather-icons-react";
 import axios from "axios";
-import { useAuth } from "../../contexts/AuthContext";
 const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 // assets
 import logoDark from 'assets/images/logo-dark.png';
 
-export default function SignIn1() {
-  const navigate = useNavigate();
-  const { login: authLogin } = useAuth();
-
-  const [credentials, setCredentials] = useState({
-    username: '',
-    password: '',
-    remember: false
-  });
-
+export default function ForgotPassword() {
+  const [email, setEmail] = useState('');
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-
-  // Load reCAPTCHA
-  useEffect(() => {
-    // Check if already logged in
-    const token = localStorage.getItem('authToken');
-    if (token) {
-      navigate('/dashboard/summary');
-    }
-  }, [navigate]);
 
   const professionalStyles = `
     .auth-wrapper {
@@ -43,52 +26,36 @@ export default function SignIn1() {
     }
   `;
 
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setCredentials({
-      ...credentials,
-      [name]: type === 'checkbox' ? checked : value
-    });
-  };
-
-  const checkLogin = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setSuccess('');
 
-    if (!credentials.username && !credentials.password) {
-      setError('Please enter both username and password.');
+    if (!email) {
+      setError('Please enter your email address.');
       return;
     }
-    if (!credentials.username) {
-      setError('Please enter your username.');
-      return;
-    }
-    if (!credentials.password) {
-      setError('Please enter your password.');
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError('Please enter a valid email address.');
       return;
     }
 
     setIsLoading(true);
     try {
-      const { data } = await axios.post(`${API_URL}/login`, {
-        username: credentials.username,
-        password: credentials.password
-      });
-
-      const { token, user, session_id, permissions } = data;
-
-      // Use AuthContext login
-      authLogin(user, permissions, token);
-      localStorage.setItem('sessionId', session_id);
-
-      navigate('/dashboard/summary');
+      const { data } = await axios.post(`${API_URL}/forgot-password`, { email });
+      
+      setSuccess(data.message || 'Password reset link has been sent to your email address. Please check your inbox.');
+      setEmail('');
     } catch (err) {
-      console.error('Login error:', err);
-
+      console.error('Forgot password error:', err);
+      
       if (err.response?.data?.message) {
         setError(err.response.data.message);
       } else {
-        setError('Invalid username or password. Please try again.');
+        setError('An error occurred. Please try again later.');
       }
     } finally {
       setIsLoading(false);
@@ -140,35 +107,46 @@ export default function SignIn1() {
                     }}
                   />
                   <h4
-                    className="mb-3"
+                    className="mb-2"
                     style={{
                       color: '#312e81',
                       fontWeight: '600',
                       fontSize: '1.6rem'
                     }}
                   >
-                    LEAVE <br />
-                    MANAGEMENT <br />
-                    SYSTEM
+                    Forgot Password?
                   </h4>
+                  <p className="text-muted mb-4" style={{ fontSize: '0.9rem' }}>
+                    Enter your email address and we'll send you a link to reset your password.
+                  </p>
 
                   {error && (
-                    <div
-                      className="alert alert-danger mb-3"
+                    <Alert
+                      variant="danger"
+                      className="mb-3"
                       style={{
-                        backgroundColor: '#f8d7da',
-                        borderColor: '#f5c6cb',
-                        color: '#721c24',
                         fontSize: '0.9rem',
-                        border: '1px solid #f5c6cb',
                         borderRadius: '6px'
                       }}
                     >
                       {error}
-                    </div>
+                    </Alert>
                   )}
 
-                  <Form onSubmit={checkLogin}>
+                  {success && (
+                    <Alert
+                      variant="success"
+                      className="mb-3"
+                      style={{
+                        fontSize: '0.9rem',
+                        borderRadius: '6px'
+                      }}
+                    >
+                      {success}
+                    </Alert>
+                  )}
+
+                  <Form onSubmit={handleSubmit}>
                     <InputGroup className="mb-3">
                       <InputGroup.Text
                         style={{
@@ -180,11 +158,11 @@ export default function SignIn1() {
                         <FeatherIcon icon="mail" size={18} />
                       </InputGroup.Text>
                       <Form.Control
-                        type="text"
-                        name="username"
-                        placeholder="Enter your username"
-                        value={credentials.username}
-                        onChange={handleChange}
+                        type="email"
+                        name="email"
+                        placeholder="Enter your email address"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
                         disabled={isLoading}
                         style={{
                           border: '1px solid #dee2e6',
@@ -195,39 +173,6 @@ export default function SignIn1() {
                         }}
                       />
                     </InputGroup>
-
-                    <InputGroup className="mb-3">
-                      <InputGroup.Text
-                        style={{
-                          backgroundColor: '#f8f9fa',
-                          border: '1px solid #dee2e6',
-                          color: '#495057'
-                        }}
-                      >
-                        <FeatherIcon icon="lock" size={18} />
-                      </InputGroup.Text>
-                      <Form.Control
-                        type="password"
-                        name="password"
-                        placeholder="Enter your password"
-                        value={credentials.password}
-                        onChange={handleChange}
-                        disabled={isLoading}
-                        style={{
-                          border: '1px solid #dee2e6',
-                          backgroundColor: '#fff',
-                          color: '#495057',
-                          fontSize: '1rem',
-                          padding: '0.65rem'
-                        }}
-                      />
-                    </InputGroup>
-
-                    <div className="mb-3 text-end">
-                      <Link to="/forgot-password" style={{ fontSize: '0.9rem', color: '#4f46e5', textDecoration: 'none' }}>
-                        Forgot password?
-                      </Link>
-                    </div>
 
                     <Button
                       type="submit"
@@ -254,14 +199,29 @@ export default function SignIn1() {
                       {isLoading ? (
                         <>
                           <span className="spinner-border spinner-border-sm me-2" role="status"></span>
-                          <em>SIGNING IN...</em>
+                          <em>SENDING...</em>
                         </>
                       ) : (
-                        'SIGN IN'
+                        'SEND RESET LINK'
                       )}
                     </Button>
 
-                    <p className="text-muted mb-2" style={{ fontSize: '0.85rem' }}>
+                    <div className="text-center">
+                      <Link 
+                        to="/login" 
+                        style={{ 
+                          fontSize: '0.9rem', 
+                          color: '#4f46e5', 
+                          textDecoration: 'none',
+                          fontWeight: '500'
+                        }}
+                      >
+                        <FeatherIcon icon="arrow-left" size={16} style={{ marginRight: '5px' }} />
+                        Back to Login
+                      </Link>
+                    </div>
+
+                    <p className="text-muted mt-3 mb-2" style={{ fontSize: '0.85rem' }}>
                       © PM Office | Sri Lanka
                     </p>
                   </Form>

@@ -5,6 +5,8 @@ import GuestLayout from 'layouts/GuestLayout';
 import ProtectedRoute from '../components/ProtectedRoute';
 
 const Login = lazy(() => import('../views/auth/login'));
+const ForgotPassword = lazy(() => import('../views/auth/ForgotPassword'));
+const ResetPassword = lazy(() => import('../views/auth/ResetPassword'));
 const DashboardSales = lazy(() => import('../views/dashboard/DashSales/index'));
 const Complaints = lazy(() => import('../components/Complaints'));
 const Complaint = lazy(() => import('../components/Complaint'));
@@ -37,6 +39,18 @@ const MainRoutes = {
     {
       path: 'login',
       element: <Login />
+    },
+
+    // FORGOT PASSWORD ROUTE (PUBLIC)
+    {
+      path: 'forgot-password',
+      element: <ForgotPassword />
+    },
+
+    // RESET PASSWORD ROUTE (PUBLIC)
+    {
+      path: 'reset-password',
+      element: <ResetPassword />
     },
 
     // PROTECTED ADMIN ROUTES
@@ -115,7 +129,7 @@ const MainRoutes = {
               <Divisions />
             </ProtectedRoute>
           )
-        },
+        }, 
         { 
           path: 'roles', 
           element: (
