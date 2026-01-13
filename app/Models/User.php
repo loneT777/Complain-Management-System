@@ -34,6 +34,7 @@ class User extends Authenticatable
 
     protected $casts = [
         'is_approved' => 'boolean',
+        'is_active' => 'boolean',
     ];
 
     /**
