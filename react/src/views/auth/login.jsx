@@ -147,7 +147,7 @@ export default function SignIn1() {
                       fontSize: '1.6rem'
                     }}
                   >
-                    CMS
+                    CMS V1.0
                   </h4>
 
                   {error && (

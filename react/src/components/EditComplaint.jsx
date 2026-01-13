@@ -32,7 +32,7 @@ const EditComplaint = () => {
     setFetchingData(true);
     try {
       const response = await axios.get(`/complaints/${id}`);
-      const data = response.data;
+      const data = response.data.data || response.data;
       
       setComplaint({
         title: data.title || '',
@@ -125,14 +125,6 @@ const EditComplaint = () => {
         <Col>
           <div className="d-flex justify-content-between align-items-center">
             <div className="d-flex align-items-center">
-              <Button
-                variant="link"
-                className="text-decoration-none p-0 me-3"
-                onClick={() => navigate(`/complaint/${id}`)}
-              >
-                <ArrowBack className="me-1" fontSize="small" /> Back to Complaint
-              </Button>
-              <span className="mx-2">/</span>
               <h4 className="mb-0">Edit Complaint</h4>
             </div>
           </div>

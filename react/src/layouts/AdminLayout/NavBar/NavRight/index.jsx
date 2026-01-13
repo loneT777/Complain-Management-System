@@ -109,38 +109,94 @@ export default function NavRight() {
             className="pc-head-link arrow-none me-0" 
             style={{ cursor: 'pointer' }}
           >
-            <div className="d-flex align-items-center">
-              <img src={getRoleAvatar(user.role)} alt="userimage" className="user-avatar" />
-              <span>
-                <span className="user-name">{user.name}</span>
-                <span className="user-desc">{user.role}</span>
-              </span>
+            <div className="d-flex align-items-center gap-2">
+              <img 
+                src={getRoleAvatar(user.role)} 
+                alt="userimage" 
+                className="user-avatar" 
+                style={{ 
+                  width: '40px', 
+                  height: '40px', 
+                  borderRadius: '50%',
+                  objectFit: 'cover',
+                  border: '2px solid #e0e0e0'
+                }}
+              />
+              <div className="d-flex flex-column">
+                <span style={{ 
+                  fontSize: '14px', 
+                  fontWeight: '600',
+                  color: '#2c3e50',
+                  lineHeight: '1.2'
+                }}>
+                  {user.name}
+                </span>
+                <span style={{ 
+                  fontSize: '12px',
+                  color: '#7f8c8d',
+                  lineHeight: '1.2'
+                }}>
+                  {user.role}
+                </span>
+              </div>
+              <FeatherIcon icon="chevron-down" size={16} style={{ color: '#7f8c8d' }} />
             </div>
           </Dropdown.Toggle>
 
-          <Dropdown.Menu className="dropdown-menu-end pc-h-dropdown">
+          <Dropdown.Menu 
+            className="dropdown-menu-end" 
+            style={{
+              minWidth: '220px',
+              padding: '8px',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+              border: '1px solid #e0e0e0',
+              borderRadius: '8px',
+              marginTop: '8px'
+            }}
+          >
+            <div style={{ padding: '12px 16px', borderBottom: '1px solid #e0e0e0', marginBottom: '8px' }}>
+              <div style={{ fontSize: '14px', fontWeight: '600', color: '#2c3e50' }}>
+                {user.name}
+              </div>
+              <div style={{ fontSize: '12px', color: '#7f8c8d', marginTop: '4px' }}>
+                {user.role}
+              </div>
+            </div>
+
             <Dropdown.Item 
               onClick={() => setShowChangePassword(true)}
               className="d-flex align-items-center"
+              style={{
+                padding: '10px 16px',
+                borderRadius: '6px',
+                fontSize: '14px',
+                transition: 'all 0.2s'
+              }}
             >
-              <FeatherIcon icon="lock" size={16} className="me-2" />
-              Change Password
+              <FeatherIcon icon="lock" size={16} className="me-2" style={{ color: '#3a4c4a' }} />
+              <span style={{ color: '#2c3e50' }}>Change Password</span>
             </Dropdown.Item>
-            <Dropdown.Divider />
+
             <Dropdown.Item 
               onClick={handleLogout}
               disabled={isLoggingOut}
-              className="d-flex align-items-center text-danger"
+              className="d-flex align-items-center"
+              style={{
+                padding: '10px 16px',
+                borderRadius: '6px',
+                fontSize: '14px',
+                transition: 'all 0.2s'
+              }}
             >
               {isLoggingOut ? (
                 <>
                   <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                  Logging Out...
+                  <span style={{ color: '#e74c3c' }}>Logging Out...</span>
                 </>
               ) : (
                 <>
-                  <FeatherIcon icon="log-out" size={16} className="me-2" />
-                  Log Out
+                  <FeatherIcon icon="log-out" size={16} className="me-2" style={{ color: '#e74c3c' }} />
+                  <span style={{ color: '#e74c3c' }}>Log Out</span>
                 </>
               )}
             </Dropdown.Item>

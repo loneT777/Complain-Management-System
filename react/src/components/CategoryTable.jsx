@@ -27,7 +27,7 @@ const CategoryTable = ({ categories, divisions, loading, handleEdit }) => {
       <Table striped bordered hover>
         <thead className="table-light">
           <tr>
-            <th>ID</th>
+            <th>#</th>
             <th>Code</th>
             <th>Parent Category</th>
             <th>Category Name</th>
@@ -44,9 +44,9 @@ const CategoryTable = ({ categories, divisions, loading, handleEdit }) => {
               </td>
             </tr>
           ) : (
-            categories.map((category) => (
+            categories.map((category, index) => (
               <tr key={category.id}>
-                <td>{category.id}</td>
+                <td>{index + 1}</td>
                 <td>{category.code}</td>
                 <td>{getParentCategoryName(category.parent_id)}</td>
                 <td>{category.category_name}</td>

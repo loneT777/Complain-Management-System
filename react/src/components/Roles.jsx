@@ -24,7 +24,10 @@ const Roles = () => {
     setLoading(true);
     try {
       const response = await axios.get('/roles');
-      setRoles(response.data.data || []);
+      const rolesData = response.data.data || [];
+      // Sort roles by ID in ascending order (1 to 5)
+      const sortedRoles = rolesData.sort((a, b) => a.id - b.id);
+      setRoles(sortedRoles);
     } catch (error) {
       console.error('Error fetching roles:', error);
     } finally {
@@ -98,7 +101,7 @@ const Roles = () => {
         <Col>
           <Card>
             <Card.Header className="d-flex justify-content-between align-items-center">
-              <h4 className="mb-0">Roles</h4>
+              <h4 className="mb-0">ROLES</h4>
               <Can permission="security.create">
                 <Button
                   style={{ backgroundColor: '#3a4c4a', borderColor: '#3a4c4a' }}

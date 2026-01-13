@@ -179,7 +179,7 @@ const Permissions = () => {
         <Col>
           <Card>
             <Card.Header className="d-flex justify-content-between align-items-center">
-              <h4 className="mb-0">Permissions</h4>
+              <h4 className="mb-0">PERMISSIONS</h4>
               <Button
                 style={{ backgroundColor: '#3a4c4a', borderColor: '#3a4c4a' }}
                 onClick={() => handleOpenModal()}
@@ -212,16 +212,16 @@ const Permissions = () => {
                   <Table striped bordered hover>
                     <thead className="table-light">
                       <tr>
-                        <th style={{ width: '80px' }}>ID</th>
+                        <th style={{ width: '80px' }}>#</th>
                         <th>Name</th>
                         <th style={{ width: '150px', textAlign: 'center' }}>Actions</th>
                       </tr>
                     </thead>
                     <tbody>
                       {filteredPermissions.length > 0 ? (
-                        filteredPermissions.map((permission) => (
+                        filteredPermissions.map((permission, index) => (
                           <tr key={permission.id}>
-                            <td>{permission.id}</td>
+                            <td>{index + 1}</td>
                             <td>{permission.name || permission.code || 'N/A'}</td>
                             <td style={{ textAlign: 'center' }}>
                               <Button

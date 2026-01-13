@@ -33,7 +33,10 @@ const Divisions = () => {
     setLoading(true);
     try {
       const response = await axios.get('/divisions');
-      setDivisions(response.data.data || []);
+      const divisionsData = response.data.data || [];
+      // Sort divisions by ID in ascending order
+      const sortedDivisions = divisionsData.sort((a, b) => a.id - b.id);
+      setDivisions(sortedDivisions);
     } catch (error) {
       console.error('Error fetching divisions:', error);
       setErrorMessage('Failed to fetch divisions');
@@ -141,7 +144,7 @@ const Divisions = () => {
         <Col>
           <Card>
             <Card.Header className="d-flex justify-content-between align-items-center">
-              <h4 className="mb-0">Divisions</h4>
+              <h4 className="mb-0">DIVISIONS</h4>
               <Can permission="setting.create">
                 <Button
                   style={{ backgroundColor: '#3a4c4a', borderColor: '#3a4c4a' }}

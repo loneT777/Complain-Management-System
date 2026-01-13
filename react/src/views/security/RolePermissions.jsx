@@ -213,7 +213,7 @@ const RolePermissions = () => {
           <Card>
             <Card.Body>
               <div className="d-flex justify-content-between align-items-center mb-4">
-                <h4 className="mb-0">Role Permissions</h4>
+                <h4 className="mb-0">ROLE PERMISSIONS</h4>
                 <div>
                   <Button
                     style={{ backgroundColor: '#3a4c4a', borderColor: '#3a4c4a' }}

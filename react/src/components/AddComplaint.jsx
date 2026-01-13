@@ -259,7 +259,6 @@ const AddComplaint = () => {
         <Col>
           <div className="d-flex justify-content-between align-items-center">
             <div className="d-flex align-items-center">
-              <h4 className="mb-0">New Complaint</h4>
             </div>
           </div>
         </Col>

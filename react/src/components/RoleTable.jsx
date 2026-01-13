@@ -28,16 +28,16 @@ const RoleTable = ({ roles, loading, handleEdit, handleDelete }) => {
       <Table striped bordered hover>
         <thead className="table-light">
           <tr>
-            <th>ID</th>
+            <th>#</th>
             <th>Name</th>
             <th>Description</th>
             <th className="text-center">Actions</th>
           </tr>
         </thead>
         <tbody>
-          {roles.map((role) => (
+          {roles.map((role, index) => (
             <tr key={role.id}>
-              <td>{role.id}</td>
+              <td>{index + 1}</td>
               <td>{role.name}</td>
               <td>{role.description || '-'}</td>
               <td className="text-center">

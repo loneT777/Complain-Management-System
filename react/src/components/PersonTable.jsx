@@ -17,7 +17,7 @@ const PersonTable = ({ persons, loading, handleEdit, handleDelete }) => {
       <Table striped bordered hover>
         <thead className="table-light">
           <tr>
-            <th>ID</th>
+            <th>#</th>
             <th>Title</th>
             <th>Full Name</th>
             <th>NIC</th>
@@ -37,9 +37,9 @@ const PersonTable = ({ persons, loading, handleEdit, handleDelete }) => {
               </td>
             </tr>
           ) : (
-            persons.map((person) => (
+            persons.map((person, index) => (
               <tr key={person.id}>
-                <td>{person.id}</td>
+                <td>{index + 1}</td>
                 <td>{person.title}</td>
                 <td>{person.full_name}</td>
                 <td>{person.nic}</td>

@@ -107,7 +107,7 @@ const Complaints = () => {
         <Col>
           <Card>
             <Card.Header className="d-flex justify-content-between align-items-center">
-              <h4 className="mb-0">Complaints</h4>
+              <h4 className="mb-0">COMPLAINTS</h4>
               <div className="flex-grow-1 d-flex justify-content-center">
                 <InputGroup style={{ width: '400px' }}>
                   <InputGroup.Text>

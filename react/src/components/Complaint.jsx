@@ -1550,11 +1550,6 @@ const Complaint = () => {
                   <strong>Email:</strong> {complaint.complainant.email}
                 </p>
               )}
-              {complaint.complainant?.address && (
-                <p>
-                  <strong>Address:</strong> {complaint.complainant.address}
-                </p>
-              )}
             </Card.Body>
           </Card>
 

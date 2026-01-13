@@ -183,7 +183,7 @@ const Users = () => {
         <Col>
           <Card>
             <Card.Header className="d-flex justify-content-between align-items-center">
-              <h4 className="mb-0">Users</h4>
+              <h4 className="mb-0">USERS</h4>
               <Can permission="security.create">
                 <Button
                   style={{ 
@@ -235,7 +235,7 @@ const Users = () => {
                   <Table striped bordered hover>
                     <thead className="table-light">
                       <tr>
-                        <th>ID</th>
+                        <th>#</th>
                         <th>Username</th>
                         <th>Name</th>
                         <th>Role</th>
@@ -246,9 +246,9 @@ const Users = () => {
                     </thead>
                     <tbody>
                       {filteredUsers.length > 0 ? (
-                        filteredUsers.map((user) => (
+                        filteredUsers.map((user, index) => (
                           <tr key={user.id}>
-                            <td>{user.id}</td>
+                            <td>{index + 1}</td>
                             <td>{user.username || 'N/A'}</td>
                             <td>{user.person?.full_name || user.username || 'N/A'}</td>
                             <td>

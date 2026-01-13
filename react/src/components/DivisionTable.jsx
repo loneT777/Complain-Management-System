@@ -16,7 +16,7 @@ const DivisionTable = ({ divisions, loading, handleEdit, handleDelete }) => {
       <Table striped bordered hover>
         <thead className="table-light">
           <tr>
-            <th>ID</th>
+            <th>#</th>
             <th>Division Name</th>
             <th>Code</th>
             <th>Description</th>
@@ -31,9 +31,9 @@ const DivisionTable = ({ divisions, loading, handleEdit, handleDelete }) => {
               </td>
             </tr>
           ) : (
-            divisions.map((division) => (
+            divisions.map((division, index) => (
               <tr key={division.id}>
-                <td>{division.id}</td>
+                <td>{index + 1}</td>
                 <td>{division.name}</td>
                 <td>{division.code}</td>
                 <td>{division.description}</td>

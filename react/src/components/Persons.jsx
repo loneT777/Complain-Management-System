@@ -132,7 +132,7 @@ const Persons = () => {
         <Col>
           <Card>
             <Card.Header className="d-flex justify-content-between align-items-center">
-              <h4 className="mb-0">Persons</h4>
+              <h4 className="mb-0">PERSONS</h4>
               <Can permission="setting.create">
                 <Button
                   style={{ backgroundColor: '#3a4c4a', borderColor: '#3a4c4a' }}

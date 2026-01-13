@@ -66,7 +66,7 @@ const ComplaintTable = ({ complaints, loading, assignments = {}, onAssign }) => 
     <Table striped bordered hover responsive className="mt-3">
       <thead>
         <tr>
-          <th style={{ width: '3%' }}>ID</th>
+          <th style={{ width: '3%' }}>#</th>
           <th style={{ width: '12%' }}>Title</th>
           <th style={{ width: '25%' }}>Description</th>
           <th style={{ width: '10%' }}>Status</th>
@@ -77,7 +77,7 @@ const ComplaintTable = ({ complaints, loading, assignments = {}, onAssign }) => 
       </thead>
 
       <tbody>
-        {complaints.map((complaint) => (
+        {complaints.map((complaint, index) => (
           <tr
             key={complaint.id}
             style={{
@@ -87,7 +87,7 @@ const ComplaintTable = ({ complaints, loading, assignments = {}, onAssign }) => 
               backgroundColor: complaint.is_reassigned_away ? '#f8f9fa' : 'transparent'
             }}
           >
-            <td>{complaint.id}</td>
+            <td>{index + 1}</td>
             <td>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 {complaint.title}
