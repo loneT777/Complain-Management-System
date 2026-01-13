@@ -15,6 +15,7 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             $table->string('email')->nullable()->unique()->after('username');
+            $table->boolean('is_active')->default(true)->after('is_approved');
         });
     }
 
@@ -26,7 +27,7 @@ return new class extends Migration
     public function down()
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn('email');
+            $table->dropColumn(['email', 'is_active']);
         });
     }
 };
