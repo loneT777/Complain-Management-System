@@ -1,6 +1,7 @@
 import React from 'react';
 import { Table, Button, Spinner, Badge } from 'react-bootstrap';
 import { Edit } from '@mui/icons-material';
+import { Can } from './PermissionComponents';
 
 const CategoryTable = ({ categories, divisions, loading, handleEdit }) => {
   if (loading) {
@@ -52,14 +53,16 @@ const CategoryTable = ({ categories, divisions, loading, handleEdit }) => {
                 <td>{category.description || '-'}</td>
                 <td>{getDivisionName(category.division_id)}</td>
                 <td className="text-center">
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    onClick={() => handleEdit(category)}
-                    title="Edit"
-                  >
-                    <Edit fontSize="small" />
-                  </Button>
+                  <Can permission="setting.update">
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      onClick={() => handleEdit(category)}
+                      title="Edit"
+                    >
+                      <Edit fontSize="small" />
+                    </Button>
+                  </Can>
                 </td>
               </tr>
             ))

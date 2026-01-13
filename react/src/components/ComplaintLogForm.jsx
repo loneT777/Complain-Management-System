@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Form, Button, Row, Col } from 'react-bootstrap';
-import axios from 'axios';
+import axios from '../utils/axiosConfig';
 
 const ComplaintLogForm = ({ show, onClose, complaintId, assignmentId, log, onSuccess }) => {
   const [formData, setFormData] = useState({
@@ -28,8 +28,8 @@ const ComplaintLogForm = ({ show, onClose, complaintId, assignmentId, log, onSuc
   const fetchDropdownData = async () => {
     try {
       const [statusRes, personRes] = await Promise.all([
-        axios.get('http://localhost:8000/api/statuses'),
-        axios.get('http://localhost:8000/api/persons')
+        axios.get('/statuses'),
+        axios.get('/persons')
       ]);
       setStatuses(statusRes.data);
       setPersons(personRes.data);
@@ -59,10 +59,10 @@ const ComplaintLogForm = ({ show, onClose, complaintId, assignmentId, log, onSuc
 
       if (log) {
         // Update existing log
-        await axios.put(`http://localhost:8000/api/complaint_logs/${log.id}`, payload);
+        await axios.put(`/complaint_logs/${log.id}`, payload);
       } else {
         // Create new log
-        const response = await axios.post('http://localhost:8000/api/complaint_logs', {
+        const response = await axios.post('/complaint_logs', {
           ...payload,
           complaint_id: complaintId,
           complaint_assignment_id: assignmentId

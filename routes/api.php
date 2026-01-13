@@ -12,7 +12,11 @@ use App\Http\Controllers\AttachmentController;
 use App\Http\Controllers\ComplaintAssignmentController;
 use App\Http\Controllers\ComplaintLogController;
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\TestHashController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\PermissionController;
+use App\Http\Controllers\RolePermissionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -34,83 +38,162 @@ Route::get('/sanctum/csrf-cookie', function (Request $request) {
 // PUBLIC AUTH ROUTES
 // -----------------
 Route::post('/login', [AuthController::class, 'login']);
-// Temporarily make all routes public for development/testing
-Route::apiResource('messages', MessageController::class);
-Route::apiResource('complaints', ComplaintController::class);
-Route::apiResource('categories', CategoryController::class);
-Route::apiResource('roles', RoleController::class);
-Route::apiResource('divisions', DivisionController::class);
-Route::apiResource('persons', PersonController::class);
-Route::apiResource('attachments', AttachmentController::class);
-Route::apiResource('complaint_assignments', ComplaintAssignmentController::class);
-Route::apiResource('complaint_logs', ComplaintLogController::class);
+Route::post('/forgot-password', [PasswordResetController::class, 'sendResetLinkEmail']);
+Route::post('/reset-password', [PasswordResetController::class, 'reset']);
 
-// Complaint-specific routes
-Route::get('/complaints/{complaintId}/messages', [MessageController::class, 'getByComplaint']);
-Route::get('/complaints/{complaintId}/assignments', [ComplaintAssignmentController::class, 'getByComplaint']);
-Route::get('/complaints/{complaintId}/logs', [ComplaintLogController::class, 'getByComplaint']);
-Route::get('/categories/{categoryId}/complaints', [CategoryController::class, 'getComplaints']);
-Route::get('/complaints/{complaintId}/attachments', [AttachmentController::class, 'getAttachmentsByComplaint']);
-
-// Status and Priority routes
-Route::get('/complaint-statuses', [ComplaintController::class, 'getStatuses']);
-Route::get('/complaint-priorities', [ComplaintController::class, 'getPriorities']);
-Route::get('/dashboard-stats', [ComplaintController::class, 'getDashboardStats']);
-Route::put('/complaints/{id}/status', [ComplaintController::class, 'updateStatus']);
-Route::put('/complaints/{id}/priority', [ComplaintController::class, 'updatePriority']);
-
-// Complaint Assignment SLA route
-Route::get('/complaint_assignments/sla/{complaintId}', [ComplaintAssignmentController::class, 'getComplaintSLA']);
-
-// Public attachment routes (for development/testing)
+// Public routes that don't require authentication
 Route::get('/public/attachments', [AttachmentController::class, 'index']);
 Route::post('/public/attachments', [AttachmentController::class, 'store']);
 Route::get('/public/attachments/{id}', [AttachmentController::class, 'show']);
 Route::put('/public/attachments/{id}', [AttachmentController::class, 'update']);
-Route::post('/public/attachments/{id}', [AttachmentController::class, 'update']); // For FormData with _method
+Route::post('/public/attachments/{id}', [AttachmentController::class, 'update']);
 Route::delete('/public/attachments/{id}', [AttachmentController::class, 'destroy']);
 Route::get('/public/attachments/{id}/download', [AttachmentController::class, 'download']);
 Route::get('/public/attachments/{id}/view', [AttachmentController::class, 'view']);
 
-// Public categories route (for complaint form)
-Route::get('/public/categories', [CategoryController::class, 'publicIndex']);
-
-// Attachment download and view
+// Attachment download and view (duplicate routes for flexibility)
 Route::get('/attachments/{id}/download', [AttachmentController::class, 'download']);
 Route::get('/attachments/{id}/view', [AttachmentController::class, 'view']);
+
+// Public categories route (for complaint form)
+Route::get('/public/categories', [CategoryController::class, 'index']);
+Route::get('/public/divisions', [DivisionController::class, 'index']);
+Route::get('/public/roles', [RoleController::class, 'index']);
+Route::get('/categories/{categoryId}/complaints', [CategoryController::class, 'getComplaints']);
 
 // -----------------
 // PROTECTED ROUTES - With Authentication
 // -----------------
 Route::middleware('auth:sanctum')->group(function () {
+    // Auth routes (no permission required)
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
     Route::get('/login-history', [AuthController::class, 'loginHistory']);
+    Route::post('/change-password', [UserController::class, 'changePassword']);
+    
+    // Dashboard - Accessible to all authenticated users
+    Route::get('/dashboard-stats', [ComplaintController::class, 'getDashboardStats']);
+    Route::get('/complaint-statuses', [ComplaintController::class, 'getStatuses']);
+    Route::get('/complaint-priorities', [ComplaintController::class, 'getPriorities']);
+
+    // Complaints Module
+    Route::middleware('permission:complaint.read')->group(function () {
+        Route::get('complaints', [ComplaintController::class, 'index']);
+        Route::get('complaints/{id}', [ComplaintController::class, 'show']);
+        Route::get('/complaints/{complaintId}/messages', [MessageController::class, 'getByComplaint']);
+        Route::get('/complaints/{complaintId}/assignments', [ComplaintAssignmentController::class, 'getByComplaint']);
+        Route::get('/complaints/{complaintId}/logs', [ComplaintLogController::class, 'getByComplaint']);
+        Route::get('/complaints/{complaintId}/attachments', [AttachmentController::class, 'getAttachmentsByComplaint']);
+    });
+    
+    Route::post('complaints', [ComplaintController::class, 'store'])->middleware('permission:complaint.create');
+    Route::put('complaints/{id}', [ComplaintController::class, 'update'])->middleware('permission:complaint.update');
+    Route::patch('complaints/{id}', [ComplaintController::class, 'update'])->middleware('permission:complaint.update');
+    Route::delete('complaints/{id}', [ComplaintController::class, 'destroy'])->middleware('permission:complaint.delete');
+    Route::put('/complaints/{id}/status', [ComplaintController::class, 'updateStatus'])->middleware('permission:complaint.update');
+    Route::put('/complaints/{id}/priority', [ComplaintController::class, 'updatePriority'])->middleware('permission:complaint.update');
+
+    // Messages Module
+    Route::middleware('permission:message.read')->group(function () {
+        Route::get('messages', [MessageController::class, 'index']);
+        Route::get('messages/{id}', [MessageController::class, 'show']);
+    });
+    Route::post('messages', [MessageController::class, 'store'])->middleware('permission:message.create');
+    Route::put('messages/{id}', [MessageController::class, 'update'])->middleware('permission:message.update');
+    Route::patch('messages/{id}', [MessageController::class, 'update'])->middleware('permission:message.update');
+    Route::delete('messages/{id}', [MessageController::class, 'destroy'])->middleware('permission:message.delete');
+
+    // Categories Module
+    Route::middleware('permission:category.read')->group(function () {
+        Route::get('categories', [CategoryController::class, 'index']);
+        Route::get('categories/{id}', [CategoryController::class, 'show']);
+        Route::get('/categories/{categoryId}/complaints', [CategoryController::class, 'getComplaints']);
+    });
+    Route::post('categories', [CategoryController::class, 'store'])->middleware('permission:category.create');
+    Route::put('categories/{id}', [CategoryController::class, 'update'])->middleware('permission:category.update');
+    Route::patch('categories/{id}', [CategoryController::class, 'update'])->middleware('permission:category.update');
+    Route::delete('categories/{id}', [CategoryController::class, 'destroy'])->middleware('permission:category.delete');
+
+    // Roles Module
+    Route::middleware('permission:security.read')->group(function () {
+        Route::get('roles', [RoleController::class, 'index']);
+        Route::get('roles/{id}', [RoleController::class, 'show']);
+    });
+    Route::post('roles', [RoleController::class, 'store'])->middleware('permission:security.create');
+    Route::put('roles/{id}', [RoleController::class, 'update'])->middleware('permission:security.update');
+    Route::patch('roles/{id}', [RoleController::class, 'update'])->middleware('permission:security.update');
+    Route::delete('roles/{id}', [RoleController::class, 'destroy'])->middleware('permission:security.delete');
+
+    // Divisions Module
+    Route::middleware('permission:security.read')->group(function () {
+        Route::get('divisions', [DivisionController::class, 'index']);
+        Route::get('divisions/{id}', [DivisionController::class, 'show']);
+    });
+    Route::post('divisions', [DivisionController::class, 'store'])->middleware('permission:security.create');
+    Route::put('divisions/{id}', [DivisionController::class, 'update'])->middleware('permission:security.update');
+    Route::patch('divisions/{id}', [DivisionController::class, 'update'])->middleware('permission:security.update');
+    Route::delete('divisions/{id}', [DivisionController::class, 'destroy'])->middleware('permission:security.delete');
+
+    // Persons Module
+    Route::middleware('permission:security.read')->group(function () {
+        Route::get('persons', [PersonController::class, 'index']);
+        Route::get('persons/{id}', [PersonController::class, 'show']);
+    });
+    Route::post('persons', [PersonController::class, 'store'])->middleware('permission:security.create');
+    Route::put('persons/{id}', [PersonController::class, 'update'])->middleware('permission:security.update');
+    Route::patch('persons/{id}', [PersonController::class, 'update'])->middleware('permission:security.update');
+    Route::delete('persons/{id}', [PersonController::class, 'destroy'])->middleware('permission:security.delete');
+
+    // Attachments Module
+    Route::middleware('permission:attachment.read')->group(function () {
+        Route::get('attachments', [AttachmentController::class, 'index']);
+        Route::get('attachments/{id}', [AttachmentController::class, 'show']);
+        Route::get('/attachments/{id}/download', [AttachmentController::class, 'download']);
+        Route::get('/attachments/{id}/view', [AttachmentController::class, 'view']);
+    });
+    Route::post('attachments', [AttachmentController::class, 'store'])->middleware('permission:attachment.create');
+    Route::put('attachments/{id}', [AttachmentController::class, 'update'])->middleware('permission:attachment.update');
+    Route::patch('attachments/{id}', [AttachmentController::class, 'update'])->middleware('permission:attachment.update');
+    Route::delete('attachments/{id}', [AttachmentController::class, 'destroy'])->middleware('permission:attachment.delete');
+
+    // Complaint Assignments
+    Route::middleware('permission:complaint.assign.view')->group(function () {
+        Route::get('complaint_assignments', [ComplaintAssignmentController::class, 'index']);
+        Route::get('complaint_assignments/{id}', [ComplaintAssignmentController::class, 'show']);
+        Route::get('/complaint_assignments/sla/{complaintId}', [ComplaintAssignmentController::class, 'getComplaintSLA']);
+    });
+    Route::post('complaint_assignments', [ComplaintAssignmentController::class, 'store'])->middleware('permission:complaint.assign.process');
+    Route::put('complaint_assignments/{id}', [ComplaintAssignmentController::class, 'update'])->middleware('permission:complaint.assign.process');
+    Route::patch('complaint_assignments/{id}', [ComplaintAssignmentController::class, 'update'])->middleware('permission:complaint.assign.process');
+    Route::delete('complaint_assignments/{id}', [ComplaintAssignmentController::class, 'destroy'])->middleware('permission:complaint.assign.process');
+
+    // Complaint Logs
+    Route::get('complaint_logs', [ComplaintLogController::class, 'index'])->middleware('permission:log.view');
+    Route::get('complaint_logs/{id}', [ComplaintLogController::class, 'show'])->middleware('permission:log.view');
+    Route::post('complaint_logs', [ComplaintLogController::class, 'store'])->middleware('permission:log.process');
+    Route::put('complaint_logs/{id}', [ComplaintLogController::class, 'update'])->middleware('permission:log.process');
+    Route::patch('complaint_logs/{id}', [ComplaintLogController::class, 'update'])->middleware('permission:log.process');
+    Route::delete('complaint_logs/{id}', [ComplaintLogController::class, 'destroy'])->middleware('permission:log.process');
+
+    // Security Management Routes
+    Route::middleware('permission:security.read')->group(function () {
+        Route::get('users', [UserController::class, 'index']);
+        Route::get('users/{id}', [UserController::class, 'show']);
+        Route::get('permissions', [PermissionController::class, 'index']);
+        Route::get('permissions/{id}', [PermissionController::class, 'show']);
+        Route::get('role-permissions/{roleId}', [RolePermissionController::class, 'show']);
+        Route::get('roles-with-permissions', [RolePermissionController::class, 'index']);
+    });
+    
+    Route::post('users', [UserController::class, 'store'])->middleware('permission:security.create');
+    Route::put('users/{id}', [UserController::class, 'update'])->middleware('permission:security.update');
+    Route::patch('users/{id}', [UserController::class, 'update'])->middleware('permission:security.update');
+    Route::delete('users/{id}', [UserController::class, 'destroy'])->middleware('permission:security.delete');
+    
+    Route::post('permissions', [PermissionController::class, 'store'])->middleware('permission:security.create');
+    Route::put('permissions/{id}', [PermissionController::class, 'update'])->middleware('permission:security.update');
+    Route::patch('permissions/{id}', [PermissionController::class, 'update'])->middleware('permission:security.update');
+    Route::delete('permissions/{id}', [PermissionController::class, 'destroy'])->middleware('permission:security.delete');
+    
+    Route::post('role-permissions', [RolePermissionController::class, 'store'])->middleware('permission:security.update');
 });
-
-// -----------------
-// PROTECTED ROUTES - TEMPORARILY DISABLED FOR DEVELOPMENT
-// -----------------
-// Uncomment this section when you're ready to enable authentication
-
-// Route::middleware('auth:sanctum')->group(function () {
-    // Route::apiResource('roles', RoleController::class);
-    // Route::apiResource('divisions', DivisionController::class);
-    // Route::apiResource('persons', PersonController::class);
-    // Route::apiResource('categories', CategoryController::class);
-    // Route::apiResource('messages', MessageController::class);
-    // Route::apiResource('complaints', ComplaintController::class);
-    // Route::apiResource('attachments', AttachmentController::class);
-    // Route::apiResource('complaint_assignments', ComplaintAssignmentController::class);
-    
-    // Route::get('/complaints/{complaintId}/messages', [MessageController::class, 'getByComplaint']);
-    // Route::get('/categories/{categoryId}/complaints', [CategoryController::class, 'getComplaints']);
-    // Route::get('/complaints/{complaintId}/attachments', [AttachmentController::class, 'getAttachmentsByComplaint']);
-    // Route::get('/attachments/{id}/download', [AttachmentController::class, 'download']);
-    // Route::get('/attachments/{id}/view', [AttachmentController::class, 'view']);
-    
-    // Role-Permissions Management
-    // Route::get('/role-permissions', [RoleController::class, 'getRolePermissions']);
-    // Route::post('/role-permissions/sync', [RoleController::class, 'syncRolePermissions']);
-    // Route::post('/role-permissions/sync-role', [RoleController::class, 'syncSingleRolePermissions']);
-// });

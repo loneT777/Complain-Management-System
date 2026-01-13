@@ -49,6 +49,9 @@ class AuthController extends Controller
         // Create API token for this session
         $token = $user->createToken('auth_token')->plainTextToken;
 
+        // Load role with permissions
+        $user->load('role.permissions');
+
         return response()->json([
             'message' => 'Login successful',
             'token' => $token,
@@ -59,7 +62,13 @@ class AuthController extends Controller
                 'username' => $user->username,
                 'role_id' => $user->role_id,
                 'division_id' => $user->division_id,
-            ]
+                'role' => [
+                    'id' => $user->role->id,
+                    'name' => $user->role->name,
+                    'code' => $user->role->code ?? null,
+                ],
+            ],
+            'permissions' => $user->role ? $user->role->permissions->pluck('code')->toArray() : [],
         ], 200);
     }
 
@@ -90,15 +99,23 @@ class AuthController extends Controller
     public function me(Request $request)
     {
         $user = $request->user();
+        $user->load('role.permissions');
 
         return response()->json([
             'user' => [
                 'id' => $user->id,
                 'full_name' => $user->full_name,
                 'username' => $user->username,
+                'email' => $user->email,
                 'role_id' => $user->role_id,
                 'division_id' => $user->division_id,
+                'role' => $user->role ? [
+                    'id' => $user->role->id,
+                    'name' => $user->role->name,
+                    'code' => $user->role->code ?? null,
+                ] : null,
             ],
+            'permissions' => $user->role ? $user->role->permissions->pluck('code')->toArray() : [],
             'active_session' => $user->activeSession(),
         ]);
     }

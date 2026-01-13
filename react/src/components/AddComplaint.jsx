@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Container, Row, Col, Card, Button, Form, Badge } from 'react-bootstrap';
 import { Save, Close, AttachFile, Upload, X as XIcon, Description } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axios from '../utils/axiosConfig';
 
 const AddComplaint = () => {
   const navigate = useNavigate();
@@ -13,6 +13,7 @@ const AddComplaint = () => {
   const [attachmentPreviews, setAttachmentPreviews] = useState([]);
   const [isDragging, setIsDragging] = useState(false);
   const [errors, setErrors] = useState({});
+  const [error, setError] = useState('');
 
   const bootstrapColors = {
     secondary: { hex: '#6c757d', light: '#e2e3e5' },
@@ -46,7 +47,7 @@ const AddComplaint = () => {
 
   const fetchCategories = async () => {
     try {
-      const response = await axios.get('http://localhost:8000/api/public/categories');
+      const response = await axios.get('/public/categories');
       console.log('Categories response:', response.data);
       
       let categoryData = [];
@@ -61,20 +62,20 @@ const AddComplaint = () => {
     } catch (error) {
       console.error('Error fetching categories:', error);
       console.error('Error details:', error.response?.data);
+      setError('Failed to fetch categories. Please refresh the page.');
     }
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setComplaint((prev) => ({ ...prev, [name]: value }));
+    setComplaint((prev) => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
   const handleCategoryToggle = (categoryId) => {
-    setSelectedCategories((prev) =>
-      prev.includes(categoryId)
-        ? prev.filter((id) => id !== categoryId)
-        : [...prev, categoryId]
-    );
+    setSelectedCategories((prev) => (prev.includes(categoryId) ? prev.filter((id) => id !== categoryId) : [...prev, categoryId]));
   };
 
   const handleRemoveCategory = (categoryId) => {
@@ -205,8 +206,12 @@ const AddComplaint = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setError('');
 
     try {
+      // Get user data to include their person_id as complainant
+      const userData = JSON.parse(localStorage.getItem('user') || '{}');
+
       const formData = new FormData();
       
       formData.append('title', complaint.title);
@@ -218,6 +223,7 @@ const AddComplaint = () => {
       if (complaint.complainant_name) formData.append('complainant_name', complaint.complainant_name);
       if (complaint.complainant_phone) formData.append('complainant_phone', complaint.complainant_phone);
       if (complaint.remark) formData.append('remark', complaint.remark);
+      if (userData?.person_id) formData.append('complainant_id', userData.person_id);
 
       selectedCategories.forEach((catId, index) => {
         formData.append(`category_ids[${index}]`, catId);
@@ -227,15 +233,21 @@ const AddComplaint = () => {
         formData.append(`attachments[${index}]`, file);
       });
 
-      await axios.post('http://localhost:8000/api/complaints', formData, {
+      const response = await axios.post('/complaints', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       
-      alert('Complaint added successfully!');
-      navigate('/complaints');
+      if (response.data.success || response.status === 201 || response.status === 200) {
+        alert('Complaint added successfully!');
+        navigate('/complaints');
+      } else {
+        setError(response.data.message || 'Failed to add complaint. Please try again.');
+      }
     } catch (error) {
       console.error('Error adding complaint:', error);
-      alert('Failed to add complaint. Please try again.');
+      const errorMessage = error.response?.data?.message || 'Failed to add complaint. Please try again.';
+      setError(errorMessage);
+      alert(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -243,6 +255,24 @@ const AddComplaint = () => {
 
   return (
     <Container fluid className="p-4">
+      <Row className="mb-3">
+        <Col>
+          <div className="d-flex justify-content-between align-items-center">
+            <div className="d-flex align-items-center">
+              <h4 className="mb-0">New Complaint</h4>
+            </div>
+          </div>
+        </Col>
+      </Row>
+
+      {error && (
+        <Row className="mb-3">
+          <Col>
+            <div className="alert alert-danger">{error}</div>
+          </Col>
+        </Row>
+      )}
+
       <Row>
         <Col lg={8}>
           <Card>
@@ -266,9 +296,8 @@ const AddComplaint = () => {
                                 cursor: 'pointer',
                                 padding: '8px 12px',
                                 borderRadius: '4px',
-                                backgroundColor: complaint.priority_level === priority.value
-                                  ? bootstrapColors[priority.variant].light
-                                  : '#f8f9fa',
+                                backgroundColor:
+                                  complaint.priority_level === priority.value ? bootstrapColors[priority.variant].light : '#f8f9fa',
                                 border: `2px solid ${bootstrapColors[priority.variant].hex}`,
                                 color: bootstrapColors[priority.variant].hex,
                                 fontWeight: '500',
@@ -345,11 +374,7 @@ const AddComplaint = () => {
                                     style={{ fontSize: '0.9rem', padding: '0.5rem 0.75rem' }}
                                   >
                                     {category.category_name}
-                                    <Close
-                                      fontSize="small"
-                                      style={{ cursor: 'pointer' }}
-                                      onClick={() => handleRemoveCategory(catId)}
-                                    />
+                                    <Close fontSize="small" style={{ cursor: 'pointer' }} onClick={() => handleRemoveCategory(catId)} />
                                   </Badge>
                                 )
                               );
@@ -382,12 +407,7 @@ const AddComplaint = () => {
                   <Col md={6} className="mb-3">
                     <Form.Group>
                       <Form.Label>Complainant Name</Form.Label>
-                      <Form.Control
-                        type="text"
-                        name="complainant_name"
-                        value={complaint.complainant_name}
-                        onChange={handleChange}
-                      />
+                      <Form.Control type="text" name="complainant_name" value={complaint.complainant_name} onChange={handleChange} />
                     </Form.Group>
                   </Col>
 
@@ -406,11 +426,7 @@ const AddComplaint = () => {
                   <Col md={6} className="mb-3">
                     <Form.Group>
                       <Form.Label>Confidentiality Level</Form.Label>
-                      <Form.Select
-                        name="confidentiality_level"
-                        value={complaint.confidentiality_level}
-                        onChange={handleChange}
-                      >
+                      <Form.Select name="confidentiality_level" value={complaint.confidentiality_level} onChange={handleChange}>
                         <option value="">Select confidentiality</option>
                         <option value="Public">Public</option>
                         <option value="Confidential">Confidential</option>
@@ -422,11 +438,7 @@ const AddComplaint = () => {
                   <Col md={6} className="mb-3">
                     <Form.Group>
                       <Form.Label>Channel</Form.Label>
-                      <Form.Select
-                        name="channel"
-                        value={complaint.channel}
-                        onChange={handleChange}
-                      >
+                      <Form.Select name="channel" value={complaint.channel} onChange={handleChange}>
                         <option value="">Select channel</option>
                         <option value="Phone">Phone</option>
                         <option value="Email">Email</option>
@@ -551,11 +563,7 @@ const AddComplaint = () => {
                 </Row>
 
                 <div className="d-flex justify-content-end gap-2 mt-4">
-                  <Button
-                    variant="outline-secondary"
-                    onClick={() => navigate('/complaints')}
-                    disabled={loading}
-                  >
+                  <Button variant="outline-secondary" onClick={() => navigate('/complaints')} disabled={loading}>
                     Cancel
                   </Button>
                   <Button

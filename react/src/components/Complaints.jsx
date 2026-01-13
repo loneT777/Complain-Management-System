@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Form, InputGroup } from 'react-bootstrap';
 import { Add, Search } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axios from '../utils/axiosConfig';
 import ComplaintTable from './ComplaintTable';
 import AssignComplaintForm from './AssignComplaintForm';
+import { Can } from './PermissionComponents';
 
 const Complaints = () => {
   const navigate = useNavigate();
@@ -31,8 +32,13 @@ const Complaints = () => {
         params.search = searchTxt;
       }
       
-      const response = await axios.get('http://localhost:8000/api/complaints', { params });
+      const response = await axios.get('/complaints', { params });
+      console.log('Complaints API Response:', response.data);
+      
       const complaintsData = response.data.data || response.data;
+      console.log('Complaints Data:', complaintsData);
+      console.log('Complaints Count:', complaintsData?.length);
+      
       setComplaints(complaintsData);
 
       // Fetch assignments for all complaints
@@ -59,7 +65,7 @@ const Complaints = () => {
       await Promise.all(
         complaintIds.map(async (complaintId) => {
           try {
-            const res = await axios.get('http://localhost:8000/api/complaint_assignments', {
+            const res = await axios.get('/complaint_assignments', {
               params: { complaint_id: complaintId }
             });
             if (res.data && res.data.length > 0) {
@@ -118,9 +124,11 @@ const Complaints = () => {
                   />
                 </InputGroup>
               </div>
-              <Button style={{ backgroundColor: '#3a4c4a', borderColor: '#3a4c4a' }} onClick={() => navigate('/add-complaint')}>
-                <Add className="me-1" /> Add New Complaint
-              </Button>
+              <Can permission="complaint.create">
+                <Button style={{ backgroundColor: '#3a4c4a', borderColor: '#3a4c4a' }} onClick={() => navigate('/add-complaint')}>
+                  <Add className="me-1" /> Add New Complaint
+                </Button>
+              </Can>
             </Card.Header>
 
             <Card.Body>
