@@ -61,6 +61,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
     Route::get('/login-history', [AuthController::class, 'loginHistory']);
+    Route::post('/change-password', [UserController::class, 'changePassword']);
     
     // Dashboard - Accessible to all authenticated users
     Route::get('/dashboard-stats', [ComplaintController::class, 'getDashboardStats']);

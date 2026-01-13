@@ -8,6 +8,7 @@ import executiveOfficerAvatar from 'assets/images/user/executive-officer.png';
 import privilegeOfficerAvatar from 'assets/images/user/privilege-officer.png';
 import subjectOfficerAvatar from 'assets/images/user/subject-officer.png';
 import superAdminAvatar from 'assets/images/user/super-admin.jpg';
+import ChangePassword from '../../../../views/auth/ChangePassword';
 import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -16,6 +17,7 @@ export default function NavRight() {
   const navigate = useNavigate();
   const { user: authUser, logout: authLogout } = useAuth();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [showChangePassword, setShowChangePassword] = useState(false);
   const [user, setUser] = useState({
     name: 'User',
     role: 'User'
@@ -101,59 +103,54 @@ export default function NavRight() {
       </ListGroup.Item>
 
       <ListGroup.Item as="li" bsPrefix=" " className="pc-h-item">
-        <div className="d-flex align-items-center">
-          <div className="pc-head-link arrow-none me-3 user-name d-flex align-items-center">
-            <img src={getRoleAvatar(user.role)} alt="userimage" className="user-avatar" />
-            <span>
-              <span className="user-name">{user.name}</span>
-              <span className="user-desc">{user.role}</span>
-            </span>
-          </div>
-
-          <Link
-            to="#"
-            className="btn btn-sm d-flex align-items-center"
-            onClick={handleLogout}
-            style={{
-              pointerEvents: isLoggingOut ? 'none' : 'auto',
-              opacity: isLoggingOut ? 0.7 : 1,
-              borderRadius: '6px',
-              padding: '8px 12px',
-              fontSize: '0.85rem',
-              marginRight: '10px',
-              border: '1px solid #dc3545',
-              color: '#dc3545',
-              backgroundColor: 'transparent',
-              transition: 'all 0.2s ease'
-            }}
-            onMouseEnter={(e) => {
-              if (!isLoggingOut) {
-                e.target.style.backgroundColor = '#dc3545';
-                e.target.style.color = 'white';
-                e.target.style.borderColor = '#dc3545';
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (!isLoggingOut) {
-                e.target.style.backgroundColor = 'transparent';
-                e.target.style.color = '#dc3545';
-                e.target.style.borderColor = '#dc3545';
-              }
-            }}
+        <Dropdown align="end">
+          <Dropdown.Toggle 
+            as="div" 
+            className="pc-head-link arrow-none me-0" 
+            style={{ cursor: 'pointer' }}
           >
-            {isLoggingOut ? (
-              <>
-                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                <em>LOGGING OUT...</em>
-              </>
-            ) : (
-              <>
-                <FeatherIcon icon="log-out" size={16} className="me-2" />
-                Log Out
-              </>
-            )}
-          </Link>
-        </div>
+            <div className="d-flex align-items-center">
+              <img src={getRoleAvatar(user.role)} alt="userimage" className="user-avatar" />
+              <span>
+                <span className="user-name">{user.name}</span>
+                <span className="user-desc">{user.role}</span>
+              </span>
+            </div>
+          </Dropdown.Toggle>
+
+          <Dropdown.Menu className="dropdown-menu-end pc-h-dropdown">
+            <Dropdown.Item 
+              onClick={() => setShowChangePassword(true)}
+              className="d-flex align-items-center"
+            >
+              <FeatherIcon icon="lock" size={16} className="me-2" />
+              Change Password
+            </Dropdown.Item>
+            <Dropdown.Divider />
+            <Dropdown.Item 
+              onClick={handleLogout}
+              disabled={isLoggingOut}
+              className="d-flex align-items-center text-danger"
+            >
+              {isLoggingOut ? (
+                <>
+                  <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                  Logging Out...
+                </>
+              ) : (
+                <>
+                  <FeatherIcon icon="log-out" size={16} className="me-2" />
+                  Log Out
+                </>
+              )}
+            </Dropdown.Item>
+          </Dropdown.Menu>
+        </Dropdown>
+
+        <ChangePassword 
+          show={showChangePassword} 
+          onHide={() => setShowChangePassword(false)} 
+        />
       </ListGroup.Item>
     </ListGroup>
   );

@@ -81,7 +81,7 @@ const Users = () => {
       setEditMode(false);
       setCurrentUser({
         full_name: '',
-        email: '',
+        username: '',
         password: '',
         role_id: '',
         designation: '',
@@ -116,6 +116,23 @@ const Users = () => {
           alert('Error: ' + error.response.data.message);
         } else {
           alert('Error deactivating user. Please try again.');
+        }
+      }
+    }
+  };
+
+  const handleActivate = async (userId) => {
+    if (window.confirm('Are you sure you want to activate this user?')) {
+      try {
+        const response = await axios.put(`/users/${userId}`, { is_active: true });
+        alert(response.data.message || 'User activated successfully');
+        fetchUsers();
+      } catch (error) {
+        console.error('Error activating user:', error);
+        if (error.response?.data?.message) {
+          alert('Error: ' + error.response.data.message);
+        } else {
+          alert('Error activating user. Please try again.');
         }
       }
     }
@@ -348,32 +365,61 @@ const Users = () => {
                                   </Button>
                                 </Can>
                                 <Can permission="security.delete">
-                                  <Button
-                                    style={{ 
-                                      backgroundColor: '#ef4444', 
-                                      borderColor: '#ef4444',
-                                      fontSize: '13px',
-                                      padding: '8px 16px',
-                                      borderRadius: '6px',
-                                      fontWeight: '500',
-                                      transition: 'all 0.2s',
-                                      border: 'none'
-                                    }}
-                                    size="sm"
-                                    onClick={() => handleDeactivate(user.id)}
-                                  onMouseEnter={(e) => {
-                                    e.currentTarget.style.backgroundColor = '#dc2626';
-                                    e.currentTarget.style.transform = 'translateY(-1px)';
-                                    e.currentTarget.style.boxShadow = '0 4px 6px rgba(239, 68, 68, 0.3)';
-                                  }}
-                                  onMouseLeave={(e) => {
-                                    e.currentTarget.style.backgroundColor = '#ef4444';
-                                    e.currentTarget.style.transform = 'translateY(0)';
-                                    e.currentTarget.style.boxShadow = 'none';
-                                  }}
-                                >
-                                  Deactivate
-                                </Button>
+                                  {user.is_active ? (
+                                    <Button
+                                      style={{ 
+                                        backgroundColor: '#ef4444', 
+                                        borderColor: '#ef4444',
+                                        fontSize: '13px',
+                                        padding: '8px 16px',
+                                        borderRadius: '6px',
+                                        fontWeight: '500',
+                                        transition: 'all 0.2s',
+                                        border: 'none'
+                                      }}
+                                      size="sm"
+                                      onClick={() => handleDeactivate(user.id)}
+                                      onMouseEnter={(e) => {
+                                        e.currentTarget.style.backgroundColor = '#dc2626';
+                                        e.currentTarget.style.transform = 'translateY(-1px)';
+                                        e.currentTarget.style.boxShadow = '0 4px 6px rgba(239, 68, 68, 0.3)';
+                                      }}
+                                      onMouseLeave={(e) => {
+                                        e.currentTarget.style.backgroundColor = '#ef4444';
+                                        e.currentTarget.style.transform = 'translateY(0)';
+                                        e.currentTarget.style.boxShadow = 'none';
+                                      }}
+                                    >
+                                      Deactivate
+                                    </Button>
+                                  ) : (
+                                    <Button
+                                      style={{ 
+                                        backgroundColor: '#10b981', 
+                                        borderColor: '#10b981',
+                                        fontSize: '13px',
+                                        padding: '8px 16px',
+                                        borderRadius: '6px',
+                                        fontWeight: '500',
+                                        transition: 'all 0.2s',
+                                        border: 'none'
+                                      }}
+                                      size="sm"
+                                      onClick={() => handleActivate(user.id)}
+                                      onMouseEnter={(e) => {
+                                        e.currentTarget.style.backgroundColor = '#059669';
+                                        e.currentTarget.style.transform = 'translateY(-1px)';
+                                        e.currentTarget.style.boxShadow = '0 4px 6px rgba(16, 185, 129, 0.3)';
+                                      }}
+                                      onMouseLeave={(e) => {
+                                        e.currentTarget.style.backgroundColor = '#10b981';
+                                        e.currentTarget.style.transform = 'translateY(0)';
+                                        e.currentTarget.style.boxShadow = 'none';
+                                      }}
+                                    >
+                                      Activate
+                                    </Button>
+                                  )}
                                 </Can>
                               </div>
                             </td>
@@ -421,17 +467,17 @@ const Users = () => {
         </Modal.Header>
         <Modal.Body style={{ padding: '24px', backgroundColor: '#fff' }}>
           <Form onSubmit={handleSubmit}>
-            {/* Username */}
+            {/* Username (Email) */}
             <Form.Group className="mb-4">
               <Form.Label style={{ color: '#374151', fontWeight: '500', marginBottom: '8px', fontSize: '14px' }}>
-                Username
+                Username (Email)
               </Form.Label>
               <Form.Control
-                type="text"
+                type="email"
                 name="username"
                 value={currentUser.username}
                 onChange={handleChange}
-                placeholder="Enter username"
+                placeholder="Enter email address"
                 required
                 style={{ 
                   padding: '12px 14px',
@@ -441,6 +487,9 @@ const Users = () => {
                   backgroundColor: '#fff'
                 }}
               />
+              <Form.Text style={{ fontSize: '12px', color: '#6b7280', marginTop: '6px', display: 'block' }}>
+                Use email address as username
+              </Form.Text>
             </Form.Group>
 
             {/* Full Name */}
@@ -486,7 +535,7 @@ const Users = () => {
                 }}
               />
               <Form.Text style={{ fontSize: '12px', color: '#6b7280', marginTop: '6px', display: 'block' }}>
-                Minimum 8 characters with at least: 1 uppercase, 1 lowercase, 1 number, and 1 special character (@$!%*?&)
+                {editMode ? 'Leave blank to keep current password. ' : ''}Minimum 8 characters
               </Form.Text>
             </Form.Group>
 
