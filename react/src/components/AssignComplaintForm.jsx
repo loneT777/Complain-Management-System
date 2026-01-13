@@ -16,7 +16,7 @@ import {
   Typography
 } from '@mui/material';
 import { Close } from '@mui/icons-material';
-import axios from 'axios';
+import axios from '../utils/axiosConfig';
 
 const AssignComplaintForm = ({ show, onClose, complaintId, assignment, onSuccess }) => {
   const [divisions, setDivisions] = useState([]);
@@ -71,7 +71,7 @@ const AssignComplaintForm = ({ show, onClose, complaintId, assignment, onSuccess
 
   const fetchComplaintSLA = async () => {
     try {
-      const response = await axios.get(`http://localhost:8000/api/complaint_assignments/sla/${complaintId}`);
+      const response = await axios.get(`/complaint_assignments/sla/${complaintId}`);
       setSlaDays(response.data.sla_days || 0);
       setPriorityLevel(response.data.priority_level || '');
     } catch (error) {
@@ -82,10 +82,14 @@ const AssignComplaintForm = ({ show, onClose, complaintId, assignment, onSuccess
 
   const fetchDivisions = async () => {
     try {
-      const response = await axios.get('http://localhost:8000/api/divisions');
-      setDivisions(response.data.data || response.data || []);
+      const response = await axios.get('/divisions');
+      // Handle the response structure: response.data has 'data' property with divisions array
+      const divisionData = response.data.data || response.data || [];
+      // Ensure it's an array before setting state
+      setDivisions(Array.isArray(divisionData) ? divisionData : []);
     } catch (error) {
       console.error('Failed to fetch divisions', error);
+      setDivisions([]);
     }
   };
 
@@ -93,9 +97,11 @@ const AssignComplaintForm = ({ show, onClose, complaintId, assignment, onSuccess
     setLoadingPersons(true);
     try {
       // Fetch persons for the selected division, or all persons if no division selected
-      const url = divisionId ? `http://localhost:8000/api/persons?division_id=${divisionId}` : `http://localhost:8000/api/persons`;
+      const url = divisionId ? `/persons?division_id=${divisionId}` : `/persons`;
       const response = await axios.get(url);
-      setPersons(response.data || []);
+      // Handle different response structures
+      const personData = response.data.data || response.data || [];
+      setPersons(Array.isArray(personData) ? personData : []);
     } catch (error) {
       console.error('Failed to fetch persons', error);
       setPersons([]);
@@ -184,10 +190,10 @@ const AssignComplaintForm = ({ show, onClose, complaintId, assignment, onSuccess
 
       if (assignmentId) {
         // Update existing assignment
-        await axios.put(`http://localhost:8000/api/complaint_assignments/${assignmentId}`, payload);
+        await axios.put(`/complaint_assignments/${assignmentId}`, payload);
       } else {
         // Create new assignment
-        await axios.post('http://localhost:8000/api/complaint_assignments', {
+        await axios.post('/complaint_assignments', {
           complaint_id: complaintId,
           ...payload
         });

@@ -41,7 +41,6 @@ class CompleteComplaintSeeder extends Seeder
                 'first_name' => 'Sarah',
                 'last_name' => 'Johnson',
                 'nic' => '199512345678',
-                'email' => 'sarah.johnson@company.com',
                 'office_phone' => '+94771234567',
             ]);
         }
@@ -128,9 +127,7 @@ class CompleteComplaintSeeder extends Seeder
             Attachment::create([
                 'complaint_id' => $complaint->id,
                 'file_name' => $fileData['original_name'],
-                'file_path' => 'attachments/' . $fileName,
                 'extension' => $fileData['extension'],
-                'description' => $fileData['description'],
                 'user_id' => $user->id,
                 'uploaded_at' => now()->subDays(3),
             ]);

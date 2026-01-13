@@ -3,7 +3,8 @@ import { Container, Row, Col, Card, Button, Alert } from 'react-bootstrap';
 import { Add } from '@mui/icons-material';
 import CategoryTable from './CategoryTable';
 import CategoryForm from './CategoryForm';
-import axios from 'axios';
+import axios from '../utils/axiosConfig';
+import { Can } from './PermissionComponents';
 
 const Categories = () => {
   const [categories, setCategories] = useState([]);
@@ -29,7 +30,7 @@ const Categories = () => {
   const fetchCategories = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('http://localhost:8000/api/categories');
+      const response = await axios.get('/categories');
       setCategories(response.data.data || response.data || []);
     } catch (error) {
       console.error('Error fetching categories:', error);
@@ -41,7 +42,7 @@ const Categories = () => {
 
   const fetchDivisions = async () => {
     try {
-      const response = await axios.get('http://localhost:8000/api/divisions');
+      const response = await axios.get('/divisions');
       setDivisions(response.data.data || response.data || []);
     } catch (error) {
       console.error('Error fetching divisions:', error);
@@ -107,10 +108,10 @@ const Categories = () => {
       };
 
       if (editMode) {
-        await axios.put(`http://localhost:8000/api/categories/${formData.id}`, submitData);
+        await axios.put(`/categories/${formData.id}`, submitData);
         setSuccessMessage('Category updated successfully');
       } else {
-        await axios.post('http://localhost:8000/api/categories', submitData);
+        await axios.post('/categories', submitData);
         setSuccessMessage('Category created successfully');
       }
 
@@ -125,7 +126,7 @@ const Categories = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this category?')) {
       try {
-        await axios.delete(`http://localhost:8000/api/categories/${id}`);
+        await axios.delete(`/categories/${id}`);
         setSuccessMessage('Category deleted successfully');
         fetchCategories();
       } catch (error) {
@@ -142,9 +143,11 @@ const Categories = () => {
           <Card>
             <Card.Header className="d-flex justify-content-between align-items-center">
               <h4 className="mb-0">Categories</h4>
-              <Button style={{ backgroundColor: '#3a4c4a', borderColor: '#3a4c4a' }} onClick={() => handleOpenModal()}>
-                <Add className="me-1" /> Add Category
-              </Button>
+              <Can permission="setting.create">
+                <Button style={{ backgroundColor: '#3a4c4a', borderColor: '#3a4c4a' }} onClick={() => handleOpenModal()}>
+                  <Add className="me-1" /> Add Category
+                </Button>
+              </Can>
             </Card.Header>
             <Card.Body>
               {successMessage && (

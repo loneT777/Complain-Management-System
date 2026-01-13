@@ -17,17 +17,20 @@ import {
   MoreVert,
   AccountCircle
 } from '@mui/icons-material';
-import axios from 'axios';
+import axios from '../utils/axiosConfig';
 import MessageForm from './MessageForm';
 import AttachmentForm from './AttachmentForm';
 import AssignComplaintForm from './AssignComplaintForm';
 import ComplaintLogForm from './ComplaintLogForm';
 import ComplaintStatusPriority from './ComplaintStatusPriority';
+import { useAuth } from '../contexts/AuthContext';
+import { Can } from './PermissionComponents';
 import './Complaint.css';
 
 const Complaint = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { hasPermission } = useAuth();
   const [complaint, setComplaint] = useState(null);
   const [loading, setLoading] = useState(true);
   const [messages, setMessages] = useState([]);
@@ -35,6 +38,10 @@ const Complaint = () => {
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [loadingAttachments, setLoadingAttachments] = useState(false);
   const [activeTab, setActiveTab] = useState('messages');
+
+  // Get user data and check role
+  const userData = JSON.parse(localStorage.getItem('user') || '{}');
+  const isEngineer = userData?.role_id === 5;
 
   // Message modal states
   const [showMessageModal, setShowMessageModal] = useState(false);
@@ -79,6 +86,19 @@ const Complaint = () => {
   const [logs, setLogs] = useState([]);
   const [loadingLogs, setLoadingLogs] = useState(false);
 
+  // Set default active tab based on permissions
+  useEffect(() => {
+    if (hasPermission('messages')) {
+      setActiveTab('messages');
+    } else if (hasPermission('attachment')) {
+      setActiveTab('attachments');
+    } else if (hasPermission('complaint.assign.process')) {
+      setActiveTab('assignments');
+    } else if (hasPermission('log.view')) {
+      setActiveTab('logs');
+    }
+  }, [hasPermission]);
+
   useEffect(() => {
     if (id) {
       fetchComplaint();
@@ -92,7 +112,7 @@ const Complaint = () => {
   const fetchComplaint = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`http://localhost:8000/api/complaints/${id}`);
+      const response = await axios.get(`/complaints/${id}`);
       setComplaint(response.data);
     } catch (error) {
       console.error('Error fetching complaint:', error);
@@ -104,7 +124,7 @@ const Complaint = () => {
   const fetchMessages = async () => {
     setLoadingMessages(true);
     try {
-      const response = await axios.get(`http://localhost:8000/api/complaints/${id}/messages`);
+      const response = await axios.get(`/complaints/${id}/messages`);
       const messagesData = response.data.data || response.data || [];
       setMessages(Array.isArray(messagesData) ? messagesData : []);
     } catch (error) {
@@ -118,7 +138,7 @@ const Complaint = () => {
   const fetchAttachments = async () => {
     setLoadingAttachments(true);
     try {
-      const response = await axios.get(`http://localhost:8000/api/complaints/${id}/attachments`);
+      const response = await axios.get(`/complaints/${id}/attachments`);
       const attachmentsData = response.data.data || response.data || [];
       setAttachments(Array.isArray(attachmentsData) ? attachmentsData : []);
     } catch (error) {
@@ -132,7 +152,7 @@ const Complaint = () => {
   const fetchAssignments = async () => {
     setLoadingAssignments(true);
     try {
-      const response = await axios.get(`http://localhost:8000/api/complaints/${id}/assignments`);
+      const response = await axios.get(`/complaints/${id}/assignments`);
       console.log('Assignments response:', response.data);
 
       // Handle both wrapped and unwrapped responses
@@ -149,7 +169,7 @@ const Complaint = () => {
   const fetchLogs = async () => {
     setLoadingLogs(true);
     try {
-      const response = await axios.get(`http://localhost:8000/api/complaints/${id}/logs`);
+      const response = await axios.get(`/complaints/${id}/logs`);
       const logsData = Array.isArray(response.data) ? response.data : response.data.data || [];
       setLogs(logsData);
       console.log('Logs fetched:', logsData);
@@ -163,7 +183,7 @@ const Complaint = () => {
 
   const handleDownload = async (attachmentId, fileName) => {
     try {
-      const response = await axios.get(`http://localhost:8000/api/attachments/${attachmentId}/download`, {
+      const response = await axios.get(`/attachments/${attachmentId}/download`, {
         responseType: 'blob'
       });
       const url = window.URL.createObjectURL(new Blob([response.data]));
@@ -179,7 +199,7 @@ const Complaint = () => {
   };
 
   const handleView = (attachmentId) => {
-    window.open(`http://localhost:8000/api/attachments/${attachmentId}/view`, '_blank');
+    window.open(`${axios.defaults.baseURL}/attachments/${attachmentId}/view`, '_blank');
   };
 
   const handleEdit = () => {
@@ -193,7 +213,7 @@ const Complaint = () => {
 
     try {
       // First fetch available statuses to get the Cancelled status ID
-      const statusesResponse = await axios.get('http://localhost:8000/api/complaint-statuses');
+      const statusesResponse = await axios.get('/complaint-statuses');
       const statuses = statusesResponse.data || [];
       const cancelStatus = statuses.find(s => s.name?.toLowerCase() === 'cancelled' || s.code?.toLowerCase() === 'cancelled');
       
@@ -202,7 +222,7 @@ const Complaint = () => {
         return;
       }
 
-      const response = await axios.put(`http://localhost:8000/api/complaints/${id}/status`, {
+      const response = await axios.put(`/complaints/${id}/status`, {
         status_id: cancelStatus.id,
         remark: 'Complaint cancelled by user'
       });
@@ -220,7 +240,7 @@ const Complaint = () => {
     }
 
     try {
-      const statusesResponse = await axios.get('http://localhost:8000/api/complaint-statuses');
+      const statusesResponse = await axios.get('/complaint-statuses');
       const statuses = statusesResponse.data || [];
       const completedStatus = statuses.find(
         (s) => s.name?.toLowerCase() === 'completed' || s.code?.toLowerCase() === 'completed'
@@ -231,7 +251,7 @@ const Complaint = () => {
         return;
       }
 
-      const response = await axios.put(`http://localhost:8000/api/complaints/${id}/status`, {
+      const response = await axios.put(`/complaints/${id}/status`, {
         status_id: completedStatus.id,
         remark: 'Complaint marked as completed by user'
       });
@@ -287,7 +307,7 @@ const Complaint = () => {
   const handleDeleteMessage = async (messageId) => {
     if (window.confirm('Are you sure you want to delete this message?')) {
       try {
-        await axios.delete(`http://localhost:8000/api/messages/${messageId}`);
+        await axios.delete(`/messages/${messageId}`);
         fetchMessages();
       } catch (error) {
         console.error('Error deleting message:', error);
@@ -308,9 +328,9 @@ const Complaint = () => {
     e.preventDefault();
     try {
       if (editingMessage) {
-        await axios.put(`http://localhost:8000/api/messages/${currentMessage.id}`, currentMessage);
+        await axios.put(`/messages/${currentMessage.id}`, currentMessage);
       } else {
-        await axios.post('http://localhost:8000/api/messages', currentMessage);
+        await axios.post('/messages', currentMessage);
       }
       setShowMessageModal(false);
       fetchMessages();
@@ -327,7 +347,7 @@ const Complaint = () => {
 
     try {
       const user = JSON.parse(localStorage.getItem('user') || '{}');
-      await axios.post('http://localhost:8000/api/messages', {
+      await axios.post('/messages', {
         complaint_id: parseInt(id),
         message: newComment.trim(),
         type: 'reply',
@@ -350,7 +370,7 @@ const Complaint = () => {
 
     try {
       const user = JSON.parse(localStorage.getItem('user') || '{}');
-      await axios.post('http://localhost:8000/api/messages', {
+      await axios.post('/messages', {
         complaint_id: parseInt(id),
         message: replyText.trim(),
         type: 'reply',
@@ -375,7 +395,7 @@ const Complaint = () => {
 
     try {
       const message = messages.find((m) => m.id === messageId);
-      await axios.put(`http://localhost:8000/api/messages/${messageId}`, {
+      await axios.put(`/messages/${messageId}`, {
         ...message,
         message: editText
       });
@@ -428,7 +448,7 @@ const Complaint = () => {
   const handleDeleteAttachment = async (attachmentId) => {
     if (window.confirm('Are you sure you want to delete this attachment?')) {
       try {
-        await axios.delete(`http://localhost:8000/api/public/attachments/${attachmentId}`);
+        await axios.delete(`/public/attachments/${attachmentId}`);
         fetchAttachments();
       } catch (error) {
         console.error('Error deleting attachment:', error);
@@ -439,7 +459,7 @@ const Complaint = () => {
 
   const handleAttachmentSubmit = async (formData) => {
     try {
-      await axios.post('http://localhost:8000/api/public/attachments', formData, {
+      await axios.post('/public/attachments', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
@@ -529,7 +549,42 @@ const Complaint = () => {
   }
 
   return (
-    <Container fluid className="p-4">
+    <Container fluid className="p-4" style={{ position: 'relative' }}>
+      {/* Reassignment Overlay */}
+      {complaint.is_reassigned_away && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            zIndex: 9999,
+            backdropFilter: 'blur(2px)'
+          }}
+        >
+          <Card
+            style={{
+              maxWidth: '500px',
+              backgroundColor: '#fff',
+              boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+            }}
+          >
+            <Card.Body className="text-center p-5">
+              <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⚠️</div>
+              <h5 className="mb-3">Complaint Reassigned</h5>
+              <p className="text-muted mb-0">
+                This complaint has been reassigned to another team member and is no longer accessible to you.
+              </p>
+            </Card.Body>
+          </Card>
+        </div>
+      )}
+
       <Row className="mb-3">
         <Col>
           <div className="d-flex justify-content-between align-items-center">
@@ -538,15 +593,27 @@ const Complaint = () => {
             </div>
 
             <div>
-              <Button style={{ backgroundColor: '#3a4c4a', borderColor: '#3a4c4a' }} size="sm" onClick={handleEdit}>
-                <Edit fontSize="small" className="me-1" /> Edit
-              </Button>
+              <Can permission="complaint.update">
+                <Button
+                  style={{ backgroundColor: '#3a4c4a', borderColor: '#3a4c4a' }}
+                  size="sm"
+                  onClick={handleEdit}
+                  disabled={complaint.is_reassigned_away}
+                >
+                  <Edit fontSize="small" className="me-1" /> Edit
+                </Button>
+              </Can>
             </div>
           </div>
         </Col>
       </Row>
 
-      <Row>
+      <Row
+        style={{
+          opacity: complaint.is_reassigned_away ? 0.3 : 1,
+          pointerEvents: complaint.is_reassigned_away ? 'none' : 'auto'
+        }}
+      >
         {/* LEFT SIDE */}
         <Col lg={8}>
           {/* Complaint Info */}
@@ -650,60 +717,105 @@ const Complaint = () => {
           {/* TABS */}
           <Card className="mb-4">
             <Card.Body>
-              {/* Bootstrap Nav Tabs */}
-              <ul className="nav nav-tabs mb-3">
-                <li className="nav-item">
-                  <a
-                    className={`nav-link ${activeTab === 'messages' ? 'active' : ''}`}
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setActiveTab('messages');
-                    }}
-                  >
-                    Comments
-                  </a>
-                </li>
-                <li className="nav-item">
-                  <a
-                    className={`nav-link ${activeTab === 'attachments' ? 'active' : ''}`}
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setActiveTab('attachments');
-                    }}
-                  >
-                    Attachments
-                  </a>
-                </li>
-                <li className="nav-item">
-                  <a
-                    className={`nav-link ${activeTab === 'assignments' ? 'active' : ''}`}
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setActiveTab('assignments');
-                    }}
-                  >
-                    Complaint Assignment
-                  </a>
-                </li>
-                <li className="nav-item">
-                  <a
-                    className={`nav-link ${activeTab === 'logs' ? 'active' : ''}`}
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setActiveTab('logs');
-                    }}
-                  >
-                    Complaint Log
-                  </a>
-                </li>
+              {/* Custom Nav Tabs */}
+              <ul className="nav nav-tabs" style={{ borderBottom: '2px solid #dee2e6', marginBottom: '1.5rem' }}>
+                <Can permission="messages">
+                  <li className="nav-item">
+                    <a
+                      className={`nav-link ${activeTab === 'messages' ? 'active' : ''}`}
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setActiveTab('messages');
+                      }}
+                      style={{
+                        color: activeTab === 'messages' ? '#0d6efd' : '#6c757d',
+                        borderBottom: activeTab === 'messages' ? '3px solid #0d6efd' : '3px solid transparent',
+                        paddingBottom: '0.75rem',
+                        fontWeight: activeTab === 'messages' ? '600' : '500',
+                        cursor: 'pointer',
+                        marginBottom: '-2px',
+                        transition: 'all 0.3s ease'
+                      }}
+                    >
+                      Comments ({messages.length})
+                    </a>
+                  </li>
+                </Can>
+                <Can permission="attachment">
+                  <li className="nav-item">
+                    <a
+                      className={`nav-link ${activeTab === 'attachments' ? 'active' : ''}`}
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setActiveTab('attachments');
+                      }}
+                      style={{
+                        color: activeTab === 'attachments' ? '#0d6efd' : '#6c757d',
+                        borderBottom: activeTab === 'attachments' ? '3px solid #0d6efd' : '3px solid transparent',
+                        paddingBottom: '0.75rem',
+                        fontWeight: activeTab === 'attachments' ? '600' : '500',
+                        cursor: 'pointer',
+                        marginBottom: '-2px',
+                        transition: 'all 0.3s ease'
+                      }}
+                    >
+                      Attachments ({attachments.length})
+                    </a>
+                  </li>
+                </Can>
+                <Can permission="complaint.assign.process">
+                  <li className="nav-item">
+                    <a
+                      className={`nav-link ${activeTab === 'assignments' ? 'active' : ''}`}
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setActiveTab('assignments');
+                      }}
+                      style={{
+                        color: activeTab === 'assignments' ? '#0d6efd' : '#6c757d',
+                        borderBottom: activeTab === 'assignments' ? '3px solid #0d6efd' : '3px solid transparent',
+                        paddingBottom: '0.75rem',
+                        fontWeight: activeTab === 'assignments' ? '600' : '500',
+                        cursor: 'pointer',
+                        marginBottom: '-2px',
+                        transition: 'all 0.3s ease'
+                      }}
+                    >
+                      Complaint Assignment ({assignments.length})
+                    </a>
+                  </li>
+                </Can>
+                <Can permission="log.view">
+                  <li className="nav-item">
+                    <a
+                      className={`nav-link ${activeTab === 'logs' ? 'active' : ''}`}
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setActiveTab('logs');
+                      }}
+                      style={{
+                        color: activeTab === 'logs' ? '#0d6efd' : '#6c757d',
+                        borderBottom: activeTab === 'logs' ? '3px solid #0d6efd' : '3px solid transparent',
+                        paddingBottom: '0.75rem',
+                        fontWeight: activeTab === 'logs' ? '600' : '500',
+                        cursor: 'pointer',
+                        marginBottom: '-2px',
+                        transition: 'all 0.3s ease'
+                      }}
+                    >
+                      Complaint Log ({logs.filter((l) => l.action !== 'Assigned').length})
+                    </a>
+                  </li>
+                </Can>
               </ul>
 
               {/* Tab Content */}
-              {activeTab === 'messages' && (
+              <Can permission="messages">
+                {activeTab === 'messages' && (
                   <div className="py-4">
                     {/* Comment Input Box */}
                     <div className="fb-comment-box mb-4">
@@ -934,12 +1046,7 @@ const Complaint = () => {
                                     {replies.length > 0 && (
                                       <div className="fb-replies mt-3">
                                         {!showReplies[msg.id] && (
-                                          <Button
-                                            variant="link"
-                                            size="sm"
-                                            className="fb-show-replies"
-                                            onClick={() => toggleReplies(msg.id)}
-                                          >
+                                          <Button variant="link" size="sm" className="fb-show-replies" onClick={() => toggleReplies(msg.id)}>
                                             <Reply fontSize="small" className="me-2" />
                                             View {replies.length} {replies.length === 1 ? 'reply' : 'replies'}
                                           </Button>
@@ -1035,42 +1142,44 @@ const Complaint = () => {
                       </div>
                     )}
                   </div>
-              )}
+                )}
+              </Can>
 
-              {activeTab === 'attachments' && (
-                <div className="py-4">
-                  <div className="d-flex justify-content-between align-items-center mb-3">
-                    <h5 className="mb-0">Complaint Attachments</h5>
-                    <Button variant="primary" size="sm" onClick={handleAddAttachment}>
-                      <Add fontSize="small" className="me-1" />
-                      Upload Files
-                    </Button>
-                  </div>
-                  {loadingAttachments ? (
-                    <div className="text-center">
-                      <Spinner animation="border" size="sm" />
-                      <p className="text-muted mt-2">Loading attachments...</p>
+              <Can permission="attachment">
+                {activeTab === 'attachments' && (
+                  <div className="py-4">
+                    <div className="d-flex justify-content-between align-items-center mb-3">
+                      <h5 className="mb-0">Complaint Attachments</h5>
+                      <Button variant="primary" size="sm" onClick={handleAddAttachment}>
+                        <Add fontSize="small" className="me-1" />
+                        Upload Files
+                      </Button>
                     </div>
-                  ) : attachments.length > 0 ? (
-                    <>
-                      <Alert variant="info" className="mb-3">
-                        <AttachFile className="me-2" />
-                        <strong>Total Attachments:</strong> {attachments.length} file(s)
-                      </Alert>
-                      <Table hover responsive className="mb-0">
-                        <thead>
-                          <tr>
-                            <th>#</th>
-                            <th>File Name</th>
-                            <th>Type</th>
-                            <th>Size</th>
-                            <th>Uploaded</th>
-                            <th>Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {attachments.map((att, index) => (
-                            <tr key={att.id}>
+                    {loadingAttachments ? (
+                      <div className="text-center">
+                        <Spinner animation="border" size="sm" />
+                        <p className="text-muted mt-2">Loading attachments...</p>
+                      </div>
+                    ) : attachments.length > 0 ? (
+                      <>
+                        <Alert variant="info" className="mb-3">
+                          <AttachFile className="me-2" />
+                          <strong>Total Attachments:</strong> {attachments.length} file(s)
+                        </Alert>
+                        <Table hover responsive className="mb-0">
+                          <thead>
+                            <tr>
+                              <th>#</th>
+                              <th>File Name</th>
+                              <th>Type</th>
+                              <th>Size</th>
+                              <th>Uploaded</th>
+                              <th>Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {attachments.map((att, index) => (
+                              <tr key={att.id}>
                                 <td>{index + 1}</td>
                                 <td>
                                   <div className="d-flex align-items-center">
@@ -1123,11 +1232,13 @@ const Complaint = () => {
                       </div>
                     )}
                   </div>
-              )}
+                )}
+              </Can>
 
-              {activeTab === 'assignments' && (
-                <div className="py-4">
-                  <div className="d-flex justify-content-between align-items-center mb-3">
+              <Can permission="complaint.assign.process">
+                {activeTab === 'assignments' && (
+                  <div className="py-4">
+                    <div className="d-flex justify-content-between align-items-center mb-3">
                       <h5 className="mb-0">Assignments</h5>
                       <Button
                         variant="success"
@@ -1149,9 +1260,7 @@ const Complaint = () => {
                     ) : assignments.length > 0 ? (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                         {assignments.map((assign, idx) => {
-                          const assignmentLogs = logs.filter(
-                            (log) => log.complaint_assignment_id === assign.id && log.action !== 'Assigned'
-                          );
+                          const assignmentLogs = logs.filter((log) => log.complaint_assignment_id === assign.id && log.action !== 'Assigned');
                           return (
                             <div
                               key={assign.id}
@@ -1210,19 +1319,21 @@ const Complaint = () => {
                                 <div style={{ fontSize: '0.9rem', color: '#666', fontWeight: '400' }}>{assign.remark || '-'}</div>
                                 <div style={{ display: 'flex', gap: '4px', fontSize: '0.75rem' }}>
                                   {idx === 0 ? (
-                                    <Button
-                                      size="sm"
-                                      variant="outline-info"
-                                      style={{ padding: '3px 8px', fontSize: '0.75rem' }}
-                                      onClick={() => {
-                                        setEditingLog(null);
-                                        setCurrentAssignmentId(assign.id);
-                                        setShowLogForm(true);
-                                      }}
-                                      title="Add Log"
-                                    >
-                                      + Log
-                                    </Button>
+                                    <Can permission="log.process">
+                                      <Button
+                                        size="sm"
+                                        variant="outline-info"
+                                        style={{ padding: '3px 8px', fontSize: '0.75rem' }}
+                                        onClick={() => {
+                                          setEditingLog(null);
+                                          setCurrentAssignmentId(assign.id);
+                                          setShowLogForm(true);
+                                        }}
+                                        title="Add Log"
+                                      >
+                                        + Log
+                                      </Button>
+                                    </Can>
                                   ) : null}
                                 </div>
                               </div>
@@ -1287,131 +1398,134 @@ const Complaint = () => {
                       </div>
                     )}
                   </div>
-              )}
+                )}
+              </Can>
 
-              {activeTab === 'logs' && (
-                <div className="py-4">
-                  <div className="d-flex justify-content-between align-items-center mb-3">
-                    <h5 className="mb-0">Complaint Logs</h5>
-                    {assignments.length > 0 ? (
-                      <Button
-                        variant="info"
-                        size="sm"
-                        onClick={() => {
-                          setEditingLog(null);
-                          setCurrentAssignmentId(assignments[0]?.id);
-                          setShowLogForm(true);
-                        }}
-                      >
-                        <Add fontSize="small" className="me-1" />
-                        Add Log Entry
-                      </Button>
-                    ) : (
-                      <Alert variant="warning" className="mb-0" style={{ fontSize: '14px' }}>
-                        📋 Please create an assignment first before adding logs
-                      </Alert>
-                    )}
-                  </div>
-
-                  {loadingLogs ? (
-                    <div className="text-center py-4">
-                      <Spinner animation="border" size="sm" />
-                    </div>
-                  ) : logs.filter((l) => l.action !== 'Assigned').length > 0 ? (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                      {assignments.map((assign) => {
-                        const assignmentLogs = logs.filter(
-                          (log) => log.complaint_assignment_id === assign.id && log.action !== 'Assigned'
-                        );
-
-                        if (assignmentLogs.length === 0) return null;
-
-                        return (
-                          <div
-                            key={assign.id}
-                            style={{
-                              border: '1px solid #e0e0e0',
-                              borderRadius: '8px',
-                              overflow: 'hidden'
+              <Can permission="log.view">
+                {activeTab === 'logs' && (
+                  <div className="py-4">
+                    <div className="d-flex justify-content-between align-items-center mb-3">
+                      <h5 className="mb-0">Complaint Logs</h5>
+                      {assignments.length > 0 ? (
+                        <Can permission="log.process">
+                          <Button
+                            variant="info"
+                            size="sm"
+                            onClick={() => {
+                              setEditingLog(null);
+                              setCurrentAssignmentId(assignments[0]?.id);
+                              setShowLogForm(true);
                             }}
                           >
-                            {/* Assignment Header */}
+                            <Add fontSize="small" className="me-1" />
+                            Add Log Entry
+                          </Button>
+                        </Can>
+                      ) : (
+                        <Alert variant="warning" className="mb-0" style={{ fontSize: '14px' }}>
+                          📋 Please create an assignment first before adding logs
+                        </Alert>
+                      )}
+                    </div>
+
+                    {loadingLogs ? (
+                      <div className="text-center py-4">
+                        <Spinner animation="border" size="sm" />
+                      </div>
+                    ) : logs.filter((l) => l.action !== 'Assigned').length > 0 ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        {assignments.map((assign) => {
+                          const assignmentLogs = logs.filter((log) => log.complaint_assignment_id === assign.id && log.action !== 'Assigned');
+
+                          if (assignmentLogs.length === 0) return null;
+
+                          return (
                             <div
+                              key={assign.id}
                               style={{
-                                backgroundColor: '#f5f5f5',
-                                color: '#333',
-                                padding: '8px 12px',
-                                fontWeight: '600',
-                                fontSize: '0.9rem',
-                                borderBottom: '1px solid #ddd'
+                                border: '1px solid #e0e0e0',
+                                borderRadius: '8px',
+                                overflow: 'hidden'
                               }}
                             >
-                              👤 {assign.assigneeUser?.full_name || assign.assignee?.full_name || 'Unassigned'}
-                              {assign.assigneeDivision?.name && ` (${assign.assigneeDivision.name})`}
-                            </div>
-
-                            {/* Logs Grid Header */}
-                            <div
-                              style={{
-                                display: 'grid',
-                                gridTemplateColumns: '100px 1fr 140px',
-                                gap: '15px',
-                                padding: '8px 12px',
-                                backgroundColor: '#f5f5f5',
-                                fontWeight: '600',
-                                fontSize: '0.85rem',
-                                borderBottom: '1px solid #ddd'
-                              }}
-                            >
-                              <div>Action</div>
-                              <div>Remark</div>
-                              <div>Date</div>
-                            </div>
-
-                            {/* Logs Data */}
-                            {assignmentLogs.map((log, idx) => (
+                              {/* Assignment Header */}
                               <div
-                                key={log.id}
+                                style={{
+                                  backgroundColor: '#f5f5f5',
+                                  color: '#333',
+                                  padding: '8px 12px',
+                                  fontWeight: '600',
+                                  fontSize: '0.9rem',
+                                  borderBottom: '1px solid #ddd'
+                                }}
+                              >
+                                👤 {assign.assigneeUser?.full_name || assign.assignee?.full_name || 'Unassigned'}
+                                {assign.assigneeDivision?.name && ` (${assign.assigneeDivision.name})`}
+                              </div>
+
+                              {/* Logs Grid Header */}
+                              <div
                                 style={{
                                   display: 'grid',
                                   gridTemplateColumns: '100px 1fr 140px',
                                   gap: '15px',
                                   padding: '8px 12px',
-                                  backgroundColor: '#fff',
-                                  borderBottom: idx < assignmentLogs.length - 1 ? '1px solid #f0f0f0' : 'none',
-                                  alignItems: 'flex-start'
+                                  backgroundColor: '#f5f5f5',
+                                  fontWeight: '600',
+                                  fontSize: '0.85rem',
+                                  borderBottom: '1px solid #ddd'
                                 }}
                               >
-                                <div style={{ fontWeight: '500', minWidth: '100px', fontSize: '0.9rem' }}>{log.action || '-'}</div>
+                                <div>Action</div>
+                                <div>Remark</div>
+                                <div>Date</div>
+                              </div>
+
+                              {/* Logs Data */}
+                              {assignmentLogs.map((log, idx) => (
                                 <div
+                                  key={log.id}
                                   style={{
-                                    color: '#666',
-                                    wordWrap: 'break-word',
-                                    overflowWrap: 'break-word',
-                                    whiteSpace: 'pre-wrap',
-                                    minWidth: '0',
-                                    fontSize: '0.9rem'
+                                    display: 'grid',
+                                    gridTemplateColumns: '100px 1fr 140px',
+                                    gap: '15px',
+                                    padding: '8px 12px',
+                                    backgroundColor: '#fff',
+                                    borderBottom: idx < assignmentLogs.length - 1 ? '1px solid #f0f0f0' : 'none',
+                                    alignItems: 'flex-start'
                                   }}
                                 >
-                                  {log.remark || '-'}
+                                  <div style={{ fontWeight: '500', minWidth: '100px', fontSize: '0.9rem' }}>{log.action || '-'}</div>
+                                  <div
+                                    style={{
+                                      color: '#666',
+                                      wordWrap: 'break-word',
+                                      overflowWrap: 'break-word',
+                                      whiteSpace: 'pre-wrap',
+                                      minWidth: '0',
+                                      fontSize: '0.9rem'
+                                    }}
+                                  >
+                                    {log.remark || '-'}
+                                  </div>
+                                  <div style={{ fontSize: '0.8rem', color: '#999', minWidth: '140px' }}>
+                                    {new Date(log.updated_at).toLocaleString()}
+                                  </div>
                                 </div>
-                                <div style={{ fontSize: '0.8rem', color: '#999', minWidth: '140px' }}>
-                                  {new Date(log.updated_at).toLocaleString()}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <div className="text-center text-muted py-4">
-                      <AccessTime style={{ fontSize: 48, opacity: 0.3 }} />
-                      <p className="mt-3">No logs yet</p>
-                    </div>
-                  )}
-                </div>
-              )}
+                              ))}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="text-center text-muted py-4">
+                        <AccessTime style={{ fontSize: 48, opacity: 0.3 }} />
+                        <p className="mt-3">No logs yet</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </Can>
             </Card.Body>
           </Card>
         </Col>

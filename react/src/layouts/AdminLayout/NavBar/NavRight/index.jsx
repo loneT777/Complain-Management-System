@@ -2,18 +2,22 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { ListGroup, Dropdown, Form } from 'react-bootstrap';
 import FeatherIcon from 'feather-icons-react';
+import { useAuth } from '../../../../contexts/AuthContext';
 import administrativeOfficerAvatar from 'assets/images/user/administrative-officer.png';
 import executiveOfficerAvatar from 'assets/images/user/executive-officer.png';
 import privilegeOfficerAvatar from 'assets/images/user/privilege-officer.png';
 import subjectOfficerAvatar from 'assets/images/user/subject-officer.png';
 import superAdminAvatar from 'assets/images/user/super-admin.jpg';
+import ChangePassword from '../../../../views/auth/ChangePassword';
 import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
 export default function NavRight() {
   const navigate = useNavigate();
+  const { user: authUser, logout: authLogout } = useAuth();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [showChangePassword, setShowChangePassword] = useState(false);
   const [user, setUser] = useState({
     name: 'User',
     role: 'User'
@@ -33,19 +37,26 @@ export default function NavRight() {
     return roleAvatars[userRole] || superAdminAvatar;
   };
 
-  // Get user data from localStorage on component mount
+  // Get user data from AuthContext or localStorage
   useEffect(() => {
-    const userData = localStorage.getItem('user');
+    if (authUser) {
+      setUser({
+        name: authUser.full_name || 'User',
+        role: authUser.role?.name || 'User'
+      });
+    } else {
+      const userData = localStorage.getItem('user');
 
-    if (userData) {
-      try {
-        const parsedUser = JSON.parse(userData);
-        setUser({
-          name: parsedUser.full_name || 'User',
-          role: 'User'
-        });
-      } catch (e) {
-        console.error('Error parsing user data:', e);
+      if (userData) {
+        try {
+          const parsedUser = JSON.parse(userData);
+          setUser({
+            name: parsedUser.full_name || 'User',
+            role: parsedUser.role?.name || 'User'
+          });
+        } catch (e) {
+          console.error('Error parsing user data:', e);
+        }
       }
     }
 
@@ -54,39 +65,21 @@ export default function NavRight() {
     if (token) {
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     }
-  }, []);
+  }, [authUser]);
 
   const handleLogout = async (e) => {
     e.preventDefault();
     setIsLoggingOut(true);
 
     try {
-      const token = localStorage.getItem('authToken');
-
-      if (token) {
-        const headers = {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        };
-
-        await axios.post(`${API_URL}/logout`, {}, { headers });
-      }
-    } catch (error) {
-      console.error('Logout API error:', error);
-    } finally {
-      // Clear localStorage
-      localStorage.removeItem('authToken');
-      localStorage.removeItem('userRole');
-      localStorage.removeItem('user');
-      localStorage.removeItem('login_session_id');
-      localStorage.removeItem('sessionId');
-      localStorage.removeItem('userPermissions');
-
-      delete axios.defaults.headers.common['Authorization'];
-      delete axios.defaults.headers.common['X-Login-Session-ID'];
-
+      // Use AuthContext logout which handles token and API call
+      await authLogout();
+      
       // Redirect to login page
       navigate('/login');
+    } catch (error) {
+      console.error('Logout failed:', error);
+    } finally {
       setIsLoggingOut(false);
     }
   };
@@ -110,59 +103,54 @@ export default function NavRight() {
       </ListGroup.Item>
 
       <ListGroup.Item as="li" bsPrefix=" " className="pc-h-item">
-        <div className="d-flex align-items-center">
-          <div className="pc-head-link arrow-none me-3 user-name d-flex align-items-center">
-            <img src={getRoleAvatar(user.role)} alt="userimage" className="user-avatar" />
-            <span>
-              <span className="user-name">{user.name}</span>
-              <span className="user-desc">{user.role}</span>
-            </span>
-          </div>
-
-          <Link
-            to="#"
-            className="btn btn-sm d-flex align-items-center"
-            onClick={handleLogout}
-            style={{
-              pointerEvents: isLoggingOut ? 'none' : 'auto',
-              opacity: isLoggingOut ? 0.7 : 1,
-              borderRadius: '6px',
-              padding: '8px 12px',
-              fontSize: '0.85rem',
-              marginRight: '10px',
-              border: '1px solid #dc3545',
-              color: '#dc3545',
-              backgroundColor: 'transparent',
-              transition: 'all 0.2s ease'
-            }}
-            onMouseEnter={(e) => {
-              if (!isLoggingOut) {
-                e.target.style.backgroundColor = '#dc3545';
-                e.target.style.color = 'white';
-                e.target.style.borderColor = '#dc3545';
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (!isLoggingOut) {
-                e.target.style.backgroundColor = 'transparent';
-                e.target.style.color = '#dc3545';
-                e.target.style.borderColor = '#dc3545';
-              }
-            }}
+        <Dropdown align="end">
+          <Dropdown.Toggle 
+            as="div" 
+            className="pc-head-link arrow-none me-0" 
+            style={{ cursor: 'pointer' }}
           >
-            {isLoggingOut ? (
-              <>
-                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                <em>LOGGING OUT...</em>
-              </>
-            ) : (
-              <>
-                <FeatherIcon icon="log-out" size={16} className="me-2" />
-                Log Out
-              </>
-            )}
-          </Link>
-        </div>
+            <div className="d-flex align-items-center">
+              <img src={getRoleAvatar(user.role)} alt="userimage" className="user-avatar" />
+              <span>
+                <span className="user-name">{user.name}</span>
+                <span className="user-desc">{user.role}</span>
+              </span>
+            </div>
+          </Dropdown.Toggle>
+
+          <Dropdown.Menu className="dropdown-menu-end pc-h-dropdown">
+            <Dropdown.Item 
+              onClick={() => setShowChangePassword(true)}
+              className="d-flex align-items-center"
+            >
+              <FeatherIcon icon="lock" size={16} className="me-2" />
+              Change Password
+            </Dropdown.Item>
+            <Dropdown.Divider />
+            <Dropdown.Item 
+              onClick={handleLogout}
+              disabled={isLoggingOut}
+              className="d-flex align-items-center text-danger"
+            >
+              {isLoggingOut ? (
+                <>
+                  <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                  Logging Out...
+                </>
+              ) : (
+                <>
+                  <FeatherIcon icon="log-out" size={16} className="me-2" />
+                  Log Out
+                </>
+              )}
+            </Dropdown.Item>
+          </Dropdown.Menu>
+        </Dropdown>
+
+        <ChangePassword 
+          show={showChangePassword} 
+          onHide={() => setShowChangePassword(false)} 
+        />
       </ListGroup.Item>
     </ListGroup>
   );

@@ -15,6 +15,7 @@ class Role extends Model
 
     protected $fillable = [
         'name',
+        'code',
         'description',
     ];
 
@@ -22,4 +23,20 @@ class Role extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
+
+    /**
+     * Get the users associated with this role
+     */
+    public function users()
+    {
+        return $this->hasMany(User::class);
+    }
+
+    /**
+     * Get the permissions associated with this role
+     */
+    public function permissions()
+    {
+        return $this->belongsToMany(Permission::class, 'role_permissions');
+    }
 }

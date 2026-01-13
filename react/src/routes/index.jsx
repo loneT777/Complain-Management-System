@@ -8,7 +8,12 @@ import MainRoutes from './MainRoutes';
 
 const router = createBrowserRouter(
   [MainRoutes], // Only use MainRoutes, remove the conflicting root route
-  { basename: import.meta.env.VITE_APP_BASE_NAME }
+  { 
+    basename: import.meta.env.VITE_APP_BASE_NAME,
+    future: {
+      v7_startTransition: true,
+    }
+  }
 );
 
 export default router;

@@ -14,9 +14,10 @@ import {
   Chip
 } from '@mui/material';
 import { Visibility, Assignment } from '@mui/icons-material';
-import axios from 'axios';
+import axios from '../utils/axiosConfig';
 import AssignComplaintForm from './AssignComplaintForm';
 import ViewAssignmentDialog from './ViewAssignmentDialog';
+import { Can } from './PermissionComponents';
 
 const ComplaintAssignments = () => {
   const [complaints, setComplaints] = useState([]);
@@ -27,6 +28,10 @@ const ComplaintAssignments = () => {
   const [selectedAssignment, setSelectedAssignment] = useState(null);
   const [assignments, setAssignments] = useState({});
 
+  // Check if user is role 5 (Engineer)
+  const userData = JSON.parse(localStorage.getItem('user') || '{}');
+  const isEngineer = userData?.role_id === 5;
+
   useEffect(() => {
     fetchComplaints();
   }, []);
@@ -34,7 +39,7 @@ const ComplaintAssignments = () => {
   const fetchComplaints = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('http://localhost:8000/api/complaints');
+      const response = await axios.get('/complaints');
       const complaintsData = response.data.data || [];
       setComplaints(complaintsData);
       await fetchAssignments(complaintsData.map((c) => c.id));
@@ -55,7 +60,7 @@ const ComplaintAssignments = () => {
       await Promise.all(
         complaintIds.map(async (complaintId) => {
           try {
-            const res = await axios.get('http://localhost:8000/api/complaint_assignments', {
+            const res = await axios.get('/complaint_assignments', {
               params: { complaint_id: complaintId }
             });
             if (res.data && res.data.length > 0) {
@@ -154,24 +159,29 @@ const ComplaintAssignments = () => {
                       </TableCell>
                       <TableCell sx={{ textAlign: 'center' }}>
                         {assignment && (
+                          <Can permission="complaint.assign.view">
+                            <IconButton
+                              size="small"
+                              color="primary"
+                              onClick={() => handleViewClick(complaint)}
+                              title="View Assignment"
+                              sx={{ mr: 1 }}
+                            >
+                              <Visibility />
+                            </IconButton>
+                          </Can>
+                        )}
+                        <Can permission="complaint.assign.process">
                           <IconButton
                             size="small"
-                            color="primary"
-                            onClick={() => handleViewClick(complaint)}
-                            title="View Assignment"
-                            sx={{ mr: 1 }}
+                            color="success"
+                            onClick={() => handleAssignClick(complaint)}
+                            title={assignment ? "Reassign" : "Assign"}
+                            disabled={isEngineer}
                           >
-                            <Visibility />
+                            <Assignment />
                           </IconButton>
-                        )}
-                        <IconButton
-                          size="small"
-                          color="success"
-                          onClick={() => handleAssignClick(complaint)}
-                          title={assignment ? "Reassign" : "Assign"}
-                        >
-                          <Assignment />
-                        </IconButton>
+                        </Can>
                       </TableCell>
                     </TableRow>
                   );
@@ -192,11 +202,7 @@ const ComplaintAssignments = () => {
       )}
 
       {showViewModal && selectedAssignment && (
-        <ViewAssignmentDialog
-          open={showViewModal}
-          handleClose={handleViewDialogClose}
-          assignment={selectedAssignment}
-        />
+        <ViewAssignmentDialog open={showViewModal} handleClose={handleViewDialogClose} assignment={selectedAssignment} />
       )}
     </Box>
   );

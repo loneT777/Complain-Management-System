@@ -1,15 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Button } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Alert } from 'react-bootstrap';
 import { Add } from '@mui/icons-material';
-import axios from 'axios';
+import axios from '../utils/axiosConfig';
 import DivisionTable from './DivisionTable';
 import DivisionForm from './DivisionForm';
+import { Can } from './PermissionComponents';
 
 const Divisions = () => {
   const [divisions, setDivisions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editMode, setEditMode] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
   const [currentDivision, setCurrentDivision] = useState({
     name: '',
     code: '',
@@ -29,10 +32,11 @@ const Divisions = () => {
   const fetchDivisions = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('http://localhost:8000/api/divisions');
+      const response = await axios.get('/divisions');
       setDivisions(response.data.data || []);
     } catch (error) {
       console.error('Error fetching divisions:', error);
+      setErrorMessage('Failed to fetch divisions');
     } finally {
       setLoading(false);
     }
@@ -72,38 +76,61 @@ const Divisions = () => {
       remark: '',
       is_approved: false
     });
+    setErrorMessage('');
   };
 
   const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
     setCurrentDivision({
       ...currentDivision,
-      [e.target.name]: e.target.value
+      [name]: type === 'checkbox' ? checked : value
     });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setErrorMessage('');
+    setSuccessMessage('');
+    
     try {
-      if (editMode) {
-        await axios.put(`http://localhost:8000/api/divisions/${currentDivision.id}`, currentDivision);
-      } else {
-        await axios.post('http://localhost:8000/api/divisions', currentDivision);
-      }
+      const url = editMode 
+        ? `/divisions/${currentDivision.id}` 
+        : '/divisions';
+      const method = editMode ? 'PUT' : 'POST';
+
+      // Convert empty parent_id to null
+      const submitData = {
+        ...currentDivision,
+        parent_id: currentDivision.parent_id === '' ? null : currentDivision.parent_id
+      };
+
+      await axios({
+        method,
+        url,
+        data: submitData,
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      setSuccessMessage(editMode ? 'Division updated successfully' : 'Division created successfully');
       fetchDivisions();
       handleCloseModal();
     } catch (error) {
       console.error('Error saving division:', error);
-      alert('Error saving division. Please check the form.');
+      setErrorMessage(error.response?.data?.message || 'Error saving division. Please check the form.');
     }
   };
 
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this division?')) {
       try {
-        await axios.delete(`http://localhost:8000/api/divisions/${id}`);
+        await axios.delete(`/divisions/${id}`);
+        setSuccessMessage('Division deleted successfully');
         fetchDivisions();
       } catch (error) {
         console.error('Error deleting division:', error);
+        setErrorMessage('Error deleting division');
       }
     }
   };
@@ -115,14 +142,28 @@ const Divisions = () => {
           <Card>
             <Card.Header className="d-flex justify-content-between align-items-center">
               <h4 className="mb-0">Divisions</h4>
-              <Button
-                style={{ backgroundColor: '#3a4c4a', borderColor: '#3a4c4a' }}
-                onClick={() => handleOpenModal()}
-              >
-                <Add className="me-1" /> Add Division
-              </Button>
+              <Can permission="setting.create">
+                <Button
+                  style={{ backgroundColor: '#3a4c4a', borderColor: '#3a4c4a' }}
+                  onClick={() => handleOpenModal()}
+                >
+                  <Add className="me-1" /> Add Division
+                </Button>
+              </Can>
             </Card.Header>
             <Card.Body>
+              {successMessage && (
+                <Alert variant="success" dismissible onClose={() => setSuccessMessage('')}>
+                  {successMessage}
+                </Alert>
+              )}
+
+              {errorMessage && (
+                <Alert variant="danger" dismissible onClose={() => setErrorMessage('')}>
+                  {errorMessage}
+                </Alert>
+              )}
+
               <DivisionTable
                 divisions={divisions}
                 loading={loading}

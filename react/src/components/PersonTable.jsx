@@ -1,6 +1,7 @@
 import React from 'react';
 import { Table, Button, Spinner } from 'react-bootstrap';
 import { Edit, Delete } from '@mui/icons-material';
+import { Can } from './PermissionComponents';
 
 const PersonTable = ({ persons, loading, handleEdit, handleDelete }) => {
   if (loading) {
@@ -48,21 +49,25 @@ const PersonTable = ({ persons, loading, handleEdit, handleDelete }) => {
                 <td>{person.type}</td>
                 <td>{person.designation}</td>
                 <td className="text-center">
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    className="me-2"
-                    onClick={() => handleEdit(person)}
-                  >
-                    <Edit fontSize="small" />
-                  </Button>
-                  {/* <Button
-                    variant="danger"
-                    size="sm"
-                    onClick={() => handleDelete(person.id)}
-                  >
-                    <Delete fontSize="small" />
-                  </Button> */}
+                  <Can permission="setting.update">
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      className="me-2"
+                      onClick={() => handleEdit(person)}
+                    >
+                      <Edit fontSize="small" />
+                    </Button>
+                  </Can>
+                  <Can permission="setting.delete">
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      onClick={() => handleDelete(person.id)}
+                    >
+                      <Delete fontSize="small" />
+                    </Button>
+                  </Can>
                 </td>
               </tr>
             ))
