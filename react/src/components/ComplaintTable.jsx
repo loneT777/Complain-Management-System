@@ -6,24 +6,29 @@ import { Can } from './PermissionComponents';
 const ComplaintTable = ({ complaints, loading, assignments = {}, onAssign }) => {
   const navigate = useNavigate();
 
+  // Check user role
+  const userData = JSON.parse(localStorage.getItem('user') || '{}');
+  const isEngineer = userData?.role_id === 5;
+  const isComplainant = userData?.role_id === 4;
+
   const handleView = (complaint) => {
     navigate(`/complaint/${complaint.id}`);
   };
 
   const getStatusColor = (statusName) => {
     const colors = {
-      'Pending': 'secondary',
-      'Assigned': 'warning',
-      'Completed': 'success'
+      Pending: 'secondary',
+      Assigned: 'warning',
+      Completed: 'success'
     };
     return colors[statusName] || 'secondary';
   };
 
   const getPriorityColor = (priorityLevel) => {
     const colors = {
-      'Low': 'success',
-      'Medium': 'warning',
-      'Urgent': 'danger',
+      Low: 'success',
+      Medium: 'warning',
+      Urgent: 'danger',
       'Very Urgent': 'dark'
     };
     return colors[priorityLevel] || 'secondary';
@@ -63,24 +68,37 @@ const ComplaintTable = ({ complaints, loading, assignments = {}, onAssign }) => 
 
       <tbody>
         {complaints.map((complaint) => (
-          <tr key={complaint.id}>
+          <tr
+            key={complaint.id}
+            style={{
+              opacity: complaint.is_reassigned_away ? 0.5 : 1,
+              filter: complaint.is_reassigned_away ? 'blur(1px)' : 'none',
+              pointerEvents: complaint.is_reassigned_away ? 'none' : 'auto',
+              backgroundColor: complaint.is_reassigned_away ? '#f8f9fa' : 'transparent'
+            }}
+          >
             <td>{complaint.id}</td>
-            <td>{complaint.title}</td>
+            <td>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                {complaint.title}
+                {complaint.is_reassigned_away && (
+                  <Badge bg="info" style={{ fontSize: '0.7rem' }}>
+                    Reassigned
+                  </Badge>
+                )}
+              </div>
+            </td>
             <td>{complaint.description}</td>
             <td>
               {complaint.lastStatus ? (
-                <Badge bg={getStatusColor(complaint.lastStatus.name)}>
-                  {complaint.lastStatus.name}
-                </Badge>
+                <Badge bg={getStatusColor(complaint.lastStatus.name)}>{complaint.lastStatus.name}</Badge>
               ) : (
                 <Badge bg="secondary">Not Set</Badge>
               )}
             </td>
             <td>
               {complaint.priority_level ? (
-                <Badge bg={getPriorityColor(complaint.priority_level)}>
-                  {complaint.priority_level}
-                </Badge>
+                <Badge bg={getPriorityColor(complaint.priority_level)}>{complaint.priority_level}</Badge>
               ) : (
                 <Badge bg="secondary">Not Set</Badge>
               )}
@@ -113,12 +131,31 @@ const ComplaintTable = ({ complaints, loading, assignments = {}, onAssign }) => 
 
             <td>
               <div className="d-flex flex-column gap-2">
-                <Button style={{ backgroundColor: '#05443cff', borderColor: '#05443cff' }} size="sm" onClick={() => handleView(complaint)}>
+                <Button
+                  style={{ backgroundColor: '#05443cff', borderColor: '#05443cff' }}
+                  size="sm"
+                  onClick={() => handleView(complaint)}
+                  disabled={complaint.is_reassigned_away}
+                >
                   View
                 </Button>
 
                 <Can permission="complaint.assign.process">
-                  <Button style={{ backgroundColor: '#011e1bff', borderColor: '#011e1bff' }} size="sm" onClick={() => onAssign(complaint)}>
+                  <Button
+                    style={{ backgroundColor: '#011e1bff', borderColor: '#011e1bff' }}
+                    size="sm"
+                    onClick={() => onAssign(complaint)}
+                    disabled={isEngineer || isComplainant || complaint.is_reassigned_away}
+                    title={
+                      complaint.is_reassigned_away
+                        ? 'Complaint was reassigned'
+                        : isEngineer
+                          ? 'Engineers cannot assign complaints'
+                          : isComplainant
+                            ? 'Complainants cannot assign complaints'
+                            : 'Assign complaint'
+                    }
+                  >
                     Assign
                   </Button>
                 </Can>

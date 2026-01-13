@@ -9,6 +9,7 @@ const AddComplaint = () => {
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState([]);
   const [selectedCategories, setSelectedCategories] = useState([]);
+  const [error, setError] = useState('');
 
   // Bootstrap color variant mapping to hex colors
   const bootstrapColors = {
@@ -51,6 +52,7 @@ const AddComplaint = () => {
       }
     } catch (error) {
       console.error('Error fetching categories:', error);
+      setError('Failed to fetch categories. Please refresh the page.');
     }
   };
 
@@ -58,16 +60,12 @@ const AddComplaint = () => {
     const { name, value } = e.target;
     setComplaint((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: value
     }));
   };
 
   const handleCategoryToggle = (categoryId) => {
-    setSelectedCategories((prev) =>
-      prev.includes(categoryId)
-        ? prev.filter((id) => id !== categoryId)
-        : [...prev, categoryId]
-    );
+    setSelectedCategories((prev) => (prev.includes(categoryId) ? prev.filter((id) => id !== categoryId) : [...prev, categoryId]));
   };
 
   const handleRemoveCategory = (categoryId) => {
@@ -77,19 +75,32 @@ const AddComplaint = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setError('');
 
     try {
+      // Get user data to include their person_id as complainant
+      const userData = JSON.parse(localStorage.getItem('user') || '{}');
+
       const complaintData = {
         ...complaint,
         category_ids: selectedCategories,
+        complainant_id: userData?.person_id // Set the logged-in user as the complainant
       };
 
-      await axios.post('/complaints', complaintData);
-      alert('Complaint added successfully!');
-      navigate('/complaints');
+      // Using relative path with axios config that handles authentication
+      const response = await axios.post('/complaints', complaintData);
+      
+      if (response.data.success) {
+        alert('Complaint added successfully!');
+        navigate('/complaints');
+      } else {
+        setError(response.data.message || 'Failed to add complaint. Please try again.');
+      }
     } catch (error) {
       console.error('Error adding complaint:', error);
-      alert('Failed to add complaint. Please try again.');
+      const errorMessage = error.response?.data?.message || 'Failed to add complaint. Please try again.';
+      setError(errorMessage);
+      alert(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -106,6 +117,14 @@ const AddComplaint = () => {
           </div>
         </Col>
       </Row>
+
+      {error && (
+        <Row className="mb-3">
+          <Col>
+            <div className="alert alert-danger">{error}</div>
+          </Col>
+        </Row>
+      )}
 
       <Row>
         <Col lg={8}>
@@ -144,7 +163,8 @@ const AddComplaint = () => {
                                 cursor: 'pointer',
                                 padding: '8px 12px',
                                 borderRadius: '4px',
-                                backgroundColor: complaint.priority_level === priority.value ? bootstrapColors[priority.variant].light : '#f8f9fa',
+                                backgroundColor:
+                                  complaint.priority_level === priority.value ? bootstrapColors[priority.variant].light : '#f8f9fa',
                                 border: `2px solid ${bootstrapColors[priority.variant].hex}`,
                                 color: bootstrapColors[priority.variant].hex,
                                 fontWeight: '500',
@@ -217,11 +237,7 @@ const AddComplaint = () => {
                                     style={{ fontSize: '0.9rem', padding: '0.5rem 0.75rem' }}
                                   >
                                     {category.category_name}
-                                    <Close
-                                      fontSize="small"
-                                      style={{ cursor: 'pointer' }}
-                                      onClick={() => handleRemoveCategory(catId)}
-                                    />
+                                    <Close fontSize="small" style={{ cursor: 'pointer' }} onClick={() => handleRemoveCategory(catId)} />
                                   </Badge>
                                 )
                               );
@@ -253,9 +269,7 @@ const AddComplaint = () => {
                           ))}
                       </Form.Select>
 
-                      <Form.Text className="text-muted">
-                        Select multiple categories that apply to this complaint
-                      </Form.Text>
+                      <Form.Text className="text-muted">Select multiple categories that apply to this complaint</Form.Text>
                     </Form.Group>
                   </Col>
 
@@ -263,12 +277,15 @@ const AddComplaint = () => {
                   <Col md={6} className="mb-3">
                     <Form.Group>
                       <Form.Label>Complainant Name</Form.Label>
-                      <Form.Control
-                        type="text"
-                        name="complainant_name"
-                        value={complaint.complainant_name}
-                        onChange={handleChange}
-                      />
+                      <Form.Control type="text" name="complainant_name" value={complaint.complainant_name} onChange={handleChange} />
+                    </Form.Group>
+                  </Col>
+
+                  {/* Complainant Phone */}
+                  <Col md={6} className="mb-3">
+                    <Form.Group>
+                      <Form.Label>Complainant Phone</Form.Label>
+                      <Form.Control type="text" name="complainant_phone" value={complaint.complainant_phone} onChange={handleChange} />
                     </Form.Group>
                   </Col>
 
@@ -276,11 +293,7 @@ const AddComplaint = () => {
                   <Col md={6} className="mb-3">
                     <Form.Group>
                       <Form.Label>Confidentiality Level</Form.Label>
-                      <Form.Select
-                        name="confidentiality_level"
-                        value={complaint.confidentiality_level}
-                        onChange={handleChange}
-                      >
+                      <Form.Select name="confidentiality_level" value={complaint.confidentiality_level} onChange={handleChange}>
                         <option value="">Select confidentiality</option>
                         <option value="Public">Public</option>
                         <option value="Confidential">Confidential</option>
@@ -293,11 +306,7 @@ const AddComplaint = () => {
                   <Col md={6} className="mb-3">
                     <Form.Group>
                       <Form.Label>Channel</Form.Label>
-                      <Form.Select
-                        name="channel"
-                        value={complaint.channel}
-                        onChange={handleChange}
-                      >
+                      <Form.Select name="channel" value={complaint.channel} onChange={handleChange}>
                         <option value="">Select channel</option>
                         <option value="Phone">Phone</option>
                         <option value="Email">Email</option>
@@ -311,15 +320,13 @@ const AddComplaint = () => {
                   {/* Attachments (future) */}
                   <Col md={12} className="mb-3">
                     <Form.Group>
-                      <Form.Label>
-                        Attachments{' '}
-                      </Form.Label>
+                      <Form.Label>Attachments </Form.Label>
                       <div
                         className="border rounded p-4 text-center"
                         style={{
                           backgroundColor: '#f8f9fa',
                           cursor: 'not-allowed',
-                          opacity: 0.7,
+                          opacity: 0.7
                         }}
                       >
                         <AttachFile style={{ fontSize: '3rem', color: '#6c757d' }} />
@@ -346,19 +353,11 @@ const AddComplaint = () => {
 
                 {/* Buttons */}
                 <div className="d-flex justify-content-end gap-2 mt-4">
-                  <Button
-                    variant="outline-secondary"
-                    onClick={() => navigate('/complaints')}
-                    disabled={loading}
-                  >
+                  <Button variant="outline-secondary" onClick={() => navigate('/complaints')} disabled={loading}>
                     Cancel
                   </Button>
 
-                  <Button
-                    type="submit"
-                    style={{ backgroundColor: '#3a4c4a', borderColor: '#3a4c4a' }}
-                    disabled={loading}
-                  >
+                  <Button type="submit" style={{ backgroundColor: '#3a4c4a', borderColor: '#3a4c4a' }} disabled={loading}>
                     <Save className="me-1" fontSize="small" />
                     {loading ? 'Saving...' : 'Save Complaint'}
                   </Button>
@@ -391,11 +390,11 @@ const AddComplaint = () => {
             </Card.Header>
             <Card.Body>
               <div className="mb-3">
-                <strong className="text-danger">Urgent:</strong>
+                <strong className="text-danger">Very Urgent:</strong>
                 <p className="mb-0 small">Requires immediate attention</p>
               </div>
               <div className="mb-3">
-                <strong className="text-warning">High:</strong>
+                <strong className="text-warning">Urgent:</strong>
                 <p className="mb-0 small">Should be addressed within 24 hours</p>
               </div>
               <div className="mb-3">

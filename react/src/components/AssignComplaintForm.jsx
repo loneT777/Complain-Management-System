@@ -83,9 +83,13 @@ const AssignComplaintForm = ({ show, onClose, complaintId, assignment, onSuccess
   const fetchDivisions = async () => {
     try {
       const response = await axios.get('/divisions');
-      setDivisions(response.data.data || response.data || []);
+      // Handle the response structure: response.data has 'data' property with divisions array
+      const divisionData = response.data.data || response.data || [];
+      // Ensure it's an array before setting state
+      setDivisions(Array.isArray(divisionData) ? divisionData : []);
     } catch (error) {
       console.error('Failed to fetch divisions', error);
+      setDivisions([]);
     }
   };
 
@@ -95,7 +99,9 @@ const AssignComplaintForm = ({ show, onClose, complaintId, assignment, onSuccess
       // Fetch persons for the selected division, or all persons if no division selected
       const url = divisionId ? `/persons?division_id=${divisionId}` : `/persons`;
       const response = await axios.get(url);
-      setPersons(response.data || []);
+      // Handle different response structures
+      const personData = response.data.data || response.data || [];
+      setPersons(Array.isArray(personData) ? personData : []);
     } catch (error) {
       console.error('Failed to fetch persons', error);
       setPersons([]);

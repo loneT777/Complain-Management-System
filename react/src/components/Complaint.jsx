@@ -39,6 +39,10 @@ const Complaint = () => {
   const [loadingAttachments, setLoadingAttachments] = useState(false);
   const [activeTab, setActiveTab] = useState('messages');
 
+  // Get user data and check role
+  const userData = JSON.parse(localStorage.getItem('user') || '{}');
+  const isEngineer = userData?.role_id === 5;
+
   // Message modal states
   const [showMessageModal, setShowMessageModal] = useState(false);
   const [currentMessage, setCurrentMessage] = useState({
@@ -211,8 +215,8 @@ const Complaint = () => {
       // First fetch available statuses to get the Cancel status ID
       const statusesResponse = await axios.get('/complaint-statuses');
       const statuses = statusesResponse.data || [];
-      const cancelStatus = statuses.find(s => s.name?.toLowerCase() === 'cancel' || s.code?.toLowerCase() === 'cancel');
-      
+      const cancelStatus = statuses.find((s) => s.name?.toLowerCase() === 'cancel' || s.code?.toLowerCase() === 'cancel');
+
       if (!cancelStatus) {
         alert('Cancel status not found in system');
         return;
@@ -451,9 +455,9 @@ const Complaint = () => {
 
   const getStatusColor = (statusName) => {
     const colors = {
-      'Pending': 'secondary',
-      'Assigned': 'warning',
-      'Completed': 'success'
+      Pending: 'secondary',
+      Assigned: 'warning',
+      Completed: 'success'
     };
     return colors[statusName] || 'secondary';
   };
@@ -505,7 +509,42 @@ const Complaint = () => {
   }
 
   return (
-    <Container fluid className="p-4">
+    <Container fluid className="p-4" style={{ position: 'relative' }}>
+      {/* Reassignment Overlay */}
+      {complaint.is_reassigned_away && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            zIndex: 9999,
+            backdropFilter: 'blur(2px)'
+          }}
+        >
+          <Card
+            style={{
+              maxWidth: '500px',
+              backgroundColor: '#fff',
+              boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+            }}
+          >
+            <Card.Body className="text-center p-5">
+              <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⚠️</div>
+              <h5 className="mb-3">Complaint Reassigned</h5>
+              <p className="text-muted mb-0">
+                This complaint has been reassigned to another team member and is no longer accessible to you.
+              </p>
+            </Card.Body>
+          </Card>
+        </div>
+      )}
+
       <Row className="mb-3">
         <Col>
           <div className="d-flex justify-content-between align-items-center">
@@ -515,7 +554,12 @@ const Complaint = () => {
 
             <div>
               <Can permission="complaint.update">
-                <Button style={{ backgroundColor: '#3a4c4a', borderColor: '#3a4c4a' }} size="sm" onClick={handleEdit}>
+                <Button
+                  style={{ backgroundColor: '#3a4c4a', borderColor: '#3a4c4a' }}
+                  size="sm"
+                  onClick={handleEdit}
+                  disabled={complaint.is_reassigned_away}
+                >
                   <Edit fontSize="small" className="me-1" /> Edit
                 </Button>
               </Can>
@@ -524,7 +568,12 @@ const Complaint = () => {
         </Col>
       </Row>
 
-      <Row>
+      <Row
+        style={{
+          opacity: complaint.is_reassigned_away ? 0.3 : 1,
+          pointerEvents: complaint.is_reassigned_away ? 'none' : 'auto'
+        }}
+      >
         {/* LEFT SIDE */}
         <Col lg={8}>
           {/* Complaint Info */}
@@ -570,19 +619,13 @@ const Complaint = () => {
                   <strong>Status:</strong>
                   <div className="d-flex align-items-center gap-2 mt-1">
                     {complaint?.lastStatus ? (
-                      <Badge bg={getStatusColor(complaint.lastStatus.name)}>
-                        {complaint.lastStatus.name}
-                      </Badge>
+                      <Badge bg={getStatusColor(complaint.lastStatus.name)}>{complaint.lastStatus.name}</Badge>
                     ) : (
                       <Badge bg="secondary">Pending</Badge>
                     )}
                     {complaint?.lastStatus?.name !== 'Cancel' && (
                       <Can permission="complaint.delete">
-                        <Button
-                          variant="outline-danger"
-                          size="sm"
-                          onClick={handleCancelComplaint}
-                        >
+                        <Button variant="outline-danger" size="sm" onClick={handleCancelComplaint}>
                           Cancel
                         </Button>
                       </Can>
@@ -708,7 +751,7 @@ const Complaint = () => {
               {/* Tab Content */}
               <Can permission="messages">
                 {activeTab === 'messages' && (
-                    <div className="py-4">
+                  <div className="py-4">
                     {/* Comment Input Box */}
                     <div className="fb-comment-box mb-4">
                       <div className="d-flex gap-3">
@@ -938,12 +981,7 @@ const Complaint = () => {
                                     {replies.length > 0 && (
                                       <div className="fb-replies mt-3">
                                         {!showReplies[msg.id] && (
-                                          <Button
-                                            variant="link"
-                                            size="sm"
-                                            className="fb-show-replies"
-                                            onClick={() => toggleReplies(msg.id)}
-                                          >
+                                          <Button variant="link" size="sm" className="fb-show-replies" onClick={() => toggleReplies(msg.id)}>
                                             <Reply fontSize="small" className="me-2" />
                                             View {replies.length} {replies.length === 1 ? 'reply' : 'replies'}
                                           </Button>
@@ -1044,39 +1082,39 @@ const Complaint = () => {
 
               <Can permission="attachment">
                 {activeTab === 'attachments' && (
-                <div className="py-4">
-                  <div className="d-flex justify-content-between align-items-center mb-3">
-                    <h5 className="mb-0">Complaint Attachments</h5>
-                    <Button variant="primary" size="sm" onClick={handleAddAttachment}>
-                      <Add fontSize="small" className="me-1" />
-                      Upload Files
-                    </Button>
-                  </div>
-                  {loadingAttachments ? (
-                    <div className="text-center">
-                      <Spinner animation="border" size="sm" />
-                      <p className="text-muted mt-2">Loading attachments...</p>
+                  <div className="py-4">
+                    <div className="d-flex justify-content-between align-items-center mb-3">
+                      <h5 className="mb-0">Complaint Attachments</h5>
+                      <Button variant="primary" size="sm" onClick={handleAddAttachment}>
+                        <Add fontSize="small" className="me-1" />
+                        Upload Files
+                      </Button>
                     </div>
-                  ) : attachments.length > 0 ? (
-                    <>
-                      <Alert variant="info" className="mb-3">
-                        <AttachFile className="me-2" />
-                        <strong>Total Attachments:</strong> {attachments.length} file(s)
-                      </Alert>
-                      <Table hover responsive className="mb-0">
-                        <thead>
-                          <tr>
-                            <th>#</th>
-                            <th>File Name</th>
-                            <th>Type</th>
-                            <th>Size</th>
-                            <th>Uploaded</th>
-                            <th>Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {attachments.map((att, index) => (
-                            <tr key={att.id}>
+                    {loadingAttachments ? (
+                      <div className="text-center">
+                        <Spinner animation="border" size="sm" />
+                        <p className="text-muted mt-2">Loading attachments...</p>
+                      </div>
+                    ) : attachments.length > 0 ? (
+                      <>
+                        <Alert variant="info" className="mb-3">
+                          <AttachFile className="me-2" />
+                          <strong>Total Attachments:</strong> {attachments.length} file(s)
+                        </Alert>
+                        <Table hover responsive className="mb-0">
+                          <thead>
+                            <tr>
+                              <th>#</th>
+                              <th>File Name</th>
+                              <th>Type</th>
+                              <th>Size</th>
+                              <th>Uploaded</th>
+                              <th>Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {attachments.map((att, index) => (
+                              <tr key={att.id}>
                                 <td>{index + 1}</td>
                                 <td>
                                   <div className="d-flex align-items-center">
@@ -1134,8 +1172,8 @@ const Complaint = () => {
 
               <Can permission="complaint.assign.process">
                 {activeTab === 'assignments' && (
-                <div className="py-4">
-                  <div className="d-flex justify-content-between align-items-center mb-3">
+                  <div className="py-4">
+                    <div className="d-flex justify-content-between align-items-center mb-3">
                       <h5 className="mb-0">Assignments</h5>
                       <Button
                         variant="success"
@@ -1157,9 +1195,7 @@ const Complaint = () => {
                     ) : assignments.length > 0 ? (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                         {assignments.map((assign, idx) => {
-                          const assignmentLogs = logs.filter(
-                            (log) => log.complaint_assignment_id === assign.id && log.action !== 'Assigned'
-                          );
+                          const assignmentLogs = logs.filter((log) => log.complaint_assignment_id === assign.id && log.action !== 'Assigned');
                           return (
                             <div
                               key={assign.id}
@@ -1302,130 +1338,128 @@ const Complaint = () => {
 
               <Can permission="log.view">
                 {activeTab === 'logs' && (
-                <div className="py-4">
-                  <div className="d-flex justify-content-between align-items-center mb-3">
-                    <h5 className="mb-0">Complaint Logs</h5>
-                    {assignments.length > 0 ? (
-                      <Can permission="log.process">
-                        <Button
-                          variant="info"
-                          size="sm"
-                          onClick={() => {
-                            setEditingLog(null);
-                            setCurrentAssignmentId(assignments[0]?.id);
-                            setShowLogForm(true);
-                          }}
-                        >
-                          <Add fontSize="small" className="me-1" />
-                          Add Log Entry
-                        </Button>
-                      </Can>
-                    ) : (
-                      <Alert variant="warning" className="mb-0" style={{ fontSize: '14px' }}>
-                        📋 Please create an assignment first before adding logs
-                      </Alert>
-                    )}
-                  </div>
-
-                  {loadingLogs ? (
-                    <div className="text-center py-4">
-                      <Spinner animation="border" size="sm" />
-                    </div>
-                  ) : logs.filter((l) => l.action !== 'Assigned').length > 0 ? (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                      {assignments.map((assign) => {
-                        const assignmentLogs = logs.filter(
-                          (log) => log.complaint_assignment_id === assign.id && log.action !== 'Assigned'
-                        );
-
-                        if (assignmentLogs.length === 0) return null;
-
-                        return (
-                          <div
-                            key={assign.id}
-                            style={{
-                              border: '1px solid #e0e0e0',
-                              borderRadius: '8px',
-                              overflow: 'hidden'
+                  <div className="py-4">
+                    <div className="d-flex justify-content-between align-items-center mb-3">
+                      <h5 className="mb-0">Complaint Logs</h5>
+                      {assignments.length > 0 ? (
+                        <Can permission="log.process">
+                          <Button
+                            variant="info"
+                            size="sm"
+                            onClick={() => {
+                              setEditingLog(null);
+                              setCurrentAssignmentId(assignments[0]?.id);
+                              setShowLogForm(true);
                             }}
                           >
-                            {/* Assignment Header */}
+                            <Add fontSize="small" className="me-1" />
+                            Add Log Entry
+                          </Button>
+                        </Can>
+                      ) : (
+                        <Alert variant="warning" className="mb-0" style={{ fontSize: '14px' }}>
+                          📋 Please create an assignment first before adding logs
+                        </Alert>
+                      )}
+                    </div>
+
+                    {loadingLogs ? (
+                      <div className="text-center py-4">
+                        <Spinner animation="border" size="sm" />
+                      </div>
+                    ) : logs.filter((l) => l.action !== 'Assigned').length > 0 ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        {assignments.map((assign) => {
+                          const assignmentLogs = logs.filter((log) => log.complaint_assignment_id === assign.id && log.action !== 'Assigned');
+
+                          if (assignmentLogs.length === 0) return null;
+
+                          return (
                             <div
+                              key={assign.id}
                               style={{
-                                backgroundColor: '#f5f5f5',
-                                color: '#333',
-                                padding: '8px 12px',
-                                fontWeight: '600',
-                                fontSize: '0.9rem',
-                                borderBottom: '1px solid #ddd'
+                                border: '1px solid #e0e0e0',
+                                borderRadius: '8px',
+                                overflow: 'hidden'
                               }}
                             >
-                              👤 {assign.assigneeUser?.full_name || assign.assignee?.full_name || 'Unassigned'}
-                              {assign.assigneeDivision?.name && ` (${assign.assigneeDivision.name})`}
-                            </div>
-
-                            {/* Logs Grid Header */}
-                            <div
-                              style={{
-                                display: 'grid',
-                                gridTemplateColumns: '100px 1fr 140px',
-                                gap: '15px',
-                                padding: '8px 12px',
-                                backgroundColor: '#f5f5f5',
-                                fontWeight: '600',
-                                fontSize: '0.85rem',
-                                borderBottom: '1px solid #ddd'
-                              }}
-                            >
-                              <div>Action</div>
-                              <div>Remark</div>
-                              <div>Date</div>
-                            </div>
-
-                            {/* Logs Data */}
-                            {assignmentLogs.map((log, idx) => (
+                              {/* Assignment Header */}
                               <div
-                                key={log.id}
+                                style={{
+                                  backgroundColor: '#f5f5f5',
+                                  color: '#333',
+                                  padding: '8px 12px',
+                                  fontWeight: '600',
+                                  fontSize: '0.9rem',
+                                  borderBottom: '1px solid #ddd'
+                                }}
+                              >
+                                👤 {assign.assigneeUser?.full_name || assign.assignee?.full_name || 'Unassigned'}
+                                {assign.assigneeDivision?.name && ` (${assign.assigneeDivision.name})`}
+                              </div>
+
+                              {/* Logs Grid Header */}
+                              <div
                                 style={{
                                   display: 'grid',
                                   gridTemplateColumns: '100px 1fr 140px',
                                   gap: '15px',
                                   padding: '8px 12px',
-                                  backgroundColor: '#fff',
-                                  borderBottom: idx < assignmentLogs.length - 1 ? '1px solid #f0f0f0' : 'none',
-                                  alignItems: 'flex-start'
+                                  backgroundColor: '#f5f5f5',
+                                  fontWeight: '600',
+                                  fontSize: '0.85rem',
+                                  borderBottom: '1px solid #ddd'
                                 }}
                               >
-                                <div style={{ fontWeight: '500', minWidth: '100px', fontSize: '0.9rem' }}>{log.action || '-'}</div>
+                                <div>Action</div>
+                                <div>Remark</div>
+                                <div>Date</div>
+                              </div>
+
+                              {/* Logs Data */}
+                              {assignmentLogs.map((log, idx) => (
                                 <div
+                                  key={log.id}
                                   style={{
-                                    color: '#666',
-                                    wordWrap: 'break-word',
-                                    overflowWrap: 'break-word',
-                                    whiteSpace: 'pre-wrap',
-                                    minWidth: '0',
-                                    fontSize: '0.9rem'
+                                    display: 'grid',
+                                    gridTemplateColumns: '100px 1fr 140px',
+                                    gap: '15px',
+                                    padding: '8px 12px',
+                                    backgroundColor: '#fff',
+                                    borderBottom: idx < assignmentLogs.length - 1 ? '1px solid #f0f0f0' : 'none',
+                                    alignItems: 'flex-start'
                                   }}
                                 >
-                                  {log.remark || '-'}
+                                  <div style={{ fontWeight: '500', minWidth: '100px', fontSize: '0.9rem' }}>{log.action || '-'}</div>
+                                  <div
+                                    style={{
+                                      color: '#666',
+                                      wordWrap: 'break-word',
+                                      overflowWrap: 'break-word',
+                                      whiteSpace: 'pre-wrap',
+                                      minWidth: '0',
+                                      fontSize: '0.9rem'
+                                    }}
+                                  >
+                                    {log.remark || '-'}
+                                  </div>
+                                  <div style={{ fontSize: '0.8rem', color: '#999', minWidth: '140px' }}>
+                                    {new Date(log.updated_at).toLocaleString()}
+                                  </div>
                                 </div>
-                                <div style={{ fontSize: '0.8rem', color: '#999', minWidth: '140px' }}>
-                                  {new Date(log.updated_at).toLocaleString()}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <div className="text-center text-muted py-4">
-                      <AccessTime style={{ fontSize: 48, opacity: 0.3 }} />
-                      <p className="mt-3">No logs yet</p>
-                    </div>
-                  )}
-                </div>
-              )}
+                              ))}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="text-center text-muted py-4">
+                        <AccessTime style={{ fontSize: 48, opacity: 0.3 }} />
+                        <p className="mt-3">No logs yet</p>
+                      </div>
+                    )}
+                  </div>
+                )}
               </Can>
             </Card.Body>
           </Card>

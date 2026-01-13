@@ -46,12 +46,16 @@ Route::get('/public/attachments', [AttachmentController::class, 'index']);
 Route::post('/public/attachments', [AttachmentController::class, 'store']);
 Route::get('/public/attachments/{id}', [AttachmentController::class, 'show']);
 Route::put('/public/attachments/{id}', [AttachmentController::class, 'update']);
-Route::post('/public/attachments/{id}', [AttachmentController::class, 'update']); // For FormData with _method
+Route::post('/public/attachments/{id}', [AttachmentController::class, 'update']);
 Route::delete('/public/attachments/{id}', [AttachmentController::class, 'destroy']);
 Route::get('/public/attachments/{id}/download', [AttachmentController::class, 'download']);
 Route::get('/public/attachments/{id}/view', [AttachmentController::class, 'view']);
+Route::get('/attachments/{id}/download', [AttachmentController::class, 'download']);
+Route::get('/attachments/{id}/view', [AttachmentController::class, 'view']);
 Route::get('/public/categories', [CategoryController::class, 'index']);
 Route::get('/public/divisions', [DivisionController::class, 'index']);
+Route::get('/public/roles', [RoleController::class, 'index']);
+Route::get('/categories/{categoryId}/complaints', [CategoryController::class, 'getComplaints']);
 
 // -----------------
 // PROTECTED ROUTES - With Authentication
@@ -89,11 +93,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('permission:message.read')->group(function () {
         Route::get('messages', [MessageController::class, 'index']);
         Route::get('messages/{id}', [MessageController::class, 'show']);
-        Route::post('messages', [MessageController::class, 'store']);
-        Route::put('messages/{id}', [MessageController::class, 'update']);
-        Route::patch('messages/{id}', [MessageController::class, 'update']);
-        Route::delete('messages/{id}', [MessageController::class, 'destroy']);
     });
+    Route::post('messages', [MessageController::class, 'store'])->middleware('permission:message.create');
+    Route::put('messages/{id}', [MessageController::class, 'update'])->middleware('permission:message.update');
+    Route::patch('messages/{id}', [MessageController::class, 'update'])->middleware('permission:message.update');
+    Route::delete('messages/{id}', [MessageController::class, 'destroy'])->middleware('permission:message.delete');
 
     // Categories Module
     Route::middleware('permission:category.read')->group(function () {
@@ -142,11 +146,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('attachments/{id}', [AttachmentController::class, 'show']);
         Route::get('/attachments/{id}/download', [AttachmentController::class, 'download']);
         Route::get('/attachments/{id}/view', [AttachmentController::class, 'view']);
-        Route::post('attachments', [AttachmentController::class, 'store']);
-        Route::put('attachments/{id}', [AttachmentController::class, 'update']);
-        Route::patch('attachments/{id}', [AttachmentController::class, 'update']);
-        Route::delete('attachments/{id}', [AttachmentController::class, 'destroy']);
     });
+    Route::post('attachments', [AttachmentController::class, 'store'])->middleware('permission:attachment.create');
+    Route::put('attachments/{id}', [AttachmentController::class, 'update'])->middleware('permission:attachment.update');
+    Route::patch('attachments/{id}', [AttachmentController::class, 'update'])->middleware('permission:attachment.update');
+    Route::delete('attachments/{id}', [AttachmentController::class, 'destroy'])->middleware('permission:attachment.delete');
 
     // Complaint Assignments
     Route::middleware('permission:complaint.assign.view')->group(function () {
@@ -189,30 +193,3 @@ Route::middleware('auth:sanctum')->group(function () {
     
     Route::post('role-permissions', [RolePermissionController::class, 'store'])->middleware('permission:security.update');
 });
-
-// -----------------
-// PROTECTED ROUTES - TEMPORARILY DISABLED FOR DEVELOPMENT
-// -----------------
-// Uncomment this section when you're ready to enable authentication
-
-// Route::middleware('auth:sanctum')->group(function () {
-    // Route::apiResource('roles', RoleController::class);
-    // Route::apiResource('divisions', DivisionController::class);
-    // Route::apiResource('persons', PersonController::class);
-    // Route::apiResource('categories', CategoryController::class);
-    // Route::apiResource('messages', MessageController::class);
-    // Route::apiResource('complaints', ComplaintController::class);
-    // Route::apiResource('attachments', AttachmentController::class);
-    // Route::apiResource('complaint_assignments', ComplaintAssignmentController::class);
-    
-    // Route::get('/complaints/{complaintId}/messages', [MessageController::class, 'getByComplaint']);
-    // Route::get('/categories/{categoryId}/complaints', [CategoryController::class, 'getComplaints']);
-    // Route::get('/complaints/{complaintId}/attachments', [AttachmentController::class, 'getAttachmentsByComplaint']);
-    // Route::get('/attachments/{id}/download', [AttachmentController::class, 'download']);
-    // Route::get('/attachments/{id}/view', [AttachmentController::class, 'view']);
-    
-    // Role-Permissions Management
-    // Route::get('/role-permissions', [RoleController::class, 'getRolePermissions']);
-    // Route::post('/role-permissions/sync', [RoleController::class, 'syncRolePermissions']);
-    // Route::post('/role-permissions/sync-role', [RoleController::class, 'syncSingleRolePermissions']);
-// });
