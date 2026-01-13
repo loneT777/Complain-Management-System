@@ -111,7 +111,7 @@ const ComplaintLogForm = ({ show, onClose, complaintId, assignmentId, log, onSuc
           </Form.Group>
 
           <div className="d-flex gap-2">
-            <Button variant="primary" type="submit" disabled={loading}>
+            <Button style={{ backgroundColor: '#3a4c4a', borderColor: '#3a4c4a' }} type="submit" disabled={loading}>
               {loading ? 'Saving...' : log ? 'Update' : 'Add'}
             </Button>
             <Button variant="secondary" onClick={onClose}>

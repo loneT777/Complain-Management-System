@@ -35,7 +35,11 @@ const Roles = () => {
   const handleOpenModal = (role = null) => {
     if (role) {
       setEditMode(true);
-      setCurrentRole(role);
+      setCurrentRole({
+        id: role.id,
+        name: role.name || '',
+        description: role.description || ''
+      });
     } else {
       setEditMode(false);
       setCurrentRole({
@@ -97,7 +101,7 @@ const Roles = () => {
               <h4 className="mb-0">Roles</h4>
               <Can permission="security.create">
                 <Button
-                  style={{ backgroundColor: '#7c4dff', borderColor: '#7c4dff' }}
+                  style={{ backgroundColor: '#3a4c4a', borderColor: '#3a4c4a' }}
                   onClick={() => handleOpenModal()}
                 >
                   <Add className="me-1" /> Add Role

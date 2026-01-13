@@ -158,7 +158,7 @@ const AttachmentTable = ({ attachments, complaints, loading, handleEdit, handleD
                             <Download fontSize="small" />
                           </Button>
                           <Button
-                            variant="primary"
+                            style={{ backgroundColor: '#3a4c4a', borderColor: '#3a4c4a' }}
                             size="sm"
                             className="me-1"
                             onClick={() => handleEdit(firstFile)}
@@ -166,14 +166,14 @@ const AttachmentTable = ({ attachments, complaints, loading, handleEdit, handleD
                           >
                             <Edit fontSize="small" />
                           </Button>
-                          <Button
+                          {/* <Button
                             variant="danger"
                             size="sm"
                             onClick={() => handleDelete(firstFile.id)}
                             title="Delete"
                           >
                             <Delete fontSize="small" />
-                          </Button>
+                          </Button> */}
                         </>
                       ) : (
                         <Badge bg="secondary">Expand to see actions</Badge>
@@ -212,7 +212,7 @@ const AttachmentTable = ({ attachments, complaints, loading, handleEdit, handleD
                           <Download fontSize="small" />
                         </Button>
                         <Button
-                          variant="primary"
+                          style={{ backgroundColor: '#3a4c4a', borderColor: '#3a4c4a' }}
                           size="sm"
                           className="me-1"
                           onClick={() => handleEdit(file)}
@@ -220,14 +220,14 @@ const AttachmentTable = ({ attachments, complaints, loading, handleEdit, handleD
                         >
                           <Edit fontSize="small" />
                         </Button>
-                        <Button
+                        {/* <Button
                           variant="danger"
                           size="sm"
                           onClick={() => handleDelete(file.id)}
                           title="Delete"
                         >
                           <Delete fontSize="small" />
-                        </Button>
+                        </Button> */}
                       </td>
                     </tr>
                   ))}

@@ -45,7 +45,7 @@ const DivisionForm = ({ show, handleClose, division, handleChange, handleSubmit,
         <Button variant="secondary" onClick={handleClose}>
           Cancel
         </Button>
-        <Button variant="primary" onClick={handleSubmit}>
+        <Button style={{ backgroundColor: '#3a4c4a', borderColor: '#3a4c4a' }} onClick={handleSubmit}>
           {editMode ? 'Update' : 'Create'}
         </Button>
       </Modal.Footer>

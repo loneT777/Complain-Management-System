@@ -103,7 +103,7 @@ export default function Breadcrumb({ inline = false }) {
                     </Button>
                     <div className="btn-group ms-2">
                       <Dropdown>
-                        <Dropdown.Toggle variant="primary" size="sm" className="arrow-none rounded-pill">
+                        <Dropdown.Toggle style={{ backgroundColor: '#3a4c4a', borderColor: '#3a4c4a' }} size="sm" className="arrow-none rounded-pill">
                           <FeatherIcon icon="plus" />
                         </Dropdown.Toggle>
                         <Dropdown.Menu className="dropdown-menu-end">

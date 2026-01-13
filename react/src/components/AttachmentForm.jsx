@@ -378,7 +378,7 @@ const AttachmentForm = ({ show, handleClose, attachment, handleSubmit, editMode 
         <Button variant="secondary" onClick={handleClose}>
           Cancel
         </Button>
-        <Button variant="primary" onClick={handleLocalSubmit}>
+        <Button style={{ backgroundColor: '#3a4c4a', borderColor: '#3a4c4a' }} onClick={handleLocalSubmit}>
           {editMode ? 'Update' : 'Upload'}
         </Button>
       </Modal.Footer>

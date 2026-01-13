@@ -113,7 +113,7 @@ const Complaint = () => {
     setLoading(true);
     try {
       const response = await axios.get(`/complaints/${id}`);
-      setComplaint(response.data);
+      setComplaint(response.data.data || response.data);
     } catch (error) {
       console.error('Error fetching complaint:', error);
     } finally {
@@ -1150,7 +1150,7 @@ const Complaint = () => {
                   <div className="py-4">
                     <div className="d-flex justify-content-between align-items-center mb-3">
                       <h5 className="mb-0">Complaint Attachments</h5>
-                      <Button variant="primary" size="sm" onClick={handleAddAttachment}>
+                      <Button style={{ backgroundColor: '#3a4c4a', borderColor: '#3a4c4a' }} size="sm" onClick={handleAddAttachment}>
                         <Add fontSize="small" className="me-1" />
                         Upload Files
                       </Button>

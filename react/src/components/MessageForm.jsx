@@ -247,7 +247,7 @@ const MessageForm = ({ show, handleClose, message, handleChange, handleSubmit, e
         <Button variant="secondary" onClick={handleClose}>
           Cancel
         </Button>
-        <Button variant="primary" onClick={handleLocalSubmit}>
+        <Button style={{ backgroundColor: '#3a4c4a', borderColor: '#3a4c4a' }} onClick={handleLocalSubmit}>
           {editMode ? 'Update' : 'Create'}
         </Button>
       </Modal.Footer>

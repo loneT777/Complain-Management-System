@@ -39,7 +39,7 @@ const DivisionTable = ({ divisions, loading, handleEdit, handleDelete }) => {
                 <td>{division.description}</td>
                 <td className="text-center">
                   <Button
-                    variant="primary"
+                    style={{ backgroundColor: '#3a4c4a', borderColor: '#3a4c4a' }}
                     size="sm"
                     className="me-2"
                     onClick={() => handleEdit(division)}

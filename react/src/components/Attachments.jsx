@@ -329,7 +329,7 @@ const Attachments = () => {
                 Attachments
               </h4>
               <Can permission="attachment">
-                <Button variant="primary" onClick={() => handleOpenModal()}>
+                <Button style={{ backgroundColor: '#3a4c4a', borderColor: '#3a4c4a' }} onClick={() => handleOpenModal()}>
                   <Add className="me-2" fontSize="small" />
                   Upload Attachment
                 </Button>

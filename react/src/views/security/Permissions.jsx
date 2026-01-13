@@ -69,7 +69,13 @@ const Permissions = () => {
   const handleOpenModal = (permission = null) => {
     if (permission) {
       setEditMode(true);
-      setCurrentPermission(permission);
+      setCurrentPermission({
+        id: permission.id,
+        name: permission.name || '',
+        code: permission.code || '',
+        module: permission.module || '',
+        description: permission.description || ''
+      });
     } else {
       setEditMode(false);
       setCurrentPermission({
@@ -172,18 +178,18 @@ const Permissions = () => {
       <Row className="mb-4">
         <Col>
           <Card>
+            <Card.Header className="d-flex justify-content-between align-items-center">
+              <h4 className="mb-0">Permissions</h4>
+              <Button
+                style={{ backgroundColor: '#3a4c4a', borderColor: '#3a4c4a' }}
+                onClick={() => handleOpenModal()}
+              >
+                <Add style={{ marginRight: '5px' }} /> Add Permission
+              </Button>
+            </Card.Header>
             <Card.Body>
-              <div className="d-flex justify-content-between align-items-center mb-4">
-                <h4 className="mb-0">Permissions</h4>
-                <Button
-                  style={{ backgroundColor: '#7c4dff', borderColor: '#7c4dff' }}
-                  onClick={() => handleOpenModal()}
-                >
-                  <Add style={{ marginRight: '5px' }} /> Add Permission
-                </Button>
-              </div>
 
-              <Row className="mb-3">
+              {/* <Row className="mb-3">
                 <Col md={6}>
                   <InputGroup>
                     <InputGroup.Text style={{ backgroundColor: '#f5f5f5', border: 'none' }}>
@@ -197,53 +203,52 @@ const Permissions = () => {
                     />
                   </InputGroup>
                 </Col>
-              </Row>
+              </Row> */}
 
               {loading ? (
                 <div className="text-center py-5">Loading...</div>
               ) : (
-                <Table hover responsive>
-                  <thead style={{ backgroundColor: '#f8f9fa' }}>
-                    <tr>
-                      <th style={{ width: '80px' }}>ID</th>
-                      <th>Name</th>
-                      <th style={{ width: '150px', textAlign: 'right' }}>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredPermissions.length > 0 ? (
-                      filteredPermissions.map((permission) => (
-                        <tr key={permission.id}>
-                          <td>{permission.id}</td>
-                          <td>{permission.name || permission.code || 'N/A'}</td>
-                          <td style={{ textAlign: 'right' }}>
-                            <Button
-                              style={{ 
-                                backgroundColor: '#7c4dff', 
-                                borderColor: '#7c4dff',
-                                fontSize: '14px',
-                                padding: '6px 16px'
-                              }}
-                              size="sm"
-                              onClick={() => handleOpenModal(permission)}
-                            >
-                              <Edit style={{ fontSize: '16px', marginRight: '5px' }} />
-                              Edit
-                            </Button>
+                <div className="table-responsive">
+                  <Table striped bordered hover>
+                    <thead className="table-light">
+                      <tr>
+                        <th style={{ width: '80px' }}>ID</th>
+                        <th>Name</th>
+                        <th style={{ width: '150px', textAlign: 'center' }}>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredPermissions.length > 0 ? (
+                        filteredPermissions.map((permission) => (
+                          <tr key={permission.id}>
+                            <td>{permission.id}</td>
+                            <td>{permission.name || permission.code || 'N/A'}</td>
+                            <td style={{ textAlign: 'center' }}>
+                              <Button
+                                style={{ 
+                                  backgroundColor: '#3a4c4a', 
+                                  borderColor: '#3a4c4a'
+                                }}
+                                size="sm"
+                                onClick={() => handleOpenModal(permission)}
+                              >
+                                <Edit fontSize="small" />
+                              </Button>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan="3" className="text-center text-muted py-4">
+                            {searchTerm.length > 0 && searchTerm.length < 3 
+                              ? 'Enter at least 3 characters to search'
+                              : 'No permissions found'}
                           </td>
                         </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan="3" className="text-center py-4">
-                          {searchTerm.length > 0 && searchTerm.length < 3 
-                            ? 'Enter at least 3 characters to search'
-                            : 'No permissions found'}
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </Table>
+                      )}
+                    </tbody>
+                  </Table>
+                </div>
               )}
 
               {/* Pagination */}
@@ -313,7 +318,7 @@ const Permissions = () => {
               </Button>
               <Button
                 type="submit"
-                style={{ backgroundColor: '#7c4dff', borderColor: '#7c4dff' }}
+                style={{ backgroundColor: '#3a4c4a', borderColor: '#3a4c4a' }}
               >
                 {editMode ? 'Update' : 'Create'}
               </Button>

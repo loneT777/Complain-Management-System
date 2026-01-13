@@ -41,41 +41,41 @@
   position: absolute;
   top: 0;
   left: 0;
-  right: 0;
-  height: 4px;
-  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
 }
 
 .metric-card-total::before {
-  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
 }
 
 .metric-card-open::before {
-  background: linear-gradient(90deg, #2196F3 0%, #1976D2 100%);
+  background: linear-gradient(180deg, #2196F3 0%, #1976D2 100%);
 }
 
 .metric-card-resolved::before {
-  background: linear-gradient(90deg, #4CAF50 0%, #388E3C 100%);
+  background: linear-gradient(180deg, #4CAF50 0%, #388E3C 100%);
 }
 
 .metric-card-closed::before {
-  background: linear-gradient(90deg, #607D8B 0%, #455A64 100%);
+  background: linear-gradient(180deg, #607D8B 0%, #455A64 100%);
 }
 
 .metric-card-priority-low::before {
-  background: linear-gradient(90deg, #4CAF50 0%, #388E3C 100%);
+  background: linear-gradient(180deg, #4CAF50 0%, #388E3C 100%);
 }
 
 .metric-card-priority-medium::before {
-  background: linear-gradient(90deg, #FFC107 0%, #FFA000 100%);
+  background: linear-gradient(180deg, #FFC107 0%, #FFA000 100%);
 }
 
 .metric-card-priority-urgent::before {
-  background: linear-gradient(90deg, #FF9800 0%, #F57C00 100%);
+  background: linear-gradient(180deg, #FF9800 0%, #F57C00 100%);
 }
 
 .metric-card-priority-very-urgent::before {
-  background: linear-gradient(90deg, #F44336 0%, #D32F2F 100%);
+  background: linear-gradient(180deg, #F44336 0%, #D32F2F 100%);
 }
 
 .metric-card .card-body {

@@ -100,20 +100,20 @@ const MessageTable = ({ messages, loading, handleEdit, handleDelete, handleViewT
                     <Chat fontSize="small" />
                   </Button>
                   <Button
-                    variant="primary"
+                    style={{ backgroundColor: '#3a4c4a', borderColor: '#3a4c4a' }}
                     size="sm"
                     className="me-2"
                     onClick={() => handleEdit(message)}
                   >
                     <Edit fontSize="small" />
                   </Button>
-                  <Button
+                  {/* <Button
                     variant="danger"
                     size="sm"
                     onClick={() => handleDelete(message.id)}
                   >
                     <Delete fontSize="small" />
-                  </Button>
+                  </Button> */}
                 </td>
               </tr>
             ))

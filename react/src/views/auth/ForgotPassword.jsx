@@ -68,7 +68,7 @@ export default function ForgotPassword() {
       <div
         className="auth-wrapper"
         style={{
-          background: 'linear-gradient(135deg, #0b1026 0%, #312e81 45%, #6366f1 100%)',
+          background: 'linear-gradient(135deg, #003333 0%, #005555 45%, #006666 100%)',
           minHeight: '100vh',
           position: 'relative',
           display: 'flex',
@@ -109,7 +109,7 @@ export default function ForgotPassword() {
                   <h4
                     className="mb-2"
                     style={{
-                      color: '#312e81',
+                      color: '#006666',
                       fontWeight: '600',
                       fontSize: '1.6rem'
                     }}
@@ -179,8 +179,8 @@ export default function ForgotPassword() {
                       className="btn btn-block mb-3"
                       disabled={isLoading}
                       style={{
-                        backgroundColor: '#6366f1',
-                        borderColor: '#4f46e5',
+                        backgroundColor: '#006666',
+                        borderColor: '#005555',
                         color: 'white',
                         fontWeight: '500',
                         padding: '0.65rem 1.25rem',
@@ -190,10 +190,10 @@ export default function ForgotPassword() {
                         transition: 'background-color 0.2s ease'
                       }}
                       onMouseEnter={(e) => {
-                        if (!isLoading) e.target.style.backgroundColor = '#4f46e5';
+                        if (!isLoading) e.target.style.backgroundColor = '#005555';
                       }}
                       onMouseLeave={(e) => {
-                        if (!isLoading) e.target.style.backgroundColor = '#6366f1';
+                        if (!isLoading) e.target.style.backgroundColor = '#006666';
                       }}
                     >
                       {isLoading ? (
@@ -211,7 +211,7 @@ export default function ForgotPassword() {
                         to="/login" 
                         style={{ 
                           fontSize: '0.9rem', 
-                          color: '#4f46e5', 
+                          color: '#006666', 
                           textDecoration: 'none',
                           fontWeight: '500'
                         }}

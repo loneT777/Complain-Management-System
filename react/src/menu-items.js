@@ -37,15 +37,15 @@ const menuItems = {
             }
           ]
         },
-        {
-          id: 'complaint-assignments',
-          title: 'Complaint Assignments',
-          type: 'item',
-          icon: 'material-icons-two-tone',
-          iconname: 'assignment',
-          url: '/complaint-assignments',
-          permission: 'complaint.assign.view'
-        },
+        // {
+        //   id: 'complaint-assignments',
+        //   title: 'Complaint Assignments',
+        //   type: 'item',
+        //   icon: 'material-icons-two-tone',
+        //   iconname: 'assignment',
+        //   url: '/complaint-assignments',
+        //   permission: 'complaint.assign.view'
+        // },
         {
           id: 'persons',
           title: 'Persons',

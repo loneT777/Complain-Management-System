@@ -178,36 +178,28 @@ const Users = () => {
   };
 
   return (
-    <Container fluid className="p-4" style={{ backgroundColor: '#f5f7fa', minHeight: '100vh' }}>
+    <Container fluid className="p-4">
       <Row className="mb-4">
         <Col>
-          <Card style={{ border: 'none', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
-            <Card.Body className="p-4">
-              {/* Page Header */}
-              <div className="d-flex justify-content-between align-items-center mb-4">
-                <h4 className="mb-0" style={{ fontWeight: '600', color: '#1e293b' }}>Users</h4>
-                <Can permission="security.create">
-                  <Button
-                    style={{ 
-                      backgroundColor: '#6366f1', 
-                      borderColor: '#6366f1',
-                      borderRadius: '8px',
-                      padding: '10px 20px',
-                      fontWeight: '500',
-                      boxShadow: '0 2px 4px rgba(99,102,241,0.3)',
-                      transition: 'all 0.2s'
-                    }}
-                    onClick={() => handleOpenModal()}
-                    onMouseEnter={(e) => e.target.style.backgroundColor = '#4f46e5'}
-                    onMouseLeave={(e) => e.target.style.backgroundColor = '#6366f1'}
-                  >
-                    <Add style={{ marginRight: '5px' }} /> Add User
-                  </Button>
-                </Can>
-              </div>
+          <Card>
+            <Card.Header className="d-flex justify-content-between align-items-center">
+              <h4 className="mb-0">Users</h4>
+              <Can permission="security.create">
+                <Button
+                  style={{ 
+                    backgroundColor: '#3a4c4a', 
+                    borderColor: '#3a4c4a'
+                  }}
+                  onClick={() => handleOpenModal()}
+                >
+                  <Add style={{ marginRight: '5px' }} /> Add User
+                </Button>
+              </Can>
+            </Card.Header>
+            <Card.Body>
 
               {/* Search Bar */}
-              <Row className="mb-4">
+              {/* <Row className="mb-4">
                 <Col md={6}>
                   <InputGroup style={{ borderRadius: '8px', overflow: 'hidden' }}>
                     <InputGroup.Text style={{ 
@@ -230,7 +222,7 @@ const Users = () => {
                     />
                   </InputGroup>
                 </Col>
-              </Row>
+              </Row> */}
 
               {loading ? (
                 <div className="text-center py-5">
@@ -239,82 +231,27 @@ const Users = () => {
                   </div>
                 </div>
               ) : (
-                <div style={{ overflowX: 'auto' }}>
-                  <Table hover responsive style={{ marginBottom: 0 }}>
-                    <thead style={{ backgroundColor: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
+                <div className="table-responsive">
+                  <Table striped bordered hover>
+                    <thead className="table-light">
                       <tr>
-                        <th style={{ 
-                          width: '60px', 
-                          padding: '16px 12px',
-                          color: '#64748b',
-                          fontWeight: '600',
-                          fontSize: '13px',
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.5px'
-                        }}>ID</th>
-                        <th style={{ 
-                          padding: '16px 12px',
-                          color: '#64748b',
-                          fontWeight: '600',
-                          fontSize: '13px',
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.5px'
-                        }}>Username</th>
-                        <th style={{ 
-                          padding: '16px 12px',
-                          color: '#64748b',
-                          fontWeight: '600',
-                          fontSize: '13px',
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.5px'
-                        }}>Name</th>
-                        <th style={{ 
-                          padding: '16px 12px',
-                          color: '#64748b',
-                          fontWeight: '600',
-                          fontSize: '13px',
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.5px'
-                        }}>Role</th>
-                        <th style={{ 
-                          padding: '16px 12px',
-                          color: '#64748b',
-                          fontWeight: '600',
-                          fontSize: '13px',
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.5px'
-                        }}>Designation</th>
-                        <th style={{ 
-                          width: '120px',
-                          padding: '16px 12px',
-                          color: '#64748b',
-                          fontWeight: '600',
-                          fontSize: '13px',
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.5px'
-                        }}>Created</th>
-                        <th style={{ 
-                          width: '240px', 
-                          textAlign: 'right',
-                          padding: '16px 12px',
-                          color: '#64748b',
-                          fontWeight: '600',
-                          fontSize: '13px',
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.5px'
-                        }}>Actions</th>
+                        <th>ID</th>
+                        <th>Username</th>
+                        <th>Name</th>
+                        <th>Role</th>
+                        <th>Designation</th>
+                        <th>Created</th>
+                        <th style={{ textAlign: 'center' }}>Actions</th>
                       </tr>
                     </thead>
                     <tbody>
                       {filteredUsers.length > 0 ? (
                         filteredUsers.map((user) => (
-                          <tr key={user.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                            <td style={{ padding: '16px 12px', color: '#475569', fontWeight: '500' }}>{user.id}</td>
-                            <td style={{ padding: '16px 12px', color: '#475569' }}>{user.username || 'N/A'}</td>
-                            <td style={{ padding: '16px 12px', color: '#1e293b', fontWeight: '500' }}>
-                              {user.person?.full_name || user.username || 'N/A'}
-                            </td>
-                            <td style={{ padding: '16px 12px' }}>
+                          <tr key={user.id}>
+                            <td>{user.id}</td>
+                            <td>{user.username || 'N/A'}</td>
+                            <td>{user.person?.full_name || user.username || 'N/A'}</td>
+                            <td>
                               <span style={{
                                 backgroundColor: '#e0e7ff',
                                 color: '#4338ca',
@@ -326,96 +263,38 @@ const Users = () => {
                                 {user.role?.name || 'N/A'}
                               </span>
                             </td>
-                            <td style={{ padding: '16px 12px', color: '#64748b' }}>{user.designation || 'N/A'}</td>
-                            <td style={{ padding: '16px 12px', color: '#64748b', fontSize: '14px' }}>
+                            <td>{user.designation || 'N/A'}</td>
+                            <td>
                               {user.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A'}
                             </td>
-                            <td style={{ textAlign: 'right', padding: '16px 12px' }}>
-                              <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', alignItems: 'center' }}>
+                            <td style={{ textAlign: 'center' }}>
+                              <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', alignItems: 'center' }}>
                                 <Can permission="security.update">
                                   <Button
                                     style={{ 
-                                      backgroundColor: '#6366f1', 
-                                      borderColor: '#6366f1',
-                                      fontSize: '13px',
-                                      padding: '8px 16px',
-                                      borderRadius: '6px',
-                                      fontWeight: '500',
-                                      display: 'flex',
-                                      alignItems: 'center',
-                                      gap: '6px',
-                                      transition: 'all 0.2s',
-                                      border: 'none'
+                                      backgroundColor: '#3a4c4a', 
+                                      borderColor: '#3a4c4a'
                                     }}
                                     size="sm"
                                     onClick={() => handleOpenModal(user)}
-                                    onMouseEnter={(e) => {
-                                      e.currentTarget.style.backgroundColor = '#4f46e5';
-                                      e.currentTarget.style.transform = 'translateY(-1px)';
-                                      e.currentTarget.style.boxShadow = '0 4px 6px rgba(99, 102, 241, 0.3)';
-                                    }}
-                                    onMouseLeave={(e) => {
-                                      e.currentTarget.style.backgroundColor = '#6366f1';
-                                      e.currentTarget.style.transform = 'translateY(0)';
-                                      e.currentTarget.style.boxShadow = 'none';
-                                    }}
                                   >
-                                    <Edit style={{ fontSize: '16px' }} />
-                                    Edit
+                                    <Edit fontSize="small" />
                                   </Button>
                                 </Can>
                                 <Can permission="security.delete">
                                   {user.is_active ? (
                                     <Button
-                                      style={{ 
-                                        backgroundColor: '#ef4444', 
-                                        borderColor: '#ef4444',
-                                        fontSize: '13px',
-                                        padding: '8px 16px',
-                                        borderRadius: '6px',
-                                        fontWeight: '500',
-                                        transition: 'all 0.2s',
-                                        border: 'none'
-                                      }}
+                                      variant="danger"
                                       size="sm"
                                       onClick={() => handleDeactivate(user.id)}
-                                      onMouseEnter={(e) => {
-                                        e.currentTarget.style.backgroundColor = '#dc2626';
-                                        e.currentTarget.style.transform = 'translateY(-1px)';
-                                        e.currentTarget.style.boxShadow = '0 4px 6px rgba(239, 68, 68, 0.3)';
-                                      }}
-                                      onMouseLeave={(e) => {
-                                        e.currentTarget.style.backgroundColor = '#ef4444';
-                                        e.currentTarget.style.transform = 'translateY(0)';
-                                        e.currentTarget.style.boxShadow = 'none';
-                                      }}
                                     >
                                       Deactivate
                                     </Button>
                                   ) : (
                                     <Button
-                                      style={{ 
-                                        backgroundColor: '#10b981', 
-                                        borderColor: '#10b981',
-                                        fontSize: '13px',
-                                        padding: '8px 16px',
-                                        borderRadius: '6px',
-                                        fontWeight: '500',
-                                        transition: 'all 0.2s',
-                                        border: 'none'
-                                      }}
+                                      variant="success"
                                       size="sm"
                                       onClick={() => handleActivate(user.id)}
-                                      onMouseEnter={(e) => {
-                                        e.currentTarget.style.backgroundColor = '#059669';
-                                        e.currentTarget.style.transform = 'translateY(-1px)';
-                                        e.currentTarget.style.boxShadow = '0 4px 6px rgba(16, 185, 129, 0.3)';
-                                      }}
-                                      onMouseLeave={(e) => {
-                                        e.currentTarget.style.backgroundColor = '#10b981';
-                                        e.currentTarget.style.transform = 'translateY(0)';
-                                        e.currentTarget.style.boxShadow = 'none';
-                                      }}
                                     >
                                       Activate
                                     </Button>
@@ -427,7 +306,7 @@ const Users = () => {
                         ))
                       ) : (
                         <tr>
-                          <td colSpan="7" className="text-center py-5" style={{ color: '#94a3b8' }}>
+                          <td colSpan="7" className="text-center text-muted py-4">
                             {searchTerm.length > 0 && searchTerm.length < 3 
                               ? 'Enter at least 3 characters to search'
                               : 'No users found'}
@@ -612,8 +491,8 @@ const Users = () => {
               <Button
                 type="submit"
                 style={{ 
-                  backgroundColor: '#6366f1', 
-                  borderColor: '#6366f1',
+                  backgroundColor: '#006666', 
+                  borderColor: '#006666',
                   padding: '10px 20px',
                   borderRadius: '6px',
                   fontWeight: '500',

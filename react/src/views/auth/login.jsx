@@ -101,7 +101,7 @@ export default function SignIn1() {
       <div
         className="auth-wrapper"
         style={{
-          background: 'linear-gradient(135deg, #0b1026 0%, #312e81 45%, #6366f1 100%)',
+          background: 'linear-gradient(135deg, #003333 0%, #005555 45%, #006666 100%)',
           minHeight: '100vh',
           position: 'relative',
           display: 'flex',
@@ -142,14 +142,12 @@ export default function SignIn1() {
                   <h4
                     className="mb-3"
                     style={{
-                      color: '#312e81',
+                      color: '#006666',
                       fontWeight: '600',
                       fontSize: '1.6rem'
                     }}
                   >
-                    LEAVE <br />
-                    MANAGEMENT <br />
-                    SYSTEM
+                    CMS
                   </h4>
 
                   {error && (
@@ -224,7 +222,7 @@ export default function SignIn1() {
                     </InputGroup>
 
                     <div className="mb-3 text-end">
-                      <Link to="/forgot-password" style={{ fontSize: '0.9rem', color: '#4f46e5', textDecoration: 'none' }}>
+                      <Link to="/forgot-password" style={{ fontSize: '0.9rem', color: '#006666', textDecoration: 'none' }}>
                         Forgot password?
                       </Link>
                     </div>
@@ -234,8 +232,8 @@ export default function SignIn1() {
                       className="btn btn-block mb-3"
                       disabled={isLoading}
                       style={{
-                        backgroundColor: '#6366f1',
-                        borderColor: '#4f46e5',
+                        backgroundColor: '#006666',
+                        borderColor: '#005555',
                         color: 'white',
                         fontWeight: '500',
                         padding: '0.65rem 1.25rem',
@@ -245,10 +243,10 @@ export default function SignIn1() {
                         transition: 'background-color 0.2s ease'
                       }}
                       onMouseEnter={(e) => {
-                        if (!isLoading) e.target.style.backgroundColor = '#4f46e5';
+                        if (!isLoading) e.target.style.backgroundColor = '#005555';
                       }}
                       onMouseLeave={(e) => {
-                        if (!isLoading) e.target.style.backgroundColor = '#6366f1';
+                        if (!isLoading) e.target.style.backgroundColor = '#006666';
                       }}
                     >
                       {isLoading ? (

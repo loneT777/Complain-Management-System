@@ -55,7 +55,7 @@ const CategoryTable = ({ categories, divisions, loading, handleEdit }) => {
                 <td className="text-center">
                   <Can permission="setting.update">
                     <Button
-                      variant="primary"
+                      style={{ backgroundColor: '#3a4c4a', borderColor: '#3a4c4a' }}
                       size="sm"
                       onClick={() => handleEdit(category)}
                       title="Edit"

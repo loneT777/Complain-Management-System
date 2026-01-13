@@ -205,7 +205,7 @@ const Messages = () => {
             <Card.Header className="d-flex justify-content-between align-items-center bg-white">
               <h4 className="mb-0">Messages</h4>
               <Can permission="messages">
-                <Button variant="primary" onClick={() => handleOpenModal()}>
+                <Button style={{ backgroundColor: '#3a4c4a', borderColor: '#3a4c4a' }} onClick={() => handleOpenModal()}>
                   <Add className="me-2" fontSize="small" />
                   Add Message
                 </Button>

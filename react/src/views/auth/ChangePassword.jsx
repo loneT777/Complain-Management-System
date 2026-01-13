@@ -172,7 +172,7 @@ export default function ChangePassword({ show, onHide }) {
           Cancel
         </Button>
         <Button 
-          variant="primary" 
+          style={{ backgroundColor: '#3a4c4a', borderColor: '#3a4c4a' }}
           onClick={handleSubmit} 
           disabled={loading}
         >

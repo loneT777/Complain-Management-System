@@ -51,7 +51,7 @@ const PersonTable = ({ persons, loading, handleEdit, handleDelete }) => {
                 <td className="text-center">
                   <Can permission="setting.update">
                     <Button
-                      variant="primary"
+                      style={{ backgroundColor: '#3a4c4a', borderColor: '#3a4c4a' }}
                       size="sm"
                       className="me-2"
                       onClick={() => handleEdit(person)}
@@ -59,7 +59,7 @@ const PersonTable = ({ persons, loading, handleEdit, handleDelete }) => {
                       <Edit fontSize="small" />
                     </Button>
                   </Can>
-                  <Can permission="setting.delete">
+                  {/* <Can permission="setting.delete">
                     <Button
                       variant="danger"
                       size="sm"
@@ -67,7 +67,7 @@ const PersonTable = ({ persons, loading, handleEdit, handleDelete }) => {
                     >
                       <Delete fontSize="small" />
                     </Button>
-                  </Can>
+                  </Can> */}
                 </td>
               </tr>
             ))

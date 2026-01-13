@@ -1,5 +1,5 @@
 import React from 'react';
-import { Table, Spinner } from 'react-bootstrap';
+import { Table, Spinner, Button } from 'react-bootstrap';
 import { Edit, Delete } from '@mui/icons-material';
 import { IconButton } from '@mui/material';
 import { Can } from './PermissionComponents';
@@ -42,15 +42,16 @@ const RoleTable = ({ roles, loading, handleEdit, handleDelete }) => {
               <td>{role.description || '-'}</td>
               <td className="text-center">
                 <Can permission="security.update">
-                  <IconButton
-                    color="primary"
-                    size="small"
+                  <Button
+                    style={{ backgroundColor: '#3a4c4a', borderColor: '#3a4c4a' }}
+                    size="sm"
+                    className="me-2"
                     onClick={() => handleEdit(role)}
                   >
                     <Edit fontSize="small" />
-                  </IconButton>
+                  </Button>
                 </Can>
-                <Can permission="security.delete">
+                {/* <Can permission="security.delete">
                   <IconButton
                     color="error"
                     size="small"
@@ -58,7 +59,7 @@ const RoleTable = ({ roles, loading, handleEdit, handleDelete }) => {
                   >
                     <Delete fontSize="small" />
                   </IconButton>
-                </Can>
+                </Can> */}
               </td>
             </tr>
           ))}
