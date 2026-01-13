@@ -27,7 +27,7 @@ const MessageForm = ({ show, handleClose, message, handleChange, handleSubmit, e
   const fetchComplaints = async () => {
     setLoadingComplaints(true);
     try {
-      const response = await axios.get('http://localhost:8000/api/complaints', {
+      const response = await axios.get('/complaints', {
         params: { per_page: 100 }
       });
       console.log('Complaints loaded:', response.data);
@@ -44,8 +44,10 @@ const MessageForm = ({ show, handleClose, message, handleChange, handleSubmit, e
   const fetchParentMessages = async (complaintId) => {
     setLoadingParentMessages(true);
     try {
-      const response = await axios.get(`http://localhost:8000/api/complaints/${complaintId}/messages`);
-      setParentMessages(response.data.data || response.data || []);
+      const response = await axios.get(`/complaints/${complaintId}/messages`);
+      const messages = response.data.data || response.data || [];
+      // Ensure messages is always an array
+      setParentMessages(Array.isArray(messages) ? messages : []);
     } catch (error) {
       console.error('Error fetching parent messages:', error);
       setParentMessages([]);
@@ -200,11 +202,11 @@ const MessageForm = ({ show, handleClose, message, handleChange, handleSubmit, e
                       name="parent_id"
                       value={message.parent_id || ''}
                       onChange={handleChange}
-                      disabled={!message.complaint_id || parentMessages.length === 0}
+                      disabled={!message.complaint_id || !Array.isArray(parentMessages) || parentMessages.length === 0}
                       isInvalid={!!validationErrors.parent_id}
                     >
                       <option value="">None (New Thread)</option>
-                      {parentMessages.map((msg) => (
+                      {Array.isArray(parentMessages) && parentMessages.map((msg) => (
                         <option key={msg.id} value={msg.id}>
                           #{msg.id} - {getMessageTypeLabel(msg.type)} ({msg.message.substring(0, 50)}...)
                         </option>

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Modal, Form, Table, Badge, InputGroup, FormControl } from 'react-bootstrap';
 import { Add, Edit, Search } from '@mui/icons-material';
-import axios from 'axios';
+import axios from '../../utils/axiosConfig';
+import { Can } from '../../components/PermissionComponents';
 
 const Users = () => {
   const [users, setUsers] = useState([]);
@@ -32,7 +33,7 @@ const Users = () => {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('http://localhost:8000/api/users');
+      const response = await axios.get('/users');
       setUsers(response.data.data || []);
       setFilteredUsers(response.data.data || []);
     } catch (error) {
@@ -44,7 +45,7 @@ const Users = () => {
 
   const fetchRoles = async () => {
     try {
-      const response = await axios.get('http://localhost:8000/api/roles');
+      const response = await axios.get('/roles');
       setRoles(response.data.data || []);
     } catch (error) {
       console.error('Error fetching roles:', error);
@@ -80,7 +81,7 @@ const Users = () => {
       setEditMode(false);
       setCurrentUser({
         full_name: '',
-        email: '',
+        username: '',
         password: '',
         role_id: '',
         designation: '',
@@ -106,7 +107,7 @@ const Users = () => {
   const handleDeactivate = async (userId) => {
     if (window.confirm('Are you sure you want to deactivate this user?')) {
       try {
-        const response = await axios.put(`http://localhost:8000/api/users/${userId}`, { is_active: false });
+        const response = await axios.put(`/users/${userId}`, { is_active: false });
         alert(response.data.message || 'User deactivated successfully');
         fetchUsers();
       } catch (error) {
@@ -115,6 +116,23 @@ const Users = () => {
           alert('Error: ' + error.response.data.message);
         } else {
           alert('Error deactivating user. Please try again.');
+        }
+      }
+    }
+  };
+
+  const handleActivate = async (userId) => {
+    if (window.confirm('Are you sure you want to activate this user?')) {
+      try {
+        const response = await axios.put(`/users/${userId}`, { is_active: true });
+        alert(response.data.message || 'User activated successfully');
+        fetchUsers();
+      } catch (error) {
+        console.error('Error activating user:', error);
+        if (error.response?.data?.message) {
+          alert('Error: ' + error.response.data.message);
+        } else {
+          alert('Error activating user. Please try again.');
         }
       }
     }
@@ -138,10 +156,10 @@ const Users = () => {
         if (!updateData.password || updateData.password.trim() === '') {
           delete updateData.password; // Don't update password if not provided
         }
-        const response = await axios.put(`http://localhost:8000/api/users/${currentUser.id}`, updateData);
+        const response = await axios.put(`/users/${currentUser.id}`, updateData);
         alert(response.data.message || 'User updated successfully');
       } else {
-        const response = await axios.post('http://localhost:8000/api/users', currentUser);
+        const response = await axios.post('/users', currentUser);
         alert(response.data.message || 'User created successfully');
       }
       fetchUsers();
@@ -168,22 +186,24 @@ const Users = () => {
               {/* Page Header */}
               <div className="d-flex justify-content-between align-items-center mb-4">
                 <h4 className="mb-0" style={{ fontWeight: '600', color: '#1e293b' }}>Users</h4>
-                <Button
-                  style={{ 
-                    backgroundColor: '#6366f1', 
-                    borderColor: '#6366f1',
-                    borderRadius: '8px',
-                    padding: '10px 20px',
-                    fontWeight: '500',
-                    boxShadow: '0 2px 4px rgba(99,102,241,0.3)',
-                    transition: 'all 0.2s'
-                  }}
-                  onClick={() => handleOpenModal()}
-                  onMouseEnter={(e) => e.target.style.backgroundColor = '#4f46e5'}
-                  onMouseLeave={(e) => e.target.style.backgroundColor = '#6366f1'}
-                >
-                  <Add style={{ marginRight: '5px' }} /> Add User
-                </Button>
+                <Can permission="security.create">
+                  <Button
+                    style={{ 
+                      backgroundColor: '#6366f1', 
+                      borderColor: '#6366f1',
+                      borderRadius: '8px',
+                      padding: '10px 20px',
+                      fontWeight: '500',
+                      boxShadow: '0 2px 4px rgba(99,102,241,0.3)',
+                      transition: 'all 0.2s'
+                    }}
+                    onClick={() => handleOpenModal()}
+                    onMouseEnter={(e) => e.target.style.backgroundColor = '#4f46e5'}
+                    onMouseLeave={(e) => e.target.style.backgroundColor = '#6366f1'}
+                  >
+                    <Add style={{ marginRight: '5px' }} /> Add User
+                  </Button>
+                </Can>
               </div>
 
               {/* Search Bar */}
@@ -312,62 +332,95 @@ const Users = () => {
                             </td>
                             <td style={{ textAlign: 'right', padding: '16px 12px' }}>
                               <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', alignItems: 'center' }}>
-                                <Button
-                                  style={{ 
-                                    backgroundColor: '#6366f1', 
-                                    borderColor: '#6366f1',
-                                    fontSize: '13px',
-                                    padding: '8px 16px',
-                                    borderRadius: '6px',
-                                    fontWeight: '500',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '6px',
-                                    transition: 'all 0.2s',
-                                    border: 'none'
-                                  }}
-                                  size="sm"
-                                  onClick={() => handleOpenModal(user)}
-                                  onMouseEnter={(e) => {
-                                    e.currentTarget.style.backgroundColor = '#4f46e5';
-                                    e.currentTarget.style.transform = 'translateY(-1px)';
-                                    e.currentTarget.style.boxShadow = '0 4px 6px rgba(99, 102, 241, 0.3)';
-                                  }}
-                                  onMouseLeave={(e) => {
-                                    e.currentTarget.style.backgroundColor = '#6366f1';
-                                    e.currentTarget.style.transform = 'translateY(0)';
-                                    e.currentTarget.style.boxShadow = 'none';
-                                  }}
-                                >
-                                  <Edit style={{ fontSize: '16px' }} />
-                                  Edit
-                                </Button>
-                                <Button
-                                  style={{ 
-                                    backgroundColor: '#ef4444', 
-                                    borderColor: '#ef4444',
-                                    fontSize: '13px',
-                                    padding: '8px 16px',
-                                    borderRadius: '6px',
-                                    fontWeight: '500',
-                                    transition: 'all 0.2s',
-                                    border: 'none'
-                                  }}
-                                  size="sm"
-                                  onClick={() => handleDeactivate(user.id)}
-                                  onMouseEnter={(e) => {
-                                    e.currentTarget.style.backgroundColor = '#dc2626';
-                                    e.currentTarget.style.transform = 'translateY(-1px)';
-                                    e.currentTarget.style.boxShadow = '0 4px 6px rgba(239, 68, 68, 0.3)';
-                                  }}
-                                  onMouseLeave={(e) => {
-                                    e.currentTarget.style.backgroundColor = '#ef4444';
-                                    e.currentTarget.style.transform = 'translateY(0)';
-                                    e.currentTarget.style.boxShadow = 'none';
-                                  }}
-                                >
-                                  Deactivate
-                                </Button>
+                                <Can permission="security.update">
+                                  <Button
+                                    style={{ 
+                                      backgroundColor: '#6366f1', 
+                                      borderColor: '#6366f1',
+                                      fontSize: '13px',
+                                      padding: '8px 16px',
+                                      borderRadius: '6px',
+                                      fontWeight: '500',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      gap: '6px',
+                                      transition: 'all 0.2s',
+                                      border: 'none'
+                                    }}
+                                    size="sm"
+                                    onClick={() => handleOpenModal(user)}
+                                    onMouseEnter={(e) => {
+                                      e.currentTarget.style.backgroundColor = '#4f46e5';
+                                      e.currentTarget.style.transform = 'translateY(-1px)';
+                                      e.currentTarget.style.boxShadow = '0 4px 6px rgba(99, 102, 241, 0.3)';
+                                    }}
+                                    onMouseLeave={(e) => {
+                                      e.currentTarget.style.backgroundColor = '#6366f1';
+                                      e.currentTarget.style.transform = 'translateY(0)';
+                                      e.currentTarget.style.boxShadow = 'none';
+                                    }}
+                                  >
+                                    <Edit style={{ fontSize: '16px' }} />
+                                    Edit
+                                  </Button>
+                                </Can>
+                                <Can permission="security.delete">
+                                  {user.is_active ? (
+                                    <Button
+                                      style={{ 
+                                        backgroundColor: '#ef4444', 
+                                        borderColor: '#ef4444',
+                                        fontSize: '13px',
+                                        padding: '8px 16px',
+                                        borderRadius: '6px',
+                                        fontWeight: '500',
+                                        transition: 'all 0.2s',
+                                        border: 'none'
+                                      }}
+                                      size="sm"
+                                      onClick={() => handleDeactivate(user.id)}
+                                      onMouseEnter={(e) => {
+                                        e.currentTarget.style.backgroundColor = '#dc2626';
+                                        e.currentTarget.style.transform = 'translateY(-1px)';
+                                        e.currentTarget.style.boxShadow = '0 4px 6px rgba(239, 68, 68, 0.3)';
+                                      }}
+                                      onMouseLeave={(e) => {
+                                        e.currentTarget.style.backgroundColor = '#ef4444';
+                                        e.currentTarget.style.transform = 'translateY(0)';
+                                        e.currentTarget.style.boxShadow = 'none';
+                                      }}
+                                    >
+                                      Deactivate
+                                    </Button>
+                                  ) : (
+                                    <Button
+                                      style={{ 
+                                        backgroundColor: '#10b981', 
+                                        borderColor: '#10b981',
+                                        fontSize: '13px',
+                                        padding: '8px 16px',
+                                        borderRadius: '6px',
+                                        fontWeight: '500',
+                                        transition: 'all 0.2s',
+                                        border: 'none'
+                                      }}
+                                      size="sm"
+                                      onClick={() => handleActivate(user.id)}
+                                      onMouseEnter={(e) => {
+                                        e.currentTarget.style.backgroundColor = '#059669';
+                                        e.currentTarget.style.transform = 'translateY(-1px)';
+                                        e.currentTarget.style.boxShadow = '0 4px 6px rgba(16, 185, 129, 0.3)';
+                                      }}
+                                      onMouseLeave={(e) => {
+                                        e.currentTarget.style.backgroundColor = '#10b981';
+                                        e.currentTarget.style.transform = 'translateY(0)';
+                                        e.currentTarget.style.boxShadow = 'none';
+                                      }}
+                                    >
+                                      Activate
+                                    </Button>
+                                  )}
+                                </Can>
                               </div>
                             </td>
                           </tr>
@@ -414,17 +467,17 @@ const Users = () => {
         </Modal.Header>
         <Modal.Body style={{ padding: '24px', backgroundColor: '#fff' }}>
           <Form onSubmit={handleSubmit}>
-            {/* Username */}
+            {/* Username (Email) */}
             <Form.Group className="mb-4">
               <Form.Label style={{ color: '#374151', fontWeight: '500', marginBottom: '8px', fontSize: '14px' }}>
-                Username
+                Username (Email)
               </Form.Label>
               <Form.Control
-                type="text"
+                type="email"
                 name="username"
                 value={currentUser.username}
                 onChange={handleChange}
-                placeholder="Enter username"
+                placeholder="Enter email address"
                 required
                 style={{ 
                   padding: '12px 14px',
@@ -434,6 +487,9 @@ const Users = () => {
                   backgroundColor: '#fff'
                 }}
               />
+              <Form.Text style={{ fontSize: '12px', color: '#6b7280', marginTop: '6px', display: 'block' }}>
+                Use email address as username
+              </Form.Text>
             </Form.Group>
 
             {/* Full Name */}
@@ -479,7 +535,7 @@ const Users = () => {
                 }}
               />
               <Form.Text style={{ fontSize: '12px', color: '#6b7280', marginTop: '6px', display: 'block' }}>
-                Minimum 8 characters with at least: 1 uppercase, 1 lowercase, 1 number, and 1 special character (@$!%*?&)
+                {editMode ? 'Leave blank to keep current password. ' : ''}Minimum 8 characters
               </Form.Text>
             </Form.Group>
 

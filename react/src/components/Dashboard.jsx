@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Container, Row, Col, Card, Spinner, Alert } from 'react-bootstrap';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import { Doughnut } from 'react-chartjs-2';
-import axios from 'axios';
+import axios from '../utils/axiosConfig';
 import './Dashboard.css';
 
 // Register ChartJS components
@@ -33,12 +33,16 @@ const Dashboard = () => {
   const fetchDashboardStats = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('http://localhost:8000/api/dashboard-stats');
+      const response = await axios.get('/dashboard-stats');
       setStats(response.data);
       setError(null);
     } catch (err) {
       console.error('Error fetching dashboard stats:', err);
-      setError('Failed to load dashboard statistics. Please try again later.');
+      if (err.response?.status === 403) {
+        setError('You do not have permission to view dashboard statistics. Please contact your administrator.');
+      } else {
+        setError('Failed to load dashboard statistics. Please try again later.');
+      }
     } finally {
       setLoading(false);
     }
@@ -125,7 +129,7 @@ const Dashboard = () => {
               <div className="metric-header">
                 <h6 className="metric-label">Total Complaints</h6>
               </div>
-              <h2 className="metric-value">{stats.total_complaints}</h2>
+              <h2 className="metric-value">{stats.total_complaints || 0}</h2>
               <p className="metric-description">All time complaints</p>
             </Card.Body>
           </Card>
@@ -136,7 +140,7 @@ const Dashboard = () => {
               <div className="metric-header">
                 <h6 className="metric-label">Pending</h6>
               </div>
-              <h2 className="metric-value">{stats.pending_count}</h2>
+              <h2 className="metric-value">{stats.pending_count || 0}</h2>
               <p className="metric-description">Awaiting action</p>
             </Card.Body>
           </Card>
@@ -147,7 +151,7 @@ const Dashboard = () => {
               <div className="metric-header">
                 <h6 className="metric-label">Assigned</h6>
               </div>
-              <h2 className="metric-value">{stats.assigned_count}</h2>
+              <h2 className="metric-value">{stats.assigned_count || 0}</h2>
               <p className="metric-description">In progress</p>
             </Card.Body>
           </Card>
@@ -158,7 +162,7 @@ const Dashboard = () => {
               <div className="metric-header">
                 <h6 className="metric-label">Completed</h6>
               </div>
-              <h2 className="metric-value">{stats.completed_count}</h2>
+              <h2 className="metric-value">{stats.completed_count || 0}</h2>
               <p className="metric-description">Resolved</p>
             </Card.Body>
           </Card>
@@ -173,7 +177,7 @@ const Dashboard = () => {
               <div className="metric-header">
                 <h6 className="metric-label">Low Priority</h6>
               </div>
-              <h2 className="metric-value">{stats.low_count}</h2>
+              <h2 className="metric-value">{stats.low_count || 0}</h2>
               <p className="metric-description">Can wait</p>
             </Card.Body>
           </Card>
@@ -184,7 +188,7 @@ const Dashboard = () => {
               <div className="metric-header">
                 <h6 className="metric-label">Medium Priority</h6>
               </div>
-              <h2 className="metric-value">{stats.medium_count}</h2>
+              <h2 className="metric-value">{stats.medium_count || 0}</h2>
               <p className="metric-description">Normal handling</p>
             </Card.Body>
           </Card>
@@ -195,7 +199,7 @@ const Dashboard = () => {
               <div className="metric-header">
                 <h6 className="metric-label">Urgent Priority</h6>
               </div>
-              <h2 className="metric-value">{stats.urgent_count}</h2>
+              <h2 className="metric-value">{stats.urgent_count || 0}</h2>
               <p className="metric-description">Needs attention</p>
             </Card.Body>
           </Card>
@@ -206,7 +210,7 @@ const Dashboard = () => {
               <div className="metric-header">
                 <h6 className="metric-label">Very Urgent</h6>
               </div>
-              <h2 className="metric-value">{stats.very_urgent_count}</h2>
+              <h2 className="metric-value">{stats.very_urgent_count || 0}</h2>
               <p className="metric-description">Critical</p>
             </Card.Body>
           </Card>
@@ -220,18 +224,22 @@ const Dashboard = () => {
             <Card.Body>
               <h5 className="chart-title">Complaint Status Distribution</h5>
               <div className="chart-container">
-                <Doughnut
-                  data={{
-                    labels: stats.status_stats.map(item => item.status_name),
-                    datasets: [{
-                      data: stats.status_stats.map(item => item.count),
-                      backgroundColor: stats.status_stats.map(item => STATUS_COLORS[item.status_code] || '#999'),
-                      borderColor: '#fff',
-                      borderWidth: 2
-                    }]
-                  }}
-                  options={getChartOptions()}
-                />
+                {stats.status_stats && stats.status_stats.length > 0 ? (
+                  <Doughnut
+                    data={{
+                      labels: stats.status_stats.map(item => item.status_name),
+                      datasets: [{
+                        data: stats.status_stats.map(item => item.count),
+                        backgroundColor: stats.status_stats.map(item => STATUS_COLORS[item.status_code] || '#999'),
+                        borderColor: '#fff',
+                        borderWidth: 2
+                      }]
+                    }}
+                    options={getChartOptions()}
+                  />
+                ) : (
+                  <div className="text-center text-muted">No status data available</div>
+                )}
               </div>
             </Card.Body>
           </Card>
@@ -241,18 +249,22 @@ const Dashboard = () => {
             <Card.Body>
               <h5 className="chart-title">Complaint Priority Distribution</h5>
               <div className="chart-container">
-                <Doughnut
-                  data={{
-                    labels: stats.priority_stats.map(item => item.priority_level.charAt(0).toUpperCase() + item.priority_level.slice(1).replace('_', ' ')),
-                    datasets: [{
-                      data: stats.priority_stats.map(item => item.count),
-                      backgroundColor: stats.priority_stats.map(item => PRIORITY_COLORS[item.priority_level] || '#999'),
-                      borderColor: '#fff',
-                      borderWidth: 2
-                    }]
-                  }}
-                  options={getChartOptions()}
-                />
+                {stats.priority_stats && stats.priority_stats.length > 0 ? (
+                  <Doughnut
+                    data={{
+                      labels: stats.priority_stats.map(item => item.priority_level.charAt(0).toUpperCase() + item.priority_level.slice(1).replace('_', ' ')),
+                      datasets: [{
+                        data: stats.priority_stats.map(item => item.count),
+                        backgroundColor: stats.priority_stats.map(item => PRIORITY_COLORS[item.priority_level] || '#999'),
+                        borderColor: '#fff',
+                        borderWidth: 2
+                      }]
+                    }}
+                    options={getChartOptions()}
+                  />
+                ) : (
+                  <div className="text-center text-muted">No priority data available</div>
+                )}
               </div>
             </Card.Body>
           </Card>

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Table, Spinner, Button, Badge } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
+import { Can } from './PermissionComponents';
 
 const ComplaintTable = ({ complaints, loading, assignments = {}, onAssign }) => {
   const navigate = useNavigate();
@@ -139,23 +140,25 @@ const ComplaintTable = ({ complaints, loading, assignments = {}, onAssign }) => 
                   View
                 </Button>
 
-                <Button
-                  style={{ backgroundColor: '#011e1bff', borderColor: '#011e1bff' }}
-                  size="sm"
-                  onClick={() => onAssign(complaint)}
-                  disabled={isEngineer || isComplainant || complaint.is_reassigned_away}
-                  title={
-                    complaint.is_reassigned_away
-                      ? 'Complaint was reassigned'
-                      : isEngineer
-                        ? 'Engineers cannot assign complaints'
-                        : isComplainant
-                          ? 'Complainants cannot assign complaints'
-                          : 'Assign complaint'
-                  }
-                >
-                  Assign
-                </Button>
+                <Can permission="complaint.assign.process">
+                  <Button
+                    style={{ backgroundColor: '#011e1bff', borderColor: '#011e1bff' }}
+                    size="sm"
+                    onClick={() => onAssign(complaint)}
+                    disabled={isEngineer || isComplainant || complaint.is_reassigned_away}
+                    title={
+                      complaint.is_reassigned_away
+                        ? 'Complaint was reassigned'
+                        : isEngineer
+                          ? 'Engineers cannot assign complaints'
+                          : isComplainant
+                            ? 'Complainants cannot assign complaints'
+                            : 'Assign complaint'
+                    }
+                  >
+                    Assign
+                  </Button>
+                </Can>
               </div>
             </td>
           </tr>

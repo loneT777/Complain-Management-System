@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button } from 'react-bootstrap';
 import { Add } from '@mui/icons-material';
-import axios from 'axios';
+import axios from '../utils/axiosConfig';
 import RoleTable from './RoleTable';
 import RoleForm from './RoleForm';
+import { Can } from './PermissionComponents';
 
 const Roles = () => {
   const [roles, setRoles] = useState([]);
@@ -22,7 +23,7 @@ const Roles = () => {
   const fetchRoles = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('http://localhost:8000/api/roles');
+      const response = await axios.get('/roles');
       setRoles(response.data.data || []);
     } catch (error) {
       console.error('Error fetching roles:', error);
@@ -64,9 +65,9 @@ const Roles = () => {
     e.preventDefault();
     try {
       if (editMode) {
-        await axios.put(`http://localhost:8000/api/roles/${currentRole.id}`, currentRole);
+        await axios.put(`/roles/${currentRole.id}`, currentRole);
       } else {
-        await axios.post('http://localhost:8000/api/roles', currentRole);
+        await axios.post('/roles', currentRole);
       }
       fetchRoles();
       handleCloseModal();
@@ -79,7 +80,7 @@ const Roles = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this role?')) {
       try {
-        await axios.delete(`http://localhost:8000/api/roles/${id}`);
+        await axios.delete(`/roles/${id}`);
         fetchRoles();
       } catch (error) {
         console.error('Error deleting role:', error);
@@ -94,12 +95,14 @@ const Roles = () => {
           <Card>
             <Card.Header className="d-flex justify-content-between align-items-center">
               <h4 className="mb-0">Roles</h4>
-              <Button
-                style={{ backgroundColor: '#3a4c4a', borderColor: '#3a4c4a' }}
-                onClick={() => handleOpenModal()}
-              >
-                <Add className="me-1" /> Add Role
-              </Button>
+              <Can permission="security.create">
+                <Button
+                  style={{ backgroundColor: '#7c4dff', borderColor: '#7c4dff' }}
+                  onClick={() => handleOpenModal()}
+                >
+                  <Add className="me-1" /> Add Role
+                </Button>
+              </Can>
             </Card.Header>
             <Card.Body>
               <RoleTable

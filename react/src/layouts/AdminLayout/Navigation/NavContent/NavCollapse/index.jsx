@@ -13,6 +13,7 @@ import NavItem from '../NavItem';
 import LoopNavCollapse from './index';
 import NavIcon from '../NavIcon';
 import { ConfigContext } from 'contexts/ConfigContext';
+import { useAuth } from '../../../../../contexts/AuthContext';
 import * as actionType from 'store/actions';
 import useWindowSize from 'hooks/useWindowSize';
 
@@ -21,6 +22,7 @@ import useWindowSize from 'hooks/useWindowSize';
 export default function NavCollapse({ collapse, type }) {
   const configContext = useContext(ConfigContext);
   const { dispatch } = configContext;
+  const { user, hasPermission } = useAuth();
   const windowSize = useWindowSize();
   /* eslint-disable @typescript-eslint/no-unused-vars */
   // @ts-ignore
@@ -43,6 +45,14 @@ export default function NavCollapse({ collapse, type }) {
     const collapses = collapse.children;
     navItems = Object.keys(collapses).map((item) => {
       item = collapses[item];
+      
+      // Check permission before rendering child items
+      if (item.permission && user?.role?.code !== 'super_admin') {
+        if (!hasPermission(item.permission)) {
+          return null;
+        }
+      }
+      
       switch (item.type) {
         case 'collapse':
           return <LoopNavCollapse key={item.id} collapse={item} type="sub" />;
@@ -51,7 +61,12 @@ export default function NavCollapse({ collapse, type }) {
         default:
           return false;
       }
-    });
+    }).filter(Boolean); // Remove null items
+  }
+
+  // If no children are visible, don't render the collapse
+  if (!navItems || navItems.length === 0) {
+    return null;
   }
 
   let itemTitle = collapse.title;

@@ -30,35 +30,33 @@ class UserController extends Controller
     {
         $validated = $request->validate([
             'full_name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email|max:255',
+            'username' => 'required|email|unique:users,username|max:255',
             'password' => 'required|string|min:8',
             'role_id' => 'required|exists:roles,id',
             'designation' => 'nullable|string|max:255',
             'is_active' => 'boolean',
         ]);
 
-        // Create or find person with this name
-        $person = Person::firstOrCreate(
-            ['email' => $validated['email']],
-            [
-                'full_name' => $validated['full_name'],
-                'nic' => 'N/A-' . time(), // Temporary NIC for system users
-                'is_approved' => true,
-                'session_id' => 1,
-                'user_id' => 1,
-            ]
-        );
+        // Create new person
+        $person = Person::create([
+            'full_name' => $validated['full_name'],
+            'email' => $validated['username'],
+            'nic' => 'U' . substr(time(), -10),
+            'is_approved' => true,
+            'session_id' => 1,
+            'user_id' => 1,
+        ]);
 
         // Create user
         $userData = [
             'person_id' => $person->id,
             'full_name' => $validated['full_name'],
-            'username' => explode('@', $validated['email'])[0], // Use email prefix as username
-            'email' => $validated['email'],
+            'username' => $validated['username'],
+            'email' => $validated['username'],
             'password' => Hash::make($validated['password']),
             'role_id' => $validated['role_id'],
             'designation' => $validated['designation'] ?? null,
-            'division_id' => 1, // Default division
+            'division_id' => 1,
             'is_active' => $validated['is_active'] ?? true,
             'is_approved' => true,
             'session_id' => 1,
@@ -96,27 +94,27 @@ class UserController extends Controller
 
         $validated = $request->validate([
             'full_name' => 'sometimes|string|max:255',
-            'email' => [
+            'username' => [
                 'sometimes',
                 'email',
                 'max:255',
                 Rule::unique('users')->ignore($user->id)
             ],
-            'password' => 'sometimes|string|min:8',
+            'password' => 'sometimes|nullable|string|min:8',
             'role_id' => 'sometimes|exists:roles,id',
             'designation' => 'nullable|string|max:255',
-            'is_active' => 'boolean',
+            'is_active' => 'sometimes|boolean',
         ]);
 
-        // Update person if full_name or email changed
-        if (isset($validated['full_name']) || isset($validated['email'])) {
+        // Update person if full_name or username changed
+        if (isset($validated['full_name']) || isset($validated['username'])) {
             $person = Person::find($user->person_id);
             if ($person) {
                 if (isset($validated['full_name'])) {
                     $person->full_name = $validated['full_name'];
                 }
-                if (isset($validated['email'])) {
-                    $person->email = $validated['email'];
+                if (isset($validated['username'])) {
+                    $person->email = $validated['username'];
                 }
                 $person->save();
             }
@@ -127,11 +125,11 @@ class UserController extends Controller
         if (isset($validated['full_name'])) {
             $updateData['full_name'] = $validated['full_name'];
         }
-        if (isset($validated['email'])) {
-            $updateData['email'] = $validated['email'];
-            $updateData['username'] = explode('@', $validated['email'])[0];
+        if (isset($validated['username'])) {
+            $updateData['username'] = $validated['username'];
+            $updateData['email'] = $validated['username'];
         }
-        if (isset($validated['password'])) {
+        if (isset($validated['password']) && !empty($validated['password'])) {
             $updateData['password'] = Hash::make($validated['password']);
         }
         if (isset($validated['role_id'])) {
@@ -140,11 +138,16 @@ class UserController extends Controller
         if (isset($validated['designation'])) {
             $updateData['designation'] = $validated['designation'];
         }
-        if (isset($validated['is_active'])) {
+        if (array_key_exists('is_active', $validated)) {
             $updateData['is_active'] = $validated['is_active'];
         }
 
-        $user->update($updateData);
+        if (!empty($updateData)) {
+            $updateData['updated_session_id'] = 1;
+            $user->update($updateData);
+        }
+        
+        $user->refresh();
         $user->load(['person', 'role', 'division']);
 
         return response()->json([
@@ -165,6 +168,46 @@ class UserController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'User deleted successfully'
+        ]);
+    }
+
+    /**
+     * Change password for the authenticated user
+     */
+    public function changePassword(Request $request)
+    {
+        $validated = $request->validate([
+            'old_password' => 'required|string',
+            'new_password' => 'required|string|min:8|confirmed',
+        ]);
+
+        $user = $request->user();
+
+        // Check if old password is correct
+        if (!Hash::check($validated['old_password'], $user->password)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'The old password is incorrect'
+            ], 422);
+        }
+
+        // Check if new password is different from old password
+        if (Hash::check($validated['new_password'], $user->password)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'New password must be different from the old password'
+            ], 422);
+        }
+
+        // Update password
+        $user->update([
+            'password' => Hash::make($validated['new_password']),
+            'updated_session_id' => 1,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Password changed successfully'
         ]);
     }
 }
