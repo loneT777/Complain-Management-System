@@ -38,6 +38,19 @@ class ComplaintController extends Controller
                 }
             ]);
 
+            // Apply search filter
+            if ($request->has('search') && $request->search != '') {
+                $search = $request->search;
+                $query->where(function ($q) use ($search) {
+                    $q->where('title', 'LIKE', "%{$search}%")
+                      ->orWhere('complainant_name', 'LIKE', "%{$search}%")
+                      ->orWhere('complainant_phone', 'LIKE', "%{$search}%")
+                      ->orWhereHas('complainant', function ($subQ) use ($search) {
+                          $subQ->where('full_name', 'LIKE', "%{$search}%");
+                      });
+                });
+            }
+
             // Apply role-based filtering
             if ($user->hasAdminAccess()) {
                 // Super Admin & Complaint Manager: Display all complaints
@@ -163,18 +176,22 @@ class ComplaintController extends Controller
             'remark' => 'nullable|string',
             'category_ids' => 'nullable|array',
             'category_ids.*' => 'exists:categories,id',
+            'attachments' => 'nullable|array|max:5',
+            'attachments.*' => 'file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png|max:5120',
         ]);
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        // Generate unique reference number in a thread-safe way
-        $referenceNo = 'CMP-' . date('Ymd') . '-' . str_pad(mt_rand(1, 9999), 4, '0', STR_PAD_LEFT);
-
         try {
             DB::beginTransaction();
-
+            
+            // Generate sequential reference number
+            $lastComplaint = Complaint::orderBy('id', 'desc')->first();
+            $nextNumber = $lastComplaint ? ($lastComplaint->id + 1) : 1;
+            $referenceNo = 'CMP-' . str_pad($nextNumber, 6, '0', STR_PAD_LEFT);
+            
             // Get the Pending status
             $pendingStatus = \App\Models\Status::where('code', 'pending')->first();
 
@@ -207,6 +224,25 @@ class ComplaintController extends Controller
             // Attach categories if provided
             if ($request->has('category_ids') && is_array($request->category_ids)) {
                 $complaint->categories()->attach($request->category_ids);
+            }
+
+            // Handle file attachments
+            if ($request->hasFile('attachments')) {
+                foreach ($request->file('attachments') as $file) {
+                    $fileName = time() . '_' . $file->getClientOriginalName();
+                    $filePath = $file->storeAs('complaints/attachments', $fileName, 'public');
+                    
+                    // Create attachment record (you'll need an Attachment model)
+                    DB::table('complaint_attachments')->insert([
+                        'complaint_id' => $complaint->id,
+                        'file_name' => $fileName,
+                        'file_path' => $filePath,
+                        'file_size' => $file->getSize(),
+                        'mime_type' => $file->getMimeType(),
+                        'created_at' => now(),
+                        'updated_at' => now()
+                    ]);
+                }
             }
 
             // Note: Logs are created only after complaint assignment
@@ -466,12 +502,16 @@ class ComplaintController extends Controller
 
             $complaint->update(['last_status_id' => $request->status_id]);
 
-            // Log the status change
-            ComplaintLog::create([
+            // Create a record in complaint_statuses table to track status history
+            DB::table('complaint_statuses')->insert([
+                'status_id' => $request->status_id,
                 'complaint_id' => $complaint->id,
-                'action' => 'Status Changed',
-                'remark' => "Status changed from {$oldStatus} to {$newStatus}. " . ($request->remark ?? '')
+                'remark' => $request->remark,
+                'created_at' => now()
             ]);
+
+            // Note: According to the application design, logs are only created after complaint assignment
+            // If we need to log status changes, it should be done through the assignment process
 
             DB::commit();
 
@@ -518,12 +558,8 @@ class ComplaintController extends Controller
             $oldPriority = $complaint->priority_level ?? 'Not Set';
             $complaint->update(['priority_level' => $request->priority_level]);
 
-            // Log the priority change
-            ComplaintLog::create([
-                'complaint_id' => $complaint->id,
-                'action' => 'Priority Changed',
-                'remark' => "Priority changed from {$oldPriority} to {$request->priority_level}. " . ($request->remark ?? '')
-            ]);
+            // Note: According to the application design, logs are only created after complaint assignment
+            // If we need to log priority changes, it should be done through the assignment process
 
             DB::commit();
 
@@ -605,11 +641,11 @@ class ComplaintController extends Controller
                 $query->where('code', 'resolved')->orWhere('code', 'closed');
             })->count();
 
-            // Get specific priority counts
-            $lowCount = Complaint::where('priority_level', 'low')->count();
-            $mediumCount = Complaint::where('priority_level', 'medium')->count();
-            $urgentCount = Complaint::where('priority_level', 'urgent')->count();
-            $veryUrgentCount = Complaint::where('priority_level', 'very_urgent')->count();
+            // Get specific priority counts - using the same format as validation
+            $lowCount = Complaint::where('priority_level', 'Low')->count();
+            $mediumCount = Complaint::where('priority_level', 'Medium')->count();
+            $urgentCount = Complaint::where('priority_level', 'Urgent')->count();
+            $veryUrgentCount = Complaint::where('priority_level', 'Very Urgent')->count();
 
             // Get total complaints
             $totalComplaints = Complaint::count();
@@ -634,19 +670,19 @@ class ComplaintController extends Controller
 
             $priorityStats = [
                 [
-                    'priority_level' => 'low',
+                    'priority_level' => 'Low',
                     'count' => $lowCount
                 ],
                 [
-                    'priority_level' => 'medium',
+                    'priority_level' => 'Medium',
                     'count' => $mediumCount
                 ],
                 [
-                    'priority_level' => 'urgent',
+                    'priority_level' => 'Urgent',
                     'count' => $urgentCount
                 ],
                 [
-                    'priority_level' => 'very_urgent',
+                    'priority_level' => 'Very Urgent',
                     'count' => $veryUrgentCount
                 ]
             ];
@@ -691,17 +727,25 @@ class ComplaintController extends Controller
             return false;
         }
 
-        // Check if user appears in any assignment except the latest one
-        $currentAssignee = $assignments->last(); // Latest assignment
-        $userWasPreviouslyAssigned = false;
+        // Get the latest assignment (most recent)
+        $currentAssignment = $assignments->last();
+        
+        // Check if the CURRENT assignment is to this user
+        if ($currentAssignment->assignee_user_id == $user->person_id) {
+            // If currently assigned to this user, not reassigned away
+            return false;
+        }
 
+        // Check if user appears in any previous assignment
+        $userWasPreviouslyAssigned = false;
         foreach ($assignments as $assignment) {
-            if ($assignment->assignee_user_id == $user->person_id && $assignment->id !== $currentAssignee->id) {
+            if ($assignment->assignee_user_id == $user->person_id) {
                 $userWasPreviouslyAssigned = true;
                 break;
             }
         }
 
+        // Return true only if was previously assigned to this user AND current assignment is different
         return $userWasPreviouslyAssigned;
     }
 

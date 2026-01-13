@@ -38,6 +38,15 @@ const menuItems = {
           ]
         },
         {
+          id: 'complaint-assignments',
+          title: 'Complaint Assignments',
+          type: 'item',
+          icon: 'material-icons-two-tone',
+          iconname: 'assignment',
+          url: '/complaint-assignments',
+          permission: 'complaint.assign.view'
+        },
+        {
           id: 'persons',
           title: 'Persons',
           type: 'item',
@@ -72,15 +81,6 @@ const menuItems = {
           iconname: 'category',
           url: '/categories',
           permission: 'category.read'
-        },
-        {
-          id: 'complaint-assignments',
-          title: 'Complaint Assignments',
-          type: 'item',
-          icon: 'material-icons-two-tone',
-          iconname: 'assignment',
-          url: '/complaint-assignments',
-          permission: 'complaint.assign.view'
         },
         {
           id: 'security',

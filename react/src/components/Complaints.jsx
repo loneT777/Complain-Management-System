@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Button } from 'react-bootstrap';
-import { Add } from '@mui/icons-material';
+import { Container, Row, Col, Card, Button, Form, InputGroup } from 'react-bootstrap';
+import { Add, Search } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import axios from '../utils/axiosConfig';
 import ComplaintTable from './ComplaintTable';
@@ -11,18 +11,28 @@ const Complaints = () => {
   const navigate = useNavigate();
   const [complaints, setComplaints] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [selectedComplaint, setSelectedComplaint] = useState(null);
   const [assignments, setAssignments] = useState({}); // complaintId => assignment
 
-  useEffect(() => {
-    fetchComplaints();
-  }, []);
-
-  const fetchComplaints = async () => {
+  // Fetch complaints from API with search
+  const fetchComplaints = async (search = null) => {
+    if (search && search.length < 3) {
+      // minimum 3 characters should be there
+      return;
+    }
+    
+    const searchTxt = search ? search : '';
+    
     setLoading(true);
     try {
-      const response = await axios.get('/complaints');
+      const params = {};
+      if (searchTxt) {
+        params.search = searchTxt;
+      }
+      
+      const response = await axios.get('/complaints', { params });
       console.log('Complaints API Response:', response.data);
       
       const complaintsData = response.data.data || response.data;
@@ -39,6 +49,10 @@ const Complaints = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchComplaints(searchTerm);
+  }, [searchTerm]);
 
   const fetchAssignments = async (complaintIds) => {
     if (!complaintIds.length) {
@@ -84,7 +98,7 @@ const Complaints = () => {
   const handleAssignmentSaved = () => {
     setShowAssignModal(false);
     setSelectedComplaint(null);
-    fetchComplaints(); // refresh complaints and assignments on save
+    fetchComplaints(searchTerm); // refresh complaints and assignments on save
   };
 
   return (
@@ -94,6 +108,22 @@ const Complaints = () => {
           <Card>
             <Card.Header className="d-flex justify-content-between align-items-center">
               <h4 className="mb-0">Complaints</h4>
+              <div className="flex-grow-1 d-flex justify-content-center">
+                <InputGroup style={{ width: '400px' }}>
+                  <InputGroup.Text>
+                    <Search fontSize="small" />
+                  </InputGroup.Text>
+                  <Form.Control
+                    type="search"
+                    placeholder="Search: Min 3 characters"
+                    value={searchTerm || ""}
+                    onChange={(e) => {
+                      setSearchTerm(e.target.value);
+                      fetchComplaints(e.target.value);
+                    }}
+                  />
+                </InputGroup>
+              </div>
               <Can permission="complaint.create">
                 <Button style={{ backgroundColor: '#3a4c4a', borderColor: '#3a4c4a' }} onClick={() => navigate('/add-complaint')}>
                   <Add className="me-1" /> Add New Complaint

@@ -17,11 +17,21 @@ const ComplaintTable = ({ complaints, loading, assignments = {}, onAssign }) => 
 
   const getStatusColor = (statusName) => {
     const colors = {
-      Pending: 'secondary',
-      Assigned: 'warning',
-      Completed: 'success'
+      'Pending': 'secondary',
+      'Assigned': 'warning',
+      'Completed': 'success',
+      'Cancelled': 'danger',
+      'Cancel': 'danger'  // Handle database value
     };
     return colors[statusName] || 'secondary';
+  };
+
+  const formatStatusName = (statusName) => {
+    // Convert "Cancel" to "Cancelled" for display
+    if (statusName && statusName.toLowerCase() === 'cancel') {
+      return 'Cancelled';
+    }
+    return statusName;
   };
 
   const getPriorityColor = (priorityLevel) => {
@@ -90,11 +100,17 @@ const ComplaintTable = ({ complaints, loading, assignments = {}, onAssign }) => 
             </td>
             <td>{complaint.description}</td>
             <td>
-              {complaint.lastStatus ? (
-                <Badge bg={getStatusColor(complaint.lastStatus.name)}>{complaint.lastStatus.name}</Badge>
-              ) : (
-                <Badge bg="secondary">Not Set</Badge>
-              )}
+              {(() => {
+                const lastStatus = complaint.last_status || complaint.lastStatus;
+                if (lastStatus?.name) {
+                  return (
+                    <Badge bg={getStatusColor(lastStatus.name)}>
+                      {formatStatusName(lastStatus.name)}
+                    </Badge>
+                  );
+                }
+                return <Badge bg="secondary">Pending</Badge>;
+              })()}
             </td>
             <td>
               {complaint.priority_level ? (

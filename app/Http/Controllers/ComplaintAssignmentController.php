@@ -8,8 +8,8 @@ use App\Models\ComplaintLog;
 use App\Models\Status;
 use App\Config\PrioritySLA;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class ComplaintAssignmentController extends Controller
 {
@@ -115,58 +115,63 @@ class ComplaintAssignmentController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'complaint_id' => 'required|exists:complaints,id',
-            'assignee_division_id' => 'nullable|exists:divisions,id',
-            'assignee_user_id' => 'nullable|exists:persons,id',
-            'due_at' => 'nullable|date',
-            'remark' => 'nullable|string',
-        ]);
-
-        // Create assignment
-        // Note: last_status_id is set to null as assignments track assignment status, 
-        // not complaint status. The complaint's status is tracked separately.
-        $assignment = ComplaintAssignment::create([
-            'complaint_id' => $request->input('complaint_id'),
-            'assignee_division_id' => $request->input('assignee_division_id'),
-            'assignee_user_id' => $request->input('assignee_user_id'), // Fixed: changed from assignee_id to assignee_user_id
-            'due_at' => $request->input('due_at'),
-            'remark' => $request->input('remark'),
-            'assigner_user_id' => Auth::user()->person_id ?? 1, // Fixed: changed from assigner_id to assigner_user_id
-            'last_status_id' => null,
-        ]);
-
-        // Update the complaint's last_status_id to 'assigned'
-        $complaint = Complaint::findOrFail($request->input('complaint_id'));
-        $assignedStatus = Status::where('code', 'assigned')->first();
-        if ($assignedStatus) {
-            $complaint->update(['last_status_id' => $assignedStatus->id]);
-        }
-
-        // Load relationships for response
-        $assignment->load([
-            'complaint',
-            'assigneeDivision',
-            'assigneeUser',
-            'assignerUser',
-            'lastStatus'
-        ]);
-
-        // Log the assignment
         try {
-            ComplaintLog::create([
-                'complaint_id' => $assignment->complaint_id,
-                'complaint_assignment_id' => $assignment->id,
-                'status_id' => $assignedStatus ? $assignedStatus->id : null,
-                'action' => 'Assigned',
-                'remark' => 'Assigned to ' . ($assignment->assigneeUser?->full_name ?? 'Division: ' . $assignment->assigneeDivision?->name)
+            $request->validate([
+                'complaint_id' => 'required|exists:complaints,id',
+                'assignee_division_id' => 'nullable|exists:divisions,id',
+                'assignee_user_id' => 'nullable|exists:persons,id',
+                'due_at' => 'nullable|date',
+                'remark' => 'nullable|string',
             ]);
-        } catch (\Exception $e) {
-            // Log creation failed but assignment is successful
-            \Log::error('Failed to log assignment: ' . $e->getMessage());
-        }
 
-        return response()->json($assignment, 201);
+            // Get the 'assigned' status
+            $assignedStatus = Status::where('code', 'assigned')->first();
+
+            // Create assignment
+            $assignment = ComplaintAssignment::create([
+                'complaint_id' => $request->input('complaint_id'),
+                'assignee_division_id' => $request->input('assignee_division_id'),
+                'assignee_user_id' => $request->input('assignee_user_id'),
+                'due_at' => $request->input('due_at'),
+                'remark' => $request->input('remark'),
+                'assigner_user_id' => Auth::user()?->person_id ?? 1,
+                'last_status_id' => $assignedStatus ? $assignedStatus->id : null,
+            ]);
+
+            // Update the complaint's last_status_id to 'assigned'
+            $complaint = Complaint::findOrFail($request->input('complaint_id'));
+            if ($assignedStatus) {
+                $complaint->update(['last_status_id' => $assignedStatus->id]);
+            }
+
+            // Load relationships for response
+            $assignment->load([
+                'complaint',
+                'assigneeDivision',
+                'assigneeUser',
+                'assignerUser',
+                'lastStatus'
+            ]);
+
+            // Log the assignment
+            try {
+                ComplaintLog::create([
+                    'complaint_id' => $assignment->complaint_id,
+                    'complaint_assignment_id' => $assignment->id,
+                    'status_id' => $assignedStatus ? $assignedStatus->id : null,
+                    'action' => 'Assigned',
+                    'remark' => 'Assigned to ' . ($assignment->assigneeUser?->full_name ?? 'Division: ' . $assignment->assigneeDivision?->name)
+                ]);
+            } catch (\Exception $e) {
+                // Log creation failed but assignment is successful
+                \Log::error('Failed to log assignment: ' . $e->getMessage());
+            }
+
+            return response()->json($assignment, 201);
+        } catch (\Exception $e) {
+            \Log::error('Error creating complaint assignment: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to create assignment', 'message' => $e->getMessage()], 500);
+        }
     }
 
     /**
@@ -204,11 +209,11 @@ class ComplaintAssignmentController extends Controller
         $assignmentData = [
             'complaint_id' => $complaintId,
             'assignee_division_id' => $request->input('assignee_division_id'),
-            'assignee_user_id' => $request->input('assignee_user_id'), // Fixed: changed from assignee_id to assignee_user_id
+            'assignee_user_id' => $request->input('assignee_user_id'),
             'due_at' => $request->input('due_at'),
             'remark' => $request->input('remark'),
-            'assigner_user_id' => Auth::user()->person_id ?? 1, // Fixed: added missing assigner_user_id
-            'last_status_id' => $oldAssignment->last_status_id, // Fixed: added missing last_status_id
+            'assigner_user_id' => Auth::user()->person_id ?? 1,
+            'last_status_id' => $oldAssignment->last_status_id,
         ];
 
         $assignment = ComplaintAssignment::create($assignmentData);

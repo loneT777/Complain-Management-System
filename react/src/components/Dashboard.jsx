@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Container, Row, Col, Card, Spinner, Alert } from 'react-bootstrap';
+import { useLocation } from 'react-router-dom';
+import { Row, Col, Card, Spinner, Alert } from 'react-bootstrap';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import { Doughnut } from 'react-chartjs-2';
 import axios from '../utils/axiosConfig';
@@ -9,6 +10,7 @@ import './Dashboard.css';
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 const Dashboard = () => {
+  const location = useLocation();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -28,7 +30,18 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchDashboardStats();
-  }, []);
+    
+    // Refresh dashboard when window gains focus (user returns from another page)
+    const handleFocus = () => {
+      fetchDashboardStats();
+    };
+    
+    window.addEventListener('focus', handleFocus);
+    
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [location]); // Re-fetch when location changes (navigating back to dashboard)
 
   const fetchDashboardStats = async () => {
     try {
@@ -88,37 +101,37 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <Container className="dashboard-container mt-5">
+      <div className="dashboard-container mt-5">
         <div className="d-flex justify-content-center align-items-center" style={{ height: '500px' }}>
           <Spinner animation="border" role="status">
             <span className="visually-hidden">Loading...</span>
           </Spinner>
         </div>
-      </Container>
+      </div>
     );
   }
 
   if (error) {
     return (
-      <Container className="dashboard-container mt-5">
+      <div className="dashboard-container mt-5">
         <Alert variant="danger" onClose={() => setError(null)} dismissible>
           <Alert.Heading>Error</Alert.Heading>
           <p>{error}</p>
         </Alert>
-      </Container>
+      </div>
     );
   }
 
   if (!stats) {
     return (
-      <Container className="dashboard-container mt-5">
+      <div className="dashboard-container mt-5">
         <Alert variant="warning">No data available</Alert>
-      </Container>
+      </div>
     );
   }
 
   return (
-    <Container fluid className="dashboard-container py-4">
+    <div className="dashboard-container py-4">
 
 
       {/* Key Metrics Cards - Status */}
@@ -270,7 +283,7 @@ const Dashboard = () => {
           </Card>
         </Col>
       </Row>
-    </Container>
+    </div>
   );
 };
 

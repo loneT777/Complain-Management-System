@@ -212,13 +212,13 @@ const Complaint = () => {
     }
 
     try {
-      // First fetch available statuses to get the Cancel status ID
+      // First fetch available statuses to get the Cancelled status ID
       const statusesResponse = await axios.get('/complaint-statuses');
       const statuses = statusesResponse.data || [];
-      const cancelStatus = statuses.find((s) => s.name?.toLowerCase() === 'cancel' || s.code?.toLowerCase() === 'cancel');
-
+      const cancelStatus = statuses.find(s => s.name?.toLowerCase() === 'cancelled' || s.code?.toLowerCase() === 'cancelled');
+      
       if (!cancelStatus) {
-        alert('Cancel status not found in system');
+        alert('Cancelled status not found in system');
         return;
       }
 
@@ -231,6 +231,36 @@ const Complaint = () => {
     } catch (error) {
       console.error('Error cancelling complaint:', error);
       alert('Failed to cancel complaint');
+    }
+  };
+
+  const handleCompleteComplaint = async () => {
+    if (!window.confirm('Mark this complaint as completed?')) {
+      return;
+    }
+
+    try {
+      const statusesResponse = await axios.get('/complaint-statuses');
+      const statuses = statusesResponse.data || [];
+      const completedStatus = statuses.find(
+        (s) => s.name?.toLowerCase() === 'completed' || s.code?.toLowerCase() === 'completed'
+      );
+
+      if (!completedStatus) {
+        alert('Completed status not found in system');
+        return;
+      }
+
+      const response = await axios.put(`/complaints/${id}/status`, {
+        status_id: completedStatus.id,
+        remark: 'Complaint marked as completed by user'
+      });
+
+      setComplaint(response.data.data || response.data);
+      alert('Complaint marked as completed');
+    } catch (error) {
+      console.error('Error completing complaint:', error);
+      alert('Failed to mark complaint as completed');
     }
   };
 
@@ -455,11 +485,21 @@ const Complaint = () => {
 
   const getStatusColor = (statusName) => {
     const colors = {
-      Pending: 'secondary',
-      Assigned: 'warning',
-      Completed: 'success'
+      'Pending': 'secondary',
+      'Assigned': 'warning',
+      'Completed': 'success',
+      'Cancelled': 'danger',
+      'Cancel': 'danger'  // Handle database value
     };
     return colors[statusName] || 'secondary';
+  };
+
+  const formatStatusName = (statusName) => {
+    // Convert "Cancel" to "Cancelled" for display
+    if (statusName && statusName.toLowerCase() === 'cancel') {
+      return 'Cancelled';
+    }
+    return statusName;
   };
 
   const getMessageTypeBadge = (type) => {
@@ -618,17 +658,42 @@ const Complaint = () => {
                 <Col md={6}>
                   <strong>Status:</strong>
                   <div className="d-flex align-items-center gap-2 mt-1">
-                    {complaint?.lastStatus ? (
-                      <Badge bg={getStatusColor(complaint.lastStatus.name)}>{complaint.lastStatus.name}</Badge>
-                    ) : (
-                      <Badge bg="secondary">Pending</Badge>
+                    {(() => {
+                      const lastStatus = complaint?.last_status || complaint?.lastStatus;
+                      if (lastStatus?.name) {
+                        return (
+                          <Badge bg={getStatusColor(lastStatus.name)}>
+                            {formatStatusName(lastStatus.name)}
+                          </Badge>
+                        );
+                      }
+                      return <Badge bg="secondary">Pending</Badge>;
+                    })()}
+                    {(() => {
+                      const lastStatus = complaint?.last_status || complaint?.lastStatus;
+                      const statusCode = (lastStatus?.code || lastStatus?.name || '').toString().toLowerCase();
+                      return statusCode === 'pending';
+                    })() && (
+                      <Button
+                        variant="outline-danger"
+                        size="sm"
+                        onClick={handleCancelComplaint}
+                      >
+                        Cancel
+                      </Button>
                     )}
-                    {complaint?.lastStatus?.name !== 'Cancel' && (
-                      <Can permission="complaint.delete">
-                        <Button variant="outline-danger" size="sm" onClick={handleCancelComplaint}>
-                          Cancel
-                        </Button>
-                      </Can>
+                    {(() => {
+                      const lastStatus = complaint?.last_status || complaint?.lastStatus;
+                      const statusCode = (lastStatus?.code || lastStatus?.name || '').toString().toLowerCase();
+                      return statusCode === 'assigned';
+                    })() && (
+                      <Button
+                        variant="outline-success"
+                        size="sm"
+                        onClick={handleCompleteComplaint}
+                      >
+                        Complete
+                      </Button>
                     )}
                   </div>
                 </Col>

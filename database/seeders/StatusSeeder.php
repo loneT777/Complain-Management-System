@@ -18,7 +18,7 @@ class StatusSeeder extends Seeder
         
         // Create/update only the required statuses
         Status::firstOrCreate(['code' => 'pending'], ['name' => 'Pending']);
-        Status::firstOrCreate(['code' => 'cancel'], ['name' => 'Cancel']);
+        Status::firstOrCreate(['code' => 'cancel'], ['name' => 'Cancelled']);
         Status::firstOrCreate(['code' => 'assigned'], ['name' => 'Assigned']);
         Status::firstOrCreate(['code' => 'completed'], ['name' => 'Completed']);
     }

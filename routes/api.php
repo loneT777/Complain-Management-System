@@ -50,8 +50,12 @@ Route::post('/public/attachments/{id}', [AttachmentController::class, 'update'])
 Route::delete('/public/attachments/{id}', [AttachmentController::class, 'destroy']);
 Route::get('/public/attachments/{id}/download', [AttachmentController::class, 'download']);
 Route::get('/public/attachments/{id}/view', [AttachmentController::class, 'view']);
+
+// Attachment download and view (duplicate routes for flexibility)
 Route::get('/attachments/{id}/download', [AttachmentController::class, 'download']);
 Route::get('/attachments/{id}/view', [AttachmentController::class, 'view']);
+
+// Public categories route (for complaint form)
 Route::get('/public/categories', [CategoryController::class, 'index']);
 Route::get('/public/divisions', [DivisionController::class, 'index']);
 Route::get('/public/roles', [RoleController::class, 'index']);

@@ -12,8 +12,8 @@ class ComplaintAssignment extends Model
     protected $fillable = [
         'complaint_id',
         'assignee_division_id',
-        'assignee_id',
-        'assigner_id',
+        'assignee_user_id',
+        'assigner_user_id',
         'last_status_id',
         'due_at',
         'remark',
@@ -37,12 +37,12 @@ class ComplaintAssignment extends Model
 
     public function assigneeUser()
     {
-        return $this->belongsTo(Person::class, 'assignee_id');
+        return $this->belongsTo(Person::class, 'assignee_user_id');
     }
 
     public function assignerUser()
     {
-        return $this->belongsTo(Person::class, 'assigner_id');
+        return $this->belongsTo(Person::class, 'assigner_user_id');
     }
 
     public function lastStatus()

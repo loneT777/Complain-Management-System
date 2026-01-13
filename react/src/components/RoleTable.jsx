@@ -24,45 +24,47 @@ const RoleTable = ({ roles, loading, handleEdit, handleDelete }) => {
   }
 
   return (
-    <Table responsive hover>
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Name</th>
-          <th>Description</th>
-          <th className="text-center">Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {roles.map((role) => (
-          <tr key={role.id}>
-            <td>{role.id}</td>
-            <td>{role.name}</td>
-            <td>{role.description || '-'}</td>
-            <td className="text-center">
-              <Can permission="security.update">
-                <IconButton
-                  color="primary"
-                  size="small"
-                  onClick={() => handleEdit(role)}
-                >
-                  <Edit fontSize="small" />
-                </IconButton>
-              </Can>
-              <Can permission="security.delete">
-                <IconButton
-                  color="error"
-                  size="small"
-                  onClick={() => handleDelete(role.id)}
-                >
-                  <Delete fontSize="small" />
-                </IconButton>
-              </Can>
-            </td>
+    <div className="table-responsive">
+      <Table striped bordered hover>
+        <thead className="table-light">
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Description</th>
+            <th className="text-center">Actions</th>
           </tr>
-        ))}
-      </tbody>
-    </Table>
+        </thead>
+        <tbody>
+          {roles.map((role) => (
+            <tr key={role.id}>
+              <td>{role.id}</td>
+              <td>{role.name}</td>
+              <td>{role.description || '-'}</td>
+              <td className="text-center">
+                <Can permission="security.update">
+                  <IconButton
+                    color="primary"
+                    size="small"
+                    onClick={() => handleEdit(role)}
+                  >
+                    <Edit fontSize="small" />
+                  </IconButton>
+                </Can>
+                <Can permission="security.delete">
+                  <IconButton
+                    color="error"
+                    size="small"
+                    onClick={() => handleDelete(role.id)}
+                  >
+                    <Delete fontSize="small" />
+                  </IconButton>
+                </Can>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </Table>
+    </div>
   );
 };
 
