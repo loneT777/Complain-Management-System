@@ -208,15 +208,33 @@ const RolePermissions = () => {
 
   return (
     <Container fluid className="p-4">
+      <Row className="mb-3">
+        <Col>
+          <Alert variant="info" className="mb-0">
+            <strong>How it works:</strong> Changes made here will reflect immediately for your current session. 
+            Other users will see the changes after they refresh the page or log back in.
+          </Alert>
+        </Col>
+      </Row>
       <Row className="mb-4">
         <Col>
           <Card>
             <Card.Body>
               <div className="d-flex justify-content-between align-items-center mb-4">
-                <h4 className="mb-0">ROLE PERMISSIONS</h4>
+                <h4 className="mb-0">Role Permissions</h4>
                 <div>
                   <Button
-                    style={{ backgroundColor: '#3a4c4a', borderColor: '#3a4c4a' }}
+                    variant="outline-secondary"
+                    onClick={() => {
+                      fetchAllRolePermissions();
+                      setMessage({ type: 'info', text: 'Permissions reloaded from database' });
+                    }}
+                    className="me-2"
+                  >
+                    <Refresh style={{ marginRight: '5px' }} /> Reload
+                  </Button>
+                  <Button
+                    style={{ backgroundColor: '#7c4dff', borderColor: '#7c4dff' }}
                     onClick={handleSave}
                     disabled={saving}
                   >
@@ -231,7 +249,7 @@ const RolePermissions = () => {
                 </Alert>
               )}
 
-              {/* <Row className="mb-3">
+              <Row className="mb-3">
                 <Col md={6}>
                   <InputGroup>
                     <InputGroup.Text style={{ backgroundColor: '#f5f5f5', border: 'none' }}>
@@ -245,7 +263,7 @@ const RolePermissions = () => {
                     />
                   </InputGroup>
                 </Col>
-              </Row> */}
+              </Row>
 
               {loading ? (
                 <div className="text-center py-5">Loading...</div>
