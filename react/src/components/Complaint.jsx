@@ -1489,7 +1489,7 @@ const Complaint = () => {
                               <div
                                 style={{
                                   display: 'grid',
-                                  gridTemplateColumns: '100px 1fr 140px',
+                                  gridTemplateColumns: '100px 1fr 140px 120px',
                                   gap: '15px',
                                   padding: '8px 12px',
                                   backgroundColor: '#f5f5f5',
@@ -1501,6 +1501,7 @@ const Complaint = () => {
                                 <div>Action</div>
                                 <div>Remark</div>
                                 <div>Date</div>
+                                <div>Added By</div>
                               </div>
 
                               {/* Logs Data */}
@@ -1509,7 +1510,7 @@ const Complaint = () => {
                                   key={log.id}
                                   style={{
                                     display: 'grid',
-                                    gridTemplateColumns: '100px 1fr 140px',
+                                    gridTemplateColumns: '100px 1fr 140px 120px',
                                     gap: '15px',
                                     padding: '8px 12px',
                                     backgroundColor: '#fff',
@@ -1532,6 +1533,9 @@ const Complaint = () => {
                                   </div>
                                   <div style={{ fontSize: '0.8rem', color: '#999', minWidth: '140px' }}>
                                     {new Date(log.updated_at).toLocaleString()}
+                                  </div>
+                                  <div style={{ fontSize: '0.85rem', color: '#555', fontWeight: '500', minWidth: '120px' }}>
+                                    {log.assignee?.full_name || 'Unknown'}
                                   </div>
                                 </div>
                               ))}
