@@ -43,11 +43,11 @@ class ComplaintController extends Controller
                 $search = $request->search;
                 $query->where(function ($q) use ($search) {
                     $q->where('title', 'LIKE', "%{$search}%")
-                      ->orWhere('complainant_name', 'LIKE', "%{$search}%")
-                      ->orWhere('complainant_phone', 'LIKE', "%{$search}%")
-                      ->orWhereHas('complainant', function ($subQ) use ($search) {
-                          $subQ->where('full_name', 'LIKE', "%{$search}%");
-                      });
+                        ->orWhere('complainant_name', 'LIKE', "%{$search}%")
+                        ->orWhere('complainant_phone', 'LIKE', "%{$search}%")
+                        ->orWhereHas('complainant', function ($subQ) use ($search) {
+                            $subQ->where('full_name', 'LIKE', "%{$search}%");
+                        });
                 });
             }
 
@@ -61,7 +61,7 @@ class ComplaintController extends Controller
                     // Show complaints where user is assigned OR user received the complaint
                     $query->where(function ($q) use ($user) {
                         $q->whereHas('assignments', function ($assignQuery) use ($user) {
-                            $assignQuery->where('assignee_user_id', $user->person_id);
+                            $assignQuery->where('assignee_id', $user->person_id);
                         })
                             ->orWhere('user_received_id', $user->id);
                     });
@@ -124,7 +124,7 @@ class ComplaintController extends Controller
             }
 
             $complaints = $query->orderBy('created_at', 'desc')->get();
-            
+
             Log::info('Fetching complaints', [
                 'user_id' => $user->id,
                 'user_role' => $user->role?->code,
@@ -186,12 +186,12 @@ class ComplaintController extends Controller
 
         try {
             DB::beginTransaction();
-            
+
             // Generate sequential reference number
             $lastComplaint = Complaint::orderBy('id', 'desc')->first();
             $nextNumber = $lastComplaint ? ($lastComplaint->id + 1) : 1;
             $referenceNo = 'CMP-' . str_pad($nextNumber, 6, '0', STR_PAD_LEFT);
-            
+
             // Get the Pending status
             $pendingStatus = \App\Models\Status::where('code', 'pending')->first();
 
@@ -231,7 +231,7 @@ class ComplaintController extends Controller
                 foreach ($request->file('attachments') as $file) {
                     $fileName = time() . '_' . $file->getClientOriginalName();
                     $filePath = $file->storeAs('complaints/attachments', $fileName, 'public');
-                    
+
                     // Create attachment record (you'll need an Attachment model)
                     DB::table('complaint_attachments')->insert([
                         'complaint_id' => $complaint->id,
@@ -304,7 +304,7 @@ class ComplaintController extends Controller
                 }
 
                 $isAssigned = $complaint->assignments()
-                    ->where('assignee_user_id', $user->person_id)
+                    ->where('assignee_id', $user->person_id)
                     ->exists();
 
                 $isReceived = $complaint->user_received_id === $user->id;
@@ -729,9 +729,9 @@ class ComplaintController extends Controller
 
         // Get the latest assignment (most recent)
         $currentAssignment = $assignments->last();
-        
+
         // Check if the CURRENT assignment is to this user
-        if ($currentAssignment->assignee_user_id == $user->person_id) {
+        if ($currentAssignment->assignee_id == $user->person_id) {
             // If currently assigned to this user, not reassigned away
             return false;
         }
@@ -739,7 +739,7 @@ class ComplaintController extends Controller
         // Check if user appears in any previous assignment
         $userWasPreviouslyAssigned = false;
         foreach ($assignments as $assignment) {
-            if ($assignment->assignee_user_id == $user->person_id) {
+            if ($assignment->assignee_id == $user->person_id) {
                 $userWasPreviouslyAssigned = true;
                 break;
             }

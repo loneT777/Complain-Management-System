@@ -17,11 +17,11 @@ const ComplaintTable = ({ complaints, loading, assignments = {}, onAssign }) => 
 
   const getStatusColor = (statusName) => {
     const colors = {
-      'Pending': 'secondary',
-      'Assigned': 'warning',
-      'Completed': 'success',
-      'Cancelled': 'danger',
-      'Cancel': 'danger'  // Handle database value
+      Pending: 'secondary',
+      Assigned: 'warning',
+      Completed: 'success',
+      Cancelled: 'danger',
+      Cancel: 'danger' // Handle database value
     };
     return colors[statusName] || 'secondary';
   };
@@ -78,15 +78,7 @@ const ComplaintTable = ({ complaints, loading, assignments = {}, onAssign }) => 
 
       <tbody>
         {complaints.map((complaint, index) => (
-          <tr
-            key={complaint.id}
-            style={{
-              opacity: complaint.is_reassigned_away ? 0.5 : 1,
-              filter: complaint.is_reassigned_away ? 'blur(1px)' : 'none',
-              pointerEvents: complaint.is_reassigned_away ? 'none' : 'auto',
-              backgroundColor: complaint.is_reassigned_away ? '#f8f9fa' : 'transparent'
-            }}
-          >
+          <tr key={complaint.id}>
             <td>{index + 1}</td>
             <td>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -103,11 +95,7 @@ const ComplaintTable = ({ complaints, loading, assignments = {}, onAssign }) => 
               {(() => {
                 const lastStatus = complaint.last_status || complaint.lastStatus;
                 if (lastStatus?.name) {
-                  return (
-                    <Badge bg={getStatusColor(lastStatus.name)}>
-                      {formatStatusName(lastStatus.name)}
-                    </Badge>
-                  );
+                  return <Badge bg={getStatusColor(lastStatus.name)}>{formatStatusName(lastStatus.name)}</Badge>;
                 }
                 return <Badge bg="secondary">Pending</Badge>;
               })()}
@@ -147,12 +135,7 @@ const ComplaintTable = ({ complaints, loading, assignments = {}, onAssign }) => 
 
             <td>
               <div className="d-flex flex-column gap-2">
-                <Button
-                  style={{ backgroundColor: '#05443cff', borderColor: '#05443cff' }}
-                  size="sm"
-                  onClick={() => handleView(complaint)}
-                  disabled={complaint.is_reassigned_away}
-                >
+                <Button style={{ backgroundColor: '#05443cff', borderColor: '#05443cff' }} size="sm" onClick={() => handleView(complaint)}>
                   View
                 </Button>
 

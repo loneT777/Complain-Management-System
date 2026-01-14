@@ -18,7 +18,7 @@ class ComplaintLogController extends Controller
     {
         try {
             $user = Auth::user();
-            
+
             if (!$user) {
                 return response()->json(['error' => 'Unauthorized'], 401);
             }
@@ -60,7 +60,7 @@ class ComplaintLogController extends Controller
     {
         try {
             $user = Auth::user();
-            
+
             if (!$user) {
                 return response()->json(['error' => 'Unauthorized'], 401);
             }
@@ -98,7 +98,7 @@ class ComplaintLogController extends Controller
     {
         try {
             $user = Auth::user();
-            
+
             if (!$user) {
                 return response()->json(['error' => 'Unauthorized'], 401);
             }
@@ -120,6 +120,39 @@ class ComplaintLogController extends Controller
                     'error' => 'Cannot create log for unassigned complaint',
                     'message' => 'Complaint must be assigned before logs can be created'
                 ], 422);
+            }
+
+            // Check if user is currently assigned (not reassigned away)
+            if ($user->person_id) {
+                $assignments = ComplaintAssignment::where('complaint_id', $complaint->id)
+                    ->orderBy('created_at', 'asc')
+                    ->get();
+
+                if ($assignments->isNotEmpty()) {
+                    $currentAssignment = $assignments->last();
+
+                    // For engineers: check if they are the current assignee
+                    if ($user->isEngineer()) {
+                        if ($currentAssignment->assignee_id != $user->person_id) {
+                            return response()->json([
+                                'success' => false,
+                                'error' => 'Cannot add log to reassigned complaint',
+                                'message' => 'This complaint has been reassigned to another person. You cannot add logs.'
+                            ], 403);
+                        }
+                    }
+
+                    // For division managers: check if their division is the current assignee
+                    if ($user->isDivisionManager() && $user->division_id) {
+                        if ($currentAssignment->assignee_division_id != $user->division_id) {
+                            return response()->json([
+                                'success' => false,
+                                'error' => 'Cannot add log to reassigned complaint',
+                                'message' => 'This complaint has been reassigned to another division. You cannot add logs.'
+                            ], 403);
+                        }
+                    }
+                }
             }
 
             $log = ComplaintLog::create([
@@ -156,7 +189,7 @@ class ComplaintLogController extends Controller
     {
         try {
             $user = Auth::user();
-            
+
             if (!$user) {
                 return response()->json(['error' => 'Unauthorized'], 401);
             }
@@ -200,7 +233,7 @@ class ComplaintLogController extends Controller
     {
         try {
             $user = Auth::user();
-            
+
             if (!$user) {
                 return response()->json(['error' => 'Unauthorized'], 401);
             }

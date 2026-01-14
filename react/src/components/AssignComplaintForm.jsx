@@ -23,7 +23,7 @@ const AssignComplaintForm = ({ show, onClose, complaintId, assignment, onSuccess
   const [persons, setPersons] = useState([]);
   const [formData, setFormData] = useState({
     assignee_division_id: '',
-    assignee_user_id: '',
+    assignee_id: '',
     due_at: '',
     remark: ''
   });
@@ -43,7 +43,7 @@ const AssignComplaintForm = ({ show, onClose, complaintId, assignment, onSuccess
         // Edit mode - pre-populate with assignment data
         setFormData({
           assignee_division_id: assignment.assignee_division_id || '',
-          assignee_user_id: assignment.assignee_user_id || '',
+          assignee_id: assignment.assignee_id || '',
           due_at: assignment.due_at ? assignment.due_at.split('T')[0] : '',
           remark: assignment.remark || ''
         });
@@ -57,7 +57,7 @@ const AssignComplaintForm = ({ show, onClose, complaintId, assignment, onSuccess
         // Create mode - reset form
         setFormData({
           assignee_division_id: '',
-          assignee_user_id: '',
+          assignee_id: '',
           due_at: '',
           remark: ''
         });
@@ -124,7 +124,7 @@ const AssignComplaintForm = ({ show, onClose, complaintId, assignment, onSuccess
     setFormData({
       ...formData,
       assignee_division_id: divisionId,
-      assignee_user_id: '',
+      assignee_id: '',
       due_at: calculatedDueDate
     });
 
@@ -140,7 +140,7 @@ const AssignComplaintForm = ({ show, onClose, complaintId, assignment, onSuccess
     const { name, value } = e.target;
 
     // If person is selected, auto-fill division and calculate due date
-    if (name === 'assignee_user_id' && value) {
+    if (name === 'assignee_id' && value) {
       const selectedPerson = persons.find((p) => p.id === parseInt(value));
       if (selectedPerson && selectedPerson.division_id) {
         // Calculate due date based on SLA days
@@ -183,7 +183,7 @@ const AssignComplaintForm = ({ show, onClose, complaintId, assignment, onSuccess
     try {
       const payload = {
         assignee_division_id: formData.assignee_division_id || null,
-        assignee_user_id: formData.assignee_user_id || null,
+        assignee_id: formData.assignee_id || null,
         due_at: formData.due_at || null,
         remark: formData.remark || ''
       };
@@ -274,9 +274,9 @@ const AssignComplaintForm = ({ show, onClose, complaintId, assignment, onSuccess
             )}
           </FormControl>
 
-          <FormControl fullWidth size="small" error={!!errors.assignee_user_id} disabled={saving}>
+          <FormControl fullWidth size="small" error={!!errors.assignee_id} disabled={saving}>
             <InputLabel>Person</InputLabel>
-            <Select name="assignee_user_id" value={formData.assignee_user_id} onChange={handleChange} label="Person">
+            <Select name="assignee_id" value={formData.assignee_id} onChange={handleChange} label="Person">
               <MenuItem value="">-- Select Person --</MenuItem>
               {persons.map((person) => (
                 <MenuItem key={person.id} value={person.id}>
@@ -294,9 +294,9 @@ const AssignComplaintForm = ({ show, onClose, complaintId, assignment, onSuccess
                 {formData.assignee_division_id ? 'No officers available for this division' : 'No officers available'}
               </Typography>
             )}
-            {errors.assignee_user_id && (
+            {errors.assignee_id && (
               <Typography variant="caption" color="error">
-                {errors.assignee_user_id[0]}
+                {errors.assignee_id[0]}
               </Typography>
             )}
           </FormControl>

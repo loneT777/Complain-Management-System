@@ -48,7 +48,7 @@ class ComplaintAssignmentController extends Controller
     {
         try {
             $user = Auth::user();
-            
+
             if (!$user) {
                 return response()->json(['error' => 'Unauthorized'], 401);
             }
@@ -69,8 +69,8 @@ class ComplaintAssignmentController extends Controller
                         'id' => $assign->id,
                         'complaint_id' => $assign->complaint_id,
                         'assignee_division_id' => $assign->assignee_division_id,
-                        'assignee_user_id' => $assign->assignee_user_id,
-                        'assigner_user_id' => $assign->assigner_user_id,
+                        'assignee_id' => $assign->assignee_id,
+                        'assigner_id' => $assign->assigner_id,
                         'last_status_id' => $assign->last_status_id,
                         'due_at' => $assign->due_at,
                         'remark' => $assign->remark,
@@ -119,7 +119,7 @@ class ComplaintAssignmentController extends Controller
             $request->validate([
                 'complaint_id' => 'required|exists:complaints,id',
                 'assignee_division_id' => 'nullable|exists:divisions,id',
-                'assignee_user_id' => 'nullable|exists:persons,id',
+                'assignee_id' => 'nullable|exists:persons,id',
                 'due_at' => 'nullable|date',
                 'remark' => 'nullable|string',
             ]);
@@ -131,11 +131,11 @@ class ComplaintAssignmentController extends Controller
             $assignment = ComplaintAssignment::create([
                 'complaint_id' => $request->input('complaint_id'),
                 'assignee_division_id' => $request->input('assignee_division_id'),
-                'assignee_user_id' => $request->input('assignee_user_id'),
+                'assignee_id' => $request->input('assignee_id'),
                 'due_at' => $request->input('due_at'),
                 'remark' => $request->input('remark'),
-                'assigner_user_id' => Auth::user()?->person_id ?? 1,
-                'last_status_id' => $assignedStatus ? $assignedStatus->id : null,
+                'assigner_id' => Auth::user()?->person_id ?? 1,
+                'last_status_id' => null, // Foreign key references wrong table, keeping null
             ]);
 
             // Update the complaint's last_status_id to 'assigned'
@@ -197,7 +197,7 @@ class ComplaintAssignmentController extends Controller
     {
         $request->validate([
             'assignee_division_id' => 'nullable|exists:divisions,id',
-            'assignee_user_id' => 'nullable|exists:persons,id',
+            'assignee_id' => 'nullable|exists:persons,id',
             'due_at' => 'nullable|date',
             'remark' => 'nullable|string',
         ]);
@@ -209,11 +209,11 @@ class ComplaintAssignmentController extends Controller
         $assignmentData = [
             'complaint_id' => $complaintId,
             'assignee_division_id' => $request->input('assignee_division_id'),
-            'assignee_user_id' => $request->input('assignee_user_id'),
+            'assignee_id' => $request->input('assignee_id'),
             'due_at' => $request->input('due_at'),
             'remark' => $request->input('remark'),
-            'assigner_user_id' => Auth::user()->person_id ?? 1,
-            'last_status_id' => $oldAssignment->last_status_id,
+            'assigner_id' => Auth::user()->person_id ?? 1,
+            'last_status_id' => null, // Foreign key references wrong table, keeping null
         ];
 
         $assignment = ComplaintAssignment::create($assignmentData);

@@ -105,7 +105,7 @@ class AuthController extends Controller
     public function me(Request $request)
     {
         $user = $request->user();
-        
+
         // Check if user is still active
         if (!$user->is_active) {
             return response()->json([
@@ -113,7 +113,7 @@ class AuthController extends Controller
                 'should_logout' => true
             ], 403);
         }
-        
+
         $user->load('role.permissions');
 
         return response()->json([

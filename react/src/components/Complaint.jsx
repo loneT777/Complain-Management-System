@@ -215,8 +215,8 @@ const Complaint = () => {
       // First fetch available statuses to get the Cancelled status ID
       const statusesResponse = await axios.get('/complaint-statuses');
       const statuses = statusesResponse.data || [];
-      const cancelStatus = statuses.find(s => s.name?.toLowerCase() === 'cancelled' || s.code?.toLowerCase() === 'cancelled');
-      
+      const cancelStatus = statuses.find((s) => s.name?.toLowerCase() === 'cancelled' || s.code?.toLowerCase() === 'cancelled');
+
       if (!cancelStatus) {
         alert('Cancelled status not found in system');
         return;
@@ -242,9 +242,7 @@ const Complaint = () => {
     try {
       const statusesResponse = await axios.get('/complaint-statuses');
       const statuses = statusesResponse.data || [];
-      const completedStatus = statuses.find(
-        (s) => s.name?.toLowerCase() === 'completed' || s.code?.toLowerCase() === 'completed'
-      );
+      const completedStatus = statuses.find((s) => s.name?.toLowerCase() === 'completed' || s.code?.toLowerCase() === 'completed');
 
       if (!completedStatus) {
         alert('Completed status not found in system');
@@ -485,11 +483,11 @@ const Complaint = () => {
 
   const getStatusColor = (statusName) => {
     const colors = {
-      'Pending': 'secondary',
-      'Assigned': 'warning',
-      'Completed': 'success',
-      'Cancelled': 'danger',
-      'Cancel': 'danger'  // Handle database value
+      Pending: 'secondary',
+      Assigned: 'warning',
+      Completed: 'success',
+      Cancelled: 'danger',
+      Cancel: 'danger' // Handle database value
     };
     return colors[statusName] || 'secondary';
   };
@@ -550,41 +548,6 @@ const Complaint = () => {
 
   return (
     <Container fluid className="p-4" style={{ position: 'relative' }}>
-      {/* Reassignment Overlay */}
-      {complaint.is_reassigned_away && (
-        <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            zIndex: 9999,
-            backdropFilter: 'blur(2px)'
-          }}
-        >
-          <Card
-            style={{
-              maxWidth: '500px',
-              backgroundColor: '#fff',
-              boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
-            }}
-          >
-            <Card.Body className="text-center p-5">
-              <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⚠️</div>
-              <h5 className="mb-3">Complaint Reassigned</h5>
-              <p className="text-muted mb-0">
-                This complaint has been reassigned to another team member and is no longer accessible to you.
-              </p>
-            </Card.Body>
-          </Card>
-        </div>
-      )}
-
       <Row className="mb-3">
         <Col>
           <div className="d-flex justify-content-between align-items-center">
@@ -599,6 +562,7 @@ const Complaint = () => {
                   size="sm"
                   onClick={handleEdit}
                   disabled={complaint.is_reassigned_away}
+                  title={complaint.is_reassigned_away ? 'Cannot edit reassigned complaint' : 'Edit complaint'}
                 >
                   <Edit fontSize="small" className="me-1" /> Edit
                 </Button>
@@ -608,12 +572,21 @@ const Complaint = () => {
         </Col>
       </Row>
 
-      <Row
-        style={{
-          opacity: complaint.is_reassigned_away ? 0.3 : 1,
-          pointerEvents: complaint.is_reassigned_away ? 'none' : 'auto'
-        }}
-      >
+      {complaint.is_reassigned_away && (
+        <Row className="mb-3">
+          <Col>
+            <Alert variant="warning" className="d-flex align-items-center">
+              <span style={{ fontSize: '1.5rem', marginRight: '12px' }}>⚠️</span>
+              <div>
+                <strong>Read-Only Access:</strong> This complaint has been reassigned. You can view all information but cannot make changes
+                or add new content.
+              </div>
+            </Alert>
+          </Col>
+        </Row>
+      )}
+
+      <Row>
         {/* LEFT SIDE */}
         <Col lg={8}>
           {/* Complaint Info */}
@@ -661,11 +634,7 @@ const Complaint = () => {
                     {(() => {
                       const lastStatus = complaint?.last_status || complaint?.lastStatus;
                       if (lastStatus?.name) {
-                        return (
-                          <Badge bg={getStatusColor(lastStatus.name)}>
-                            {formatStatusName(lastStatus.name)}
-                          </Badge>
-                        );
+                        return <Badge bg={getStatusColor(lastStatus.name)}>{formatStatusName(lastStatus.name)}</Badge>;
                       }
                       return <Badge bg="secondary">Pending</Badge>;
                     })()}
@@ -678,6 +647,8 @@ const Complaint = () => {
                         variant="outline-danger"
                         size="sm"
                         onClick={handleCancelComplaint}
+                        disabled={complaint.is_reassigned_away}
+                        title={complaint.is_reassigned_away ? 'Cannot cancel reassigned complaint' : 'Cancel complaint'}
                       >
                         Cancel
                       </Button>
@@ -691,6 +662,8 @@ const Complaint = () => {
                         variant="outline-success"
                         size="sm"
                         onClick={handleCompleteComplaint}
+                        disabled={complaint.is_reassigned_away}
+                        title={complaint.is_reassigned_away ? 'Cannot complete reassigned complaint' : 'Mark as complete'}
                       >
                         Complete
                       </Button>
@@ -869,6 +842,8 @@ const Complaint = () => {
                                     padding: '6px 20px'
                                   }}
                                   onClick={handleQuickComment}
+                                  disabled={complaint.is_reassigned_away}
+                                  title={complaint.is_reassigned_away ? 'Cannot comment on reassigned complaint' : 'Post comment'}
                                 >
                                   <Send fontSize="small" className="me-1" />
                                   Post Comment
@@ -983,11 +958,25 @@ const Complaint = () => {
                                         })}
                                       </small>
                                       <span className="text-muted mx-1">•</span>
-                                      <Button variant="link" size="sm" className="fb-action-btn" onClick={() => setReplyingTo(msg.id)}>
+                                      <Button
+                                        variant="link"
+                                        size="sm"
+                                        className="fb-action-btn"
+                                        onClick={() => setReplyingTo(msg.id)}
+                                        disabled={complaint.is_reassigned_away}
+                                        title={complaint.is_reassigned_away ? 'Cannot reply to reassigned complaint' : 'Reply'}
+                                      >
                                         💬 Reply
                                       </Button>
                                       {replies.length === 0 && (
-                                        <Button variant="link" size="sm" className="fb-action-btn" onClick={() => startEditing(msg)}>
+                                        <Button
+                                          variant="link"
+                                          size="sm"
+                                          className="fb-action-btn"
+                                          onClick={() => startEditing(msg)}
+                                          disabled={complaint.is_reassigned_away}
+                                          title={complaint.is_reassigned_away ? 'Cannot edit reassigned complaint' : 'Edit'}
+                                        >
                                           ✏️ Edit
                                         </Button>
                                       )}
@@ -996,6 +985,8 @@ const Complaint = () => {
                                         size="sm"
                                         className="fb-action-btn text-danger"
                                         onClick={() => handleDeleteMessage(msg.id)}
+                                        disabled={complaint.is_reassigned_away}
+                                        title={complaint.is_reassigned_away ? 'Cannot delete from reassigned complaint' : 'Delete'}
                                       >
                                         🗑️ Delete
                                       </Button>
@@ -1046,7 +1037,12 @@ const Complaint = () => {
                                     {replies.length > 0 && (
                                       <div className="fb-replies mt-3">
                                         {!showReplies[msg.id] && (
-                                          <Button variant="link" size="sm" className="fb-show-replies" onClick={() => toggleReplies(msg.id)}>
+                                          <Button
+                                            variant="link"
+                                            size="sm"
+                                            className="fb-show-replies"
+                                            onClick={() => toggleReplies(msg.id)}
+                                          >
                                             <Reply fontSize="small" className="me-2" />
                                             View {replies.length} {replies.length === 1 ? 'reply' : 'replies'}
                                           </Button>
@@ -1093,6 +1089,10 @@ const Complaint = () => {
                                                       className="fb-action-btn text-danger"
                                                       onClick={() => handleDeleteMessage(reply.id)}
                                                       style={{ padding: '2px 6px !important' }}
+                                                      disabled={complaint.is_reassigned_away}
+                                                      title={
+                                                        complaint.is_reassigned_away ? 'Cannot delete from reassigned complaint' : 'Delete'
+                                                      }
                                                     >
                                                       🗑️ Delete
                                                     </Button>
@@ -1150,7 +1150,13 @@ const Complaint = () => {
                   <div className="py-4">
                     <div className="d-flex justify-content-between align-items-center mb-3">
                       <h5 className="mb-0">Complaint Attachments</h5>
-                      <Button style={{ backgroundColor: '#3a4c4a', borderColor: '#3a4c4a' }} size="sm" onClick={handleAddAttachment}>
+                      <Button
+                        style={{ backgroundColor: '#3a4c4a', borderColor: '#3a4c4a' }}
+                        size="sm"
+                        onClick={handleAddAttachment}
+                        disabled={complaint.is_reassigned_away}
+                        title={complaint.is_reassigned_away ? 'Cannot upload files to reassigned complaint' : 'Upload files'}
+                      >
                         <Add fontSize="small" className="me-1" />
                         Upload Files
                       </Button>
@@ -1214,7 +1220,8 @@ const Complaint = () => {
                                       size="sm"
                                       variant="outline-danger"
                                       onClick={() => handleDeleteAttachment(att.id)}
-                                      title="Delete"
+                                      title={complaint.is_reassigned_away ? 'Cannot delete from reassigned complaint' : 'Delete'}
+                                      disabled={complaint.is_reassigned_away}
                                     >
                                       <Delete fontSize="small" />
                                     </Button>
@@ -1247,6 +1254,8 @@ const Complaint = () => {
                           setEditingAssignment(null);
                           setShowAssignForm(true);
                         }}
+                        disabled={complaint.is_reassigned_away}
+                        title={complaint.is_reassigned_away ? 'Cannot add assignment to reassigned complaint' : 'Add Assignment'}
                       >
                         <Add fontSize="small" className="me-1" />
                         Add Assignment
@@ -1260,7 +1269,9 @@ const Complaint = () => {
                     ) : assignments.length > 0 ? (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                         {assignments.map((assign, idx) => {
-                          const assignmentLogs = logs.filter((log) => log.complaint_assignment_id === assign.id && log.action !== 'Assigned');
+                          const assignmentLogs = logs.filter(
+                            (log) => log.complaint_assignment_id === assign.id && log.action !== 'Assigned'
+                          );
                           return (
                             <div
                               key={assign.id}
@@ -1310,7 +1321,7 @@ const Complaint = () => {
                                 <div>
                                   {assign.assigneeUser?.full_name ||
                                     assign.assignee?.full_name ||
-                                    (assign.assignee_user_id ? `Person #${assign.assignee_user_id}` : '-')}
+                                    (assign.assignee_id ? `Person #${assign.assignee_id}` : '-')}
                                 </div>
                                 <div>{assign.due_at ? new Date(assign.due_at).toLocaleDateString() : '-'}</div>
                                 <div>
@@ -1329,7 +1340,8 @@ const Complaint = () => {
                                           setCurrentAssignmentId(assign.id);
                                           setShowLogForm(true);
                                         }}
-                                        title="Add Log"
+                                        disabled={complaint.is_reassigned_away}
+                                        title={complaint.is_reassigned_away ? 'Cannot add log to reassigned complaint' : 'Add Log'}
                                       >
                                         + Log
                                       </Button>
@@ -1416,6 +1428,8 @@ const Complaint = () => {
                               setCurrentAssignmentId(assignments[0]?.id);
                               setShowLogForm(true);
                             }}
+                            disabled={complaint.is_reassigned_away}
+                            title={complaint.is_reassigned_away ? 'Cannot add log to reassigned complaint' : 'Add log entry'}
                           >
                             <Add fontSize="small" className="me-1" />
                             Add Log Entry
@@ -1435,7 +1449,9 @@ const Complaint = () => {
                     ) : logs.filter((l) => l.action !== 'Assigned').length > 0 ? (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                         {assignments.map((assign) => {
-                          const assignmentLogs = logs.filter((log) => log.complaint_assignment_id === assign.id && log.action !== 'Assigned');
+                          const assignmentLogs = logs.filter(
+                            (log) => log.complaint_assignment_id === assign.id && log.action !== 'Assigned'
+                          );
 
                           if (assignmentLogs.length === 0) return null;
 
