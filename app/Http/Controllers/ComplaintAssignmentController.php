@@ -97,7 +97,7 @@ class ComplaintAssignmentController extends Controller
     {
         try {
             $complaint = Complaint::findOrFail($complaintId);
-            $slaDays = PrioritySLA::getDays($complaint->priority_level);
+            $slaDays = $complaint->priority_level ? PrioritySLA::getDays($complaint->priority_level) : null;
 
             return response()->json([
                 'complaint_id' => $complaint->id,

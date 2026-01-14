@@ -101,7 +101,7 @@ class ComplaintController extends Controller
                 $query->where(function ($q) use ($user) {
                     $q->where('user_received_id', $user->id)
                         ->orWhereHas('assignments', function ($assignQuery) use ($user) {
-                            $assignQuery->where('assignee_user_id', $user->person_id ?? $user->id);
+                            $assignQuery->where('assignee_id', $user->person_id ?? $user->id);
                         });
                 });
             }
@@ -739,7 +739,11 @@ class ComplaintController extends Controller
         // Check if user appears in any previous assignment
         $userWasPreviouslyAssigned = false;
         foreach ($assignments as $assignment) {
+<<<<<<< Updated upstream
             if ($assignment->assignee_id == $user->person_id) {
+=======
+            if ($assignment->assignee_id == $user->person_id && $assignment->id !== $currentAssignee->id) {
+>>>>>>> Stashed changes
                 $userWasPreviouslyAssigned = true;
                 break;
             }
