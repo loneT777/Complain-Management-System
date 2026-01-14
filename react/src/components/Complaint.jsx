@@ -1254,8 +1254,14 @@ const Complaint = () => {
                           setEditingAssignment(null);
                           setShowAssignForm(true);
                         }}
-                        disabled={complaint.is_reassigned_away}
-                        title={complaint.is_reassigned_away ? 'Cannot add assignment to reassigned complaint' : 'Add Assignment'}
+                        disabled={isEngineer || complaint.is_reassigned_away}
+                        title={
+                          isEngineer 
+                            ? 'Engineers cannot assign complaints' 
+                            : complaint.is_reassigned_away 
+                              ? 'Cannot add assignment to reassigned complaint' 
+                              : 'Add Assignment'
+                        }
                       >
                         <Add fontSize="small" className="me-1" />
                         Add Assignment
