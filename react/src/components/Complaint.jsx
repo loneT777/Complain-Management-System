@@ -1256,10 +1256,10 @@ const Complaint = () => {
                         }}
                         disabled={isEngineer || complaint.is_reassigned_away}
                         title={
-                          isEngineer 
-                            ? 'Engineers cannot assign complaints' 
-                            : complaint.is_reassigned_away 
-                              ? 'Cannot add assignment to reassigned complaint' 
+                          isEngineer
+                            ? 'Engineers cannot assign complaints'
+                            : complaint.is_reassigned_away
+                              ? 'Cannot add assignment to reassigned complaint'
                               : 'Add Assignment'
                         }
                       >
