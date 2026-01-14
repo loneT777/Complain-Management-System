@@ -64,7 +64,7 @@ Route::get('/categories/{categoryId}/complaints', [CategoryController::class, 'g
 // -----------------
 // PROTECTED ROUTES - With Authentication
 // -----------------
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum', 'user.active'])->group(function () {
     // Auth routes (no permission required)
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);

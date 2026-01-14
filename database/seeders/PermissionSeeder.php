@@ -20,11 +20,11 @@ class PermissionSeeder extends Seeder
             ['name' => 'Security Update', 'code' => 'security.update', 'module' => 'Security', 'description' => 'Update security settings'],
             ['name' => 'Security Delete', 'code' => 'security.delete', 'module' => 'Security', 'description' => 'Delete security settings'],
 
-            // Setting Module (4 permissions)
-            ['name' => 'Setting Read', 'code' => 'setting.read', 'module' => 'Setting', 'description' => 'View settings'],
-            ['name' => 'Setting Create', 'code' => 'setting.create', 'module' => 'Setting', 'description' => 'Create settings'],
-            ['name' => 'Setting Update', 'code' => 'setting.update', 'module' => 'Setting', 'description' => 'Update settings'],
-            ['name' => 'Setting Delete', 'code' => 'setting.delete', 'module' => 'Setting', 'description' => 'Delete settings'],
+            // Category Module (4 permissions)
+            ['name' => 'Category Read', 'code' => 'category.read', 'module' => 'Category', 'description' => 'View categories'],
+            ['name' => 'Category Create', 'code' => 'category.create', 'module' => 'Category', 'description' => 'Create categories'],
+            ['name' => 'Category Update', 'code' => 'category.update', 'module' => 'Category', 'description' => 'Update categories'],
+            ['name' => 'Category Delete', 'code' => 'category.delete', 'module' => 'Category', 'description' => 'Delete categories'],
 
             // Complaint Module (6 permissions)
             ['name' => 'Complaint Read', 'code' => 'complaint.read', 'module' => 'Complaint', 'description' => 'View complaints'],

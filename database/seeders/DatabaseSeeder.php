@@ -12,16 +12,18 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
-            SessionSeeder::class,
-            RoleSeeder::class,
-            PermissionSeeder::class,
-            RolePermissionSeeder::class,
-            DivisionSeeder::class,
-            PersonSeeder::class,
-            UserSeeder::class,
-            StatusSeeder::class,
-            PrioritySeeder::class,
-            CompleteComplaintSeeder::class, // Added sample complaints
+            SessionSeeder::class,              // 1. Create sessions first
+            RoleSeeder::class,                 // 2. Create roles
+            PermissionSeeder::class,           // 3. Create permissions
+            RolePermissionSeeder::class,       // 4. Assign permissions to roles
+            DivisionSeeder::class,             // 5. Create divisions
+            PersonSeeder::class,               // 6. Create persons
+            UserSeeder::class,                 // 7. Create users (requires roles)
+            StatusSeeder::class,               // 8. Create statuses
+            PrioritySeeder::class,             // 9. Create priorities
+            CompleteComplaintSeeder::class,    // 10. Create sample complaints
         ]);
+        
+        $this->command->info('✅ Database seeding completed successfully!');
     }
 }

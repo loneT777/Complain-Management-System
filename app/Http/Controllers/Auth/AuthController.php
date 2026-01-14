@@ -35,6 +35,12 @@ class AuthController extends Controller
             ], 403);
         }
 
+        if (!$user->is_active) {
+            return response()->json([
+                'message' => 'Your account has been deactivated. Please contact administrator.'
+            ], 403);
+        }
+
         // End any previous active sessions for this user
         $user->loginSessions()
             ->whereNull('logout_time')
@@ -99,6 +105,15 @@ class AuthController extends Controller
     public function me(Request $request)
     {
         $user = $request->user();
+        
+        // Check if user is still active
+        if (!$user->is_active) {
+            return response()->json([
+                'message' => 'Your account has been deactivated',
+                'should_logout' => true
+            ], 403);
+        }
+        
         $user->load('role.permissions');
 
         return response()->json([
