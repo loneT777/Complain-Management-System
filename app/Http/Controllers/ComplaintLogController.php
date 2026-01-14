@@ -155,9 +155,13 @@ class ComplaintLogController extends Controller
                 }
             }
 
+            // Set assignee_id to the person_id of the logged-in user
+            $assigneeId = $user->person_id;
+
             $log = ComplaintLog::create([
                 'complaint_id' => $request->input('complaint_id'),
                 'complaint_assignment_id' => $request->input('complaint_assignment_id'),
+                'assignee_id' => $assigneeId,
                 'action' => $request->input('action'),
                 'remark' => $request->input('remark'),
             ]);

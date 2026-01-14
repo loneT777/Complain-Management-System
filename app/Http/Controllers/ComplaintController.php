@@ -67,7 +67,11 @@ class ComplaintController extends Controller
                     });
                 } else {
                     // Engineer without person_id can see complaints they received
-                    $query->where('user_received_id', $user->id);
+                    // $query->where('user_received_id', $user->id);
+                    return response()->json([
+                        'success' => false,
+                        'data' => []
+                    ]);
                 }
             } elseif ($user->isDivisionManager()) {
                 // Division Manager: Display complaints assigned to their division (current or past) OR created by division members
@@ -84,6 +88,11 @@ class ComplaintController extends Controller
                                 $personQuery->where('division_id', $user->division_id);
                             });
                         });
+                } else {
+                    return response()->json([
+                        'success' => false,
+                        'data' => []
+                    ]);
                 }
             } elseif ($user->isComplainant()) {
                 // Complainant (Public User): Display only their own complaints
@@ -98,12 +107,17 @@ class ComplaintController extends Controller
                 $query->where('division_id', $user->division_id);
             } else {
                 // Regular User: Display complaints they received or are assigned to
-                $query->where(function ($q) use ($user) {
-                    $q->where('user_received_id', $user->id)
-                        ->orWhereHas('assignments', function ($assignQuery) use ($user) {
-                            $assignQuery->where('assignee_id', $user->person_id ?? $user->id);
-                        });
-                });
+                // $query->where(function ($q) use ($user) {
+                //     $q->where('user_received_id', $user->id)
+                //         ->orWhereHas('assignments', function ($assignQuery) use ($user) {
+                //             $assignQuery->where('assignee_id', $user->person_id ?? $user->id);
+                //         });
+                // });
+                return response()->json([
+                    'success' => false,
+                    'data' => []
+                ]);
+                
             }
 
             // Apply additional filters if provided
@@ -313,7 +327,7 @@ class ComplaintController extends Controller
                     return response()->json(['error' => 'Forbidden - Complaint not assigned to you or received by you'], 403);
                 }
             } elseif ($user->isDivisionManager()) {
-                // Division Manager: Check if complaint is created by their division members (can see even if reassigned)
+                // Division Manager: Check if complaint is created by their division members OR assigned to their division
                 if (!$user->division_id) {
                     return response()->json(['error' => 'Forbidden - Division Manager without division_id'], 403);
                 }
@@ -322,7 +336,12 @@ class ComplaintController extends Controller
                     ->where('division_id', $user->division_id)
                     ->exists();
 
-                if (!$isCreatedByDivisionMember) {
+                // Also check if complaint is currently assigned to their division
+                $isAssignedToDivision = $complaint->assignments()
+                    ->where('assignee_division_id', $user->division_id)
+                    ->exists();
+
+                if (!$isCreatedByDivisionMember && !$isAssignedToDivision) {
                     return response()->json(['error' => 'Forbidden - Complaint not in your division'], 403);
                 }
             } elseif ($user->isComplainant()) {
