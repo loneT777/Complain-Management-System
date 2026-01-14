@@ -739,11 +739,7 @@ class ComplaintController extends Controller
         // Check if user appears in any previous assignment
         $userWasPreviouslyAssigned = false;
         foreach ($assignments as $assignment) {
-<<<<<<< Updated upstream
             if ($assignment->assignee_id == $user->person_id) {
-=======
-            if ($assignment->assignee_id == $user->person_id && $assignment->id !== $currentAssignee->id) {
->>>>>>> Stashed changes
                 $userWasPreviouslyAssigned = true;
                 break;
             }
