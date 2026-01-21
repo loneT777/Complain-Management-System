@@ -5,7 +5,6 @@ import axios from '../../utils/axiosConfig';
 
 const Permissions = () => {
   const [permissions, setPermissions] = useState([]);
-  const [filteredPermissions, setFilteredPermissions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editMode, setEditMode] = useState(false);
@@ -21,49 +20,49 @@ const Permissions = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [perPage] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
 
   useEffect(() => {
     fetchPermissions();
   }, []);
 
   useEffect(() => {
-    handleSearch();
-  }, [searchTerm, permissions, currentPage]);
+    const delaySearch = setTimeout(() => {
+      if (searchTerm.length >= 3 || searchTerm.length === 0) {
+        setCurrentPage(1); // Reset to first page on new search
+        fetchPermissions();
+      }
+    }, 500);
+    return () => clearTimeout(delaySearch);
+  }, [searchTerm]);
+
+  useEffect(() => {
+    fetchPermissions();
+  }, [currentPage]);
 
   const fetchPermissions = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('/permissions');
-      setPermissions(response.data.data || []);
+      const params = {
+        page: currentPage,
+        per_page: perPage
+      };
+      if (searchTerm && searchTerm.length >= 3) {
+        params.search = searchTerm;
+      }
+      const response = await axios.get('/permissions', { params });
+      const data = response.data.data || [];
+      const pagination = response.data.pagination || {};
+      
+      setPermissions(data);
+      setTotalRecords(pagination.total || 0);
+      setTotalPages(Math.ceil((pagination.total || 0) / perPage));
     } catch (error) {
       console.error('Error fetching permissions:', error);
+      setPermissions([]);
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleSearch = () => {
-    let filtered = permissions;
-    
-    if (searchTerm.length >= 3) {
-      filtered = permissions.filter(permission =>
-        permission.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        permission.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        permission.module.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-    
-    // Calculate pagination
-    const totalItems = filtered.length;
-    const pages = Math.ceil(totalItems / perPage);
-    setTotalPages(pages);
-    
-    // Get current page items
-    const startIndex = (currentPage - 1) * perPage;
-    const endIndex = startIndex + perPage;
-    const paginatedItems = filtered.slice(startIndex, endIndex);
-    
-    setFilteredPermissions(paginatedItems);
   };
 
   const handleOpenModal = (permission = null) => {
@@ -189,7 +188,7 @@ const Permissions = () => {
             </Card.Header>
             <Card.Body>
 
-              {/* <Row className="mb-3">
+              <Row className="mb-3">
                 <Col md={6}>
                   <InputGroup>
                     <InputGroup.Text style={{ backgroundColor: '#f5f5f5', border: 'none' }}>
@@ -203,7 +202,7 @@ const Permissions = () => {
                     />
                   </InputGroup>
                 </Col>
-              </Row> */}
+              </Row>
 
               {loading ? (
                 <div className="text-center py-5">Loading...</div>
@@ -218,10 +217,10 @@ const Permissions = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {filteredPermissions.length > 0 ? (
-                        filteredPermissions.map((permission, index) => (
+                      {permissions.length > 0 ? (
+                        permissions.map((permission, index) => (
                           <tr key={permission.id}>
-                            <td>{index + 1}</td>
+                            <td>{(currentPage - 1) * perPage + index + 1}</td>
                             <td>{permission.name || permission.code || 'N/A'}</td>
                             <td style={{ textAlign: 'center' }}>
                               <Button

@@ -44,44 +44,33 @@ const RolesManagement = () => {
   }, []);
 
   /**
-   * Trigger search whenever search term or roles list changes
+   * Trigger server-side search whenever search term changes
    */
   useEffect(() => {
-    handleSearch();
-  }, [searchTerm, roles]);
+    const delaySearch = setTimeout(() => {
+      fetchRoles();
+    }, 500);
+    return () => clearTimeout(delaySearch);
+  }, [searchTerm]);
 
   /**
-   * Fetches all roles from the API
+   * Fetches all roles from the API with search parameter
    * Updates both roles and filteredRoles state
    */
   const fetchRoles = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('/roles');
+      const params = {};
+      if (searchTerm && searchTerm.length >= 3) {
+        params.search = searchTerm;
+      }
+      const response = await axios.get('/roles', { params });
       setRoles(response.data.data || []);
       setFilteredRoles(response.data.data || []);
     } catch (error) {
       console.error('Error fetching roles:', error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  /**
-   * Filters roles based on search term
-   * Searches across name, code, and description fields
-   * Minimum 3 characters required for search
-   */
-  const handleSearch = () => {
-    if (searchTerm.length >= 3) {
-      const filtered = roles.filter(role =>
-        role.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        role.code?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        role.description?.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      setFilteredRoles(filtered);
-    } else if (searchTerm.length === 0) {
-      setFilteredRoles(roles);
     }
   };
 

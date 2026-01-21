@@ -12,6 +12,7 @@ const Persons = () => {
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editMode, setEditMode] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const [currentPerson, setCurrentPerson] = useState({
     title: '',
     full_name: '',
@@ -31,11 +32,25 @@ const Persons = () => {
     fetchDivisions();
   }, []);
 
+  useEffect(() => {
+    const delaySearch = setTimeout(() => {
+      if (searchQuery.length >= 3 || searchQuery.length === 0) {
+        fetchPersons();
+      }
+    }, 500);
+
+    return () => clearTimeout(delaySearch);
+  }, [searchQuery]);
+
   const fetchPersons = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('/persons');
-      setPersons(response.data);
+      const params = {};
+      if (searchQuery && searchQuery.length >= 3) {
+        params.search = searchQuery;
+      }
+      const response = await axios.get('/persons', { params });
+      setPersons(response.data.data || []);
     } catch (error) {
       console.error('Error fetching persons:', error);
     } finally {
@@ -143,6 +158,16 @@ const Persons = () => {
               </Can>
             </Card.Header>
             <Card.Body>
+              <div className="mb-3">
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="Search persons (min 3 characters)..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+
               <PersonTable
                 persons={persons}
                 loading={loading}

@@ -11,6 +11,7 @@ const Roles = () => {
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editMode, setEditMode] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const [currentRole, setCurrentRole] = useState({
     name: '',
     description: ''
@@ -20,10 +21,24 @@ const Roles = () => {
     fetchRoles();
   }, []);
 
+  useEffect(() => {
+    const delaySearch = setTimeout(() => {
+      if (searchQuery.length >= 3 || searchQuery.length === 0) {
+        fetchRoles();
+      }
+    }, 500);
+
+    return () => clearTimeout(delaySearch);
+  }, [searchQuery]);
+
   const fetchRoles = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('/roles');
+      const params = {};
+      if (searchQuery && searchQuery.length >= 3) {
+        params.search = searchQuery;
+      }
+      const response = await axios.get('/roles', { params });
       const rolesData = response.data.data || [];
       // Sort roles by ID in ascending order (1 to 5)
       const sortedRoles = rolesData.sort((a, b) => a.id - b.id);
@@ -112,6 +127,16 @@ const Roles = () => {
               </Can>
             </Card.Header>
             <Card.Body>
+              <div className="mb-3">
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="Search roles (min 3 characters)..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+
               <RoleTable
                 roles={roles}
                 loading={loading}

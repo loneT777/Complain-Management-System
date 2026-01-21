@@ -18,8 +18,18 @@ const menuItems = {
         },
         { id: 'persons', title: 'Persons', type: 'item', url: '/persons' },
         { id: 'divisions', title: 'Divisions', type: 'item', url: '/divisions' },
-        { id: 'roles', title: 'Roles', type: 'item', url: '/roles' },
-        { id: 'categories', title: 'Categories', type: 'item', url: '/categories' }
+        { id: 'categories', title: 'Categories', type: 'item', url: '/categories' },
+        { 
+          id: 'security', 
+          title: 'Security', 
+          type: 'collapse',
+          children: [
+            { id: 'users', title: 'Users', type: 'item', url: '/security/users' },
+            { id: 'roles', title: 'Roles', type: 'item', url: '/roles' },
+            { id: 'permissions', title: 'Permissions', type: 'item', url: '/security/permissions' },
+            { id: 'role-permissions', title: 'Role Permissions', type: 'item', url: '/security/role-permissions' }
+          ]
+        }
         // { id: 'messages', title: 'Messages', type: 'item', url: '/messages' },
         // { id: 'attachments', title: 'Attachments', type: 'item', url: '/attachments' }
       ]

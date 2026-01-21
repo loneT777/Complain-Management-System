@@ -9,14 +9,14 @@ use Illuminate\Support\Facades\Validator;
 class PersonController extends Controller
 {
     /**
-     * Display a listing of the resource with pagination and search.
+     * Display a listing of the resource.
      *
      * @return \Illuminate\Http\Response
      */
     public function index(Request $request)
     {
         try {
-            $perPage = $request->input('per_page', 10);
+            $perPage = $request->input('per_page', 'all');
             $search = $request->input('search', '');
 
             $query = Person::orderBy('created_at', 'desc');
@@ -37,6 +37,14 @@ class PersonController extends Controller
                         ->orWhere('designation', 'LIKE', "%{$search}%")
                         ->orWhere('code', 'LIKE', "%{$search}%");
                 });
+            }
+
+            if ($perPage === 'all' || $perPage === null) {
+                $people = $query->get();
+                return response()->json([
+                    'success' => true,
+                    'data' => $people
+                ]);
             }
 
             $people = $query->paginate($perPage);

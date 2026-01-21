@@ -65,15 +65,6 @@ const menuItems = {
           permission: 'security.read'
         },
         {
-          id: 'roles',
-          title: 'Roles',
-          type: 'item',
-          icon: 'material-icons-two-tone',
-          iconname: 'security',
-          url: '/roles',
-          permission: 'security.read'
-        },
-        {
           id: 'categories',
           title: 'Categories',
           type: 'item',
@@ -95,6 +86,13 @@ const menuItems = {
               title: 'Users',
               type: 'item',
               url: '/security/users',
+              permission: 'security.read'
+            },
+            {
+              id: 'roles',
+              title: 'Roles',
+              type: 'item',
+              url: '/roles',
               permission: 'security.read'
             },
             {

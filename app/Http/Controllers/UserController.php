@@ -12,12 +12,12 @@ use Illuminate\Validation\Rule;
 class UserController extends Controller
 {
     /**
-     * Display a listing of users with pagination and search
+     * Display a listing of users
      */
     public function index(Request $request)
     {
         try {
-            $perPage = $request->input('per_page', 10);
+            $perPage = $request->input('per_page', 'all');
             $search = $request->input('search', '');
 
             $query = User::with(['person', 'role', 'division']);
@@ -40,7 +40,17 @@ class UserController extends Controller
                 });
             }
 
-            $users = $query->orderBy('id', 'desc')->paginate($perPage);
+            $query->orderBy('id', 'desc');
+
+            if ($perPage === 'all' || $perPage === null) {
+                $users = $query->get();
+                return response()->json([
+                    'success' => true,
+                    'data' => $users
+                ]);
+            }
+
+            $users = $query->paginate($perPage);
 
             return response()->json([
                 'success' => true,

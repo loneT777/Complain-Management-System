@@ -69,12 +69,12 @@ class RolePermissionController extends Controller
     }
 
     /**
-     * Get all roles with their permissions with pagination and search
+     * Get all roles with their permissions
      */
     public function index(Request $request)
     {
         try {
-            $perPage = $request->input('per_page', 10);
+            $perPage = $request->input('per_page', 'all');
             $search = $request->input('search', '');
 
             $query = Role::with(['permissions']);
@@ -90,7 +90,17 @@ class RolePermissionController extends Controller
                 });
             }
 
-            $roles = $query->orderBy('id', 'desc')->paginate($perPage);
+            $query->orderBy('id', 'desc');
+
+            if ($perPage === 'all' || $perPage === null) {
+                $roles = $query->get();
+                return response()->json([
+                    'success' => true,
+                    'data' => $roles
+                ]);
+            }
+
+            $roles = $query->paginate($perPage);
 
             return response()->json([
                 'success' => true,

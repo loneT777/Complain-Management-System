@@ -27,7 +27,10 @@ const RolePermissions = () => {
   }, []);
 
   useEffect(() => {
-    handleSearch();
+    const delaySearch = setTimeout(() => {
+      handleSearch();
+    }, 300);
+    return () => clearTimeout(delaySearch);
   }, [searchTerm, permissions, currentPage]);
 
   const fetchRoles = async () => {

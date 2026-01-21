@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Auth;
 class ComplaintLogController extends Controller
 {
     /**
-     * Display a listing of complaint logs with pagination and search
+     * Display a listing of complaint logs
      */
     public function index(Request $request)
     {
@@ -23,7 +23,7 @@ class ComplaintLogController extends Controller
                 return response()->json(['error' => 'Unauthorized'], 401);
             }
 
-            $perPage = $request->input('per_page', 10);
+            $perPage = $request->input('per_page', 'all');
             $search = $request->input('search', '');
 
             $query = ComplaintLog::query();
@@ -51,11 +51,21 @@ class ComplaintLogController extends Controller
                 });
             }
 
-            $logs = $query->with([
+            $query->with([
                 'complaint',
                 'assignee',
                 'status'
-            ])->orderBy('created_at', 'desc')->paginate($perPage);
+            ])->orderBy('created_at', 'desc');
+
+            if ($perPage === 'all' || $perPage === null) {
+                $logs = $query->get();
+                return response()->json([
+                    'success' => true,
+                    'data' => $logs
+                ]);
+            }
+
+            $logs = $query->paginate($perPage);
 
             return response()->json([
                 'success' => true,

@@ -27,13 +27,20 @@ const Users = () => {
   }, []);
 
   useEffect(() => {
-    handleSearch();
-  }, [searchTerm, users]);
+    const delaySearch = setTimeout(() => {
+      fetchUsers();
+    }, 500);
+    return () => clearTimeout(delaySearch);
+  }, [searchTerm]);
 
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('/users');
+      const params = {};
+      if (searchTerm && searchTerm.length >= 3) {
+        params.search = searchTerm;
+      }
+      const response = await axios.get('/users', { params });
       setUsers(response.data.data || []);
       setFilteredUsers(response.data.data || []);
     } catch (error) {
@@ -49,19 +56,6 @@ const Users = () => {
       setRoles(response.data.data || []);
     } catch (error) {
       console.error('Error fetching roles:', error);
-    }
-  };
-
-  const handleSearch = () => {
-    if (searchTerm.length >= 3) {
-      const filtered = users.filter(user =>
-        user.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.person?.full_name?.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      setFilteredUsers(filtered);
-    } else if (searchTerm.length === 0) {
-      setFilteredUsers(users);
     }
   };
 
@@ -199,7 +193,7 @@ const Users = () => {
             <Card.Body>
 
               {/* Search Bar */}
-              {/* <Row className="mb-4">
+              <Row className="mb-4">
                 <Col md={6}>
                   <InputGroup style={{ borderRadius: '8px', overflow: 'hidden' }}>
                     <InputGroup.Text style={{ 
@@ -222,7 +216,7 @@ const Users = () => {
                     />
                   </InputGroup>
                 </Col>
-              </Row> */}
+              </Row>
 
               {loading ? (
                 <div className="text-center py-5">

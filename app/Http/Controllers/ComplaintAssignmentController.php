@@ -14,12 +14,12 @@ use Illuminate\Support\Facades\Log;
 class ComplaintAssignmentController extends Controller
 {
     /**
-     * Display a listing of complaint assignments with pagination and search
+     * Display a listing of complaint assignments
      */
     public function index(Request $request)
     {
         try {
-            $perPage = $request->input('per_page', 10);
+            $perPage = $request->input('per_page', 'all');
             $search = $request->input('search', '');
 
             $query = ComplaintAssignment::query();
@@ -46,13 +46,23 @@ class ComplaintAssignmentController extends Controller
                 });
             }
 
-            $assignments = $query->with([
+            $query->with([
                 'complaint',
                 'assigneeDivision',
                 'assigneeUser',
                 'assignerUser',
                 'lastStatus'
-            ])->orderBy('created_at', 'desc')->paginate($perPage);
+            ])->orderBy('created_at', 'desc');
+
+            if ($perPage === 'all' || $perPage === null) {
+                $assignments = $query->get();
+                return response()->json([
+                    'success' => true,
+                    'data' => $assignments
+                ]);
+            }
+
+            $assignments = $query->paginate($perPage);
 
             return response()->json([
                 'success' => true,

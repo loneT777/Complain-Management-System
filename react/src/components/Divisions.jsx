@@ -11,6 +11,7 @@ const Divisions = () => {
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editMode, setEditMode] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [currentDivision, setCurrentDivision] = useState({
@@ -29,10 +30,24 @@ const Divisions = () => {
     fetchDivisions();
   }, []);
 
+  useEffect(() => {
+    const delaySearch = setTimeout(() => {
+      if (searchQuery.length >= 3 || searchQuery.length === 0) {
+        fetchDivisions();
+      }
+    }, 500);
+
+    return () => clearTimeout(delaySearch);
+  }, [searchQuery]);
+
   const fetchDivisions = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('/divisions');
+      const params = {};
+      if (searchQuery && searchQuery.length >= 3) {
+        params.search = searchQuery;
+      }
+      const response = await axios.get('/divisions', { params });
       const divisionsData = response.data.data || [];
       // Sort divisions by ID in ascending order
       const sortedDivisions = divisionsData.sort((a, b) => a.id - b.id);
@@ -166,6 +181,16 @@ const Divisions = () => {
                   {errorMessage}
                 </Alert>
               )}
+
+              <div className="mb-3">
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="Search divisions (min 3 characters)..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
 
               <DivisionTable
                 divisions={divisions}

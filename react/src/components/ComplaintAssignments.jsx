@@ -27,6 +27,7 @@ const ComplaintAssignments = () => {
   const [selectedComplaint, setSelectedComplaint] = useState(null);
   const [selectedAssignment, setSelectedAssignment] = useState(null);
   const [assignments, setAssignments] = useState({});
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Check if user is role 5 (Engineer)
   const userData = JSON.parse(localStorage.getItem('user') || '{}');
@@ -36,10 +37,24 @@ const ComplaintAssignments = () => {
     fetchComplaints();
   }, []);
 
+  useEffect(() => {
+    const delaySearch = setTimeout(() => {
+      if (searchQuery.length >= 3 || searchQuery.length === 0) {
+        fetchComplaints();
+      }
+    }, 500);
+
+    return () => clearTimeout(delaySearch);
+  }, [searchQuery]);
+
   const fetchComplaints = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('/complaints');
+      const params = {};
+      if (searchQuery && searchQuery.length >= 3) {
+        params.search = searchQuery;
+      }
+      const response = await axios.get('/complaints', { params });
       const complaintsData = response.data.data || [];
       setComplaints(complaintsData);
       await fetchAssignments(complaintsData.map((c) => c.id));
@@ -112,6 +127,16 @@ const ComplaintAssignments = () => {
     <Box sx={{ p: 3 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h4">Complaint Assignments</Typography>
+      </Box>
+
+      <Box sx={{ mb: 3 }}>
+        <input
+          type="text"
+          className="form-control"
+          placeholder="Search complaints (min 3 characters)..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
       </Box>
 
       {loading ? (

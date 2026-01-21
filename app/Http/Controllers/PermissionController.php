@@ -8,12 +8,12 @@ use Illuminate\Http\Request;
 class PermissionController extends Controller
 {
     /**
-     * Display a listing of permissions with pagination and search
+     * Display a listing of permissions
      */
     public function index(Request $request)
     {
         try {
-            $perPage = $request->input('per_page', 10);
+            $perPage = $request->input('per_page', 'all');
             $search = $request->input('search', '');
 
             $query = Permission::query();
@@ -27,7 +27,17 @@ class PermissionController extends Controller
                 });
             }
 
-            $permissions = $query->orderBy('id', 'desc')->paginate($perPage);
+            $query->orderBy('id', 'desc');
+
+            if ($perPage === 'all' || $perPage === null) {
+                $permissions = $query->get();
+                return response()->json([
+                    'success' => true,
+                    'data' => $permissions
+                ]);
+            }
+
+            $permissions = $query->paginate($perPage);
 
             return response()->json([
                 'success' => true,

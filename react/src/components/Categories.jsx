@@ -12,6 +12,7 @@ const Categories = () => {
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editMode, setEditMode] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const [formData, setFormData] = useState({
     code: '',
     parent_id: '',
@@ -27,10 +28,24 @@ const Categories = () => {
     fetchDivisions();
   }, []);
 
+  useEffect(() => {
+    const delaySearch = setTimeout(() => {
+      if (searchQuery.length >= 3 || searchQuery.length === 0) {
+        fetchCategories();
+      }
+    }, 500);
+
+    return () => clearTimeout(delaySearch);
+  }, [searchQuery]);
+
   const fetchCategories = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('/categories');
+      const params = {};
+      if (searchQuery && searchQuery.length >= 3) {
+        params.search = searchQuery;
+      }
+      const response = await axios.get('/categories', { params });
       setCategories(response.data.data || response.data || []);
     } catch (error) {
       console.error('Error fetching categories:', error);
@@ -161,6 +176,16 @@ const Categories = () => {
                   {errorMessage}
                 </Alert>
               )}
+
+              <div className="mb-3">
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="Search categories (min 3 characters)..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
 
               <CategoryTable
                 categories={categories}
