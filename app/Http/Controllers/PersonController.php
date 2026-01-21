@@ -9,21 +9,57 @@ use Illuminate\Support\Facades\Validator;
 class PersonController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Display a listing of the resource with pagination and search.
      *
      * @return \Illuminate\Http\Response
      */
     public function index(Request $request)
     {
-        $query = Person::orderBy('created_at', 'desc');
+        try {
+            $perPage = $request->input('per_page', 10);
+            $search = $request->input('search', '');
 
-        // Filter by division_id if provided
-        if ($request->has('division_id') && $request->division_id) {
-            $query->where('division_id', $request->division_id);
+            $query = Person::orderBy('created_at', 'desc');
+
+            // Filter by division_id if provided
+            if ($request->has('division_id') && $request->division_id) {
+                $query->where('division_id', $request->division_id);
+            }
+
+            // Apply search filter
+            if ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('full_name', 'LIKE', "%{$search}%")
+                        ->orWhere('nic', 'LIKE', "%{$search}%")
+                        ->orWhere('email', 'LIKE', "%{$search}%")
+                        ->orWhere('office_phone', 'LIKE', "%{$search}%")
+                        ->orWhere('whatsapp', 'LIKE', "%{$search}%")
+                        ->orWhere('designation', 'LIKE', "%{$search}%")
+                        ->orWhere('code', 'LIKE', "%{$search}%");
+                });
+            }
+
+            $people = $query->paginate($perPage);
+
+            return response()->json([
+                'success' => true,
+                'data' => $people->items(),
+                'pagination' => [
+                    'current_page' => $people->currentPage(),
+                    'last_page' => $people->lastPage(),
+                    'per_page' => $people->perPage(),
+                    'total' => $people->total(),
+                    'from' => $people->firstItem(),
+                    'to' => $people->lastItem()
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error fetching persons',
+                'error' => $e->getMessage()
+            ], 500);
         }
-
-        $people = $query->get();
-        return response()->json($people);
     }
 
     /**

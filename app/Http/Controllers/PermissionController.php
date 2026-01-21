@@ -8,15 +8,46 @@ use Illuminate\Http\Request;
 class PermissionController extends Controller
 {
     /**
-     * Display a listing of permissions
+     * Display a listing of permissions with pagination and search
      */
-    public function index()
+    public function index(Request $request)
     {
-        $permissions = Permission::all();
-        return response()->json([
-            'success' => true,
-            'data' => $permissions
-        ]);
+        try {
+            $perPage = $request->input('per_page', 10);
+            $search = $request->input('search', '');
+
+            $query = Permission::query();
+
+            if ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'LIKE', "%{$search}%")
+                        ->orWhere('code', 'LIKE', "%{$search}%")
+                        ->orWhere('module', 'LIKE', "%{$search}%")
+                        ->orWhere('description', 'LIKE', "%{$search}%");
+                });
+            }
+
+            $permissions = $query->orderBy('id', 'desc')->paginate($perPage);
+
+            return response()->json([
+                'success' => true,
+                'data' => $permissions->items(),
+                'pagination' => [
+                    'current_page' => $permissions->currentPage(),
+                    'last_page' => $permissions->lastPage(),
+                    'per_page' => $permissions->perPage(),
+                    'total' => $permissions->total(),
+                    'from' => $permissions->firstItem(),
+                    'to' => $permissions->lastItem()
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error fetching permissions',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**

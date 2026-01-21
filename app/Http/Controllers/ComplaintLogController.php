@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Auth;
 class ComplaintLogController extends Controller
 {
     /**
-     * Display a listing of complaint logs
+     * Display a listing of complaint logs with pagination and search
      */
     public function index(Request $request)
     {
@@ -23,6 +23,9 @@ class ComplaintLogController extends Controller
                 return response()->json(['error' => 'Unauthorized'], 401);
             }
 
+            $perPage = $request->input('per_page', 10);
+            $search = $request->input('search', '');
+
             $query = ComplaintLog::query();
 
             // Filter by complaint_id if provided
@@ -30,15 +33,41 @@ class ComplaintLogController extends Controller
                 $query->where('complaint_id', $request->input('complaint_id'));
             }
 
+            // Apply search filter
+            if ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('action', 'LIKE', "%{$search}%")
+                        ->orWhere('remark', 'LIKE', "%{$search}%")
+                        ->orWhereHas('complaint', function ($subQ) use ($search) {
+                            $subQ->where('reference_no', 'LIKE', "%{$search}%")
+                                ->orWhere('title', 'LIKE', "%{$search}%");
+                        })
+                        ->orWhereHas('assignee', function ($subQ) use ($search) {
+                            $subQ->where('full_name', 'LIKE', "%{$search}%");
+                        })
+                        ->orWhereHas('status', function ($subQ) use ($search) {
+                            $subQ->where('name', 'LIKE', "%{$search}%");
+                        });
+                });
+            }
+
             $logs = $query->with([
                 'complaint',
                 'assignee',
                 'status'
-            ])->orderBy('created_at', 'desc')->get();
+            ])->orderBy('created_at', 'desc')->paginate($perPage);
 
             return response()->json([
                 'success' => true,
-                'data' => $logs
+                'data' => $logs->items(),
+                'pagination' => [
+                    'current_page' => $logs->currentPage(),
+                    'last_page' => $logs->lastPage(),
+                    'per_page' => $logs->perPage(),
+                    'total' => $logs->total(),
+                    'from' => $logs->firstItem(),
+                    'to' => $logs->lastItem()
+                ]
             ]);
         } catch (\Exception $e) {
             Log::error('Error fetching complaint logs: ' . $e->getMessage(), [

@@ -12,15 +12,55 @@ use Illuminate\Validation\Rule;
 class UserController extends Controller
 {
     /**
-     * Display a listing of users
+     * Display a listing of users with pagination and search
      */
-    public function index()
+    public function index(Request $request)
     {
-        $users = User::with(['person', 'role', 'division'])->get();
-        return response()->json([
-            'success' => true,
-            'data' => $users
-        ]);
+        try {
+            $perPage = $request->input('per_page', 10);
+            $search = $request->input('search', '');
+
+            $query = User::with(['person', 'role', 'division']);
+
+            if ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('username', 'LIKE', "%{$search}%")
+                        ->orWhere('designation', 'LIKE', "%{$search}%")
+                        ->orWhereHas('person', function ($subQ) use ($search) {
+                            $subQ->where('full_name', 'LIKE', "%{$search}%")
+                                ->orWhere('email', 'LIKE', "%{$search}%")
+                                ->orWhere('nic', 'LIKE', "%{$search}%");
+                        })
+                        ->orWhereHas('role', function ($subQ) use ($search) {
+                            $subQ->where('name', 'LIKE', "%{$search}%");
+                        })
+                        ->orWhereHas('division', function ($subQ) use ($search) {
+                            $subQ->where('name', 'LIKE', "%{$search}%");
+                        });
+                });
+            }
+
+            $users = $query->orderBy('id', 'desc')->paginate($perPage);
+
+            return response()->json([
+                'success' => true,
+                'data' => $users->items(),
+                'pagination' => [
+                    'current_page' => $users->currentPage(),
+                    'last_page' => $users->lastPage(),
+                    'per_page' => $users->perPage(),
+                    'total' => $users->total(),
+                    'from' => $users->firstItem(),
+                    'to' => $users->lastItem()
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error fetching users',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**

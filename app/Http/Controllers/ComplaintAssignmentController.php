@@ -14,16 +14,36 @@ use Illuminate\Support\Facades\Log;
 class ComplaintAssignmentController extends Controller
 {
     /**
-     * Display a listing of complaint assignments
+     * Display a listing of complaint assignments with pagination and search
      */
     public function index(Request $request)
     {
         try {
+            $perPage = $request->input('per_page', 10);
+            $search = $request->input('search', '');
+
             $query = ComplaintAssignment::query();
 
             // Filter by complaint_id if provided
             if ($request->has('complaint_id')) {
                 $query->where('complaint_id', $request->input('complaint_id'));
+            }
+
+            // Apply search filter
+            if ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('remark', 'LIKE', "%{$search}%")
+                        ->orWhereHas('complaint', function ($subQ) use ($search) {
+                            $subQ->where('reference_no', 'LIKE', "%{$search}%")
+                                ->orWhere('title', 'LIKE', "%{$search}%");
+                        })
+                        ->orWhereHas('assigneeDivision', function ($subQ) use ($search) {
+                            $subQ->where('name', 'LIKE', "%{$search}%");
+                        })
+                        ->orWhereHas('assigneeUser.person', function ($subQ) use ($search) {
+                            $subQ->where('full_name', 'LIKE', "%{$search}%");
+                        });
+                });
             }
 
             $assignments = $query->with([
@@ -32,12 +52,27 @@ class ComplaintAssignmentController extends Controller
                 'assigneeUser',
                 'assignerUser',
                 'lastStatus'
-            ])->get();
+            ])->orderBy('created_at', 'desc')->paginate($perPage);
 
-            return response()->json($assignments);
+            return response()->json([
+                'success' => true,
+                'data' => $assignments->items(),
+                'pagination' => [
+                    'current_page' => $assignments->currentPage(),
+                    'last_page' => $assignments->lastPage(),
+                    'per_page' => $assignments->perPage(),
+                    'total' => $assignments->total(),
+                    'from' => $assignments->firstItem(),
+                    'to' => $assignments->lastItem()
+                ]
+            ]);
         } catch (\Exception $e) {
             \Log::error('Error fetching complaint assignments: ' . $e->getMessage());
-            return response()->json(['error' => 'Failed to fetch assignments', 'message' => $e->getMessage()], 500);
+            return response()->json([
+                'success' => false,
+                'error' => 'Failed to fetch assignments',
+                'message' => $e->getMessage()
+            ], 500);
         }
     }
 

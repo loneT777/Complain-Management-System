@@ -69,14 +69,47 @@ class RolePermissionController extends Controller
     }
 
     /**
-     * Get all roles with their permissions
+     * Get all roles with their permissions with pagination and search
      */
-    public function index()
+    public function index(Request $request)
     {
-        $roles = Role::with(['permissions'])->get();
-        return response()->json([
-            'success' => true,
-            'data' => $roles
-        ]);
+        try {
+            $perPage = $request->input('per_page', 10);
+            $search = $request->input('search', '');
+
+            $query = Role::with(['permissions']);
+
+            if ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'LIKE', "%{$search}%")
+                        ->orWhere('description', 'LIKE', "%{$search}%")
+                        ->orWhereHas('permissions', function ($subQ) use ($search) {
+                            $subQ->where('name', 'LIKE', "%{$search}%")
+                                ->orWhere('code', 'LIKE', "%{$search}%");
+                        });
+                });
+            }
+
+            $roles = $query->orderBy('id', 'desc')->paginate($perPage);
+
+            return response()->json([
+                'success' => true,
+                'data' => $roles->items(),
+                'pagination' => [
+                    'current_page' => $roles->currentPage(),
+                    'last_page' => $roles->lastPage(),
+                    'per_page' => $roles->perPage(),
+                    'total' => $roles->total(),
+                    'from' => $roles->firstItem(),
+                    'to' => $roles->lastItem()
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error fetching role permissions',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }
