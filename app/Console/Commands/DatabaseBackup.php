@@ -4,6 +4,8 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\BackupNotification;
 use Carbon\Carbon;
 
 class DatabaseBackup extends Command
@@ -125,9 +127,13 @@ class DatabaseBackup extends Command
                 $this->cleanOldBackups($backupPath);
             }
 
+            // Send email notification
+            $this->sendEmailNotification('Database Backup', $filename, $filepath, $size, 'success');
+
             return Command::SUCCESS;
         } else {
             $this->error('Backup file was not created or is empty!');
+            $this->sendEmailNotification('Database Backup', $filename, $filepath, '0 B', 'failed', 'Backup file was not created or is empty');
             return Command::FAILURE;
         }
     }
@@ -175,5 +181,34 @@ class DatabaseBackup extends Command
         }
 
         return round($bytes, 2) . ' ' . $units[$i];
+    }
+
+    /**
+     * Send email notification
+     *
+     * @param string $backupType
+     * @param string $filename
+     * @param string $filepath
+     * @param string $filesize
+     * @param string $status
+     * @param string|null $errorMessage
+     * @return void
+     */
+    protected function sendEmailNotification($backupType, $filename, $filepath, $filesize, $status = 'success', $errorMessage = null)
+    {
+        try {
+            $this->info('Sending email notification...');
+            
+            $emailTo = env('BACKUP_EMAIL_TO', 'thasneemmohamed802@gmail.com');
+            
+            Mail::to($emailTo)->send(
+                new BackupNotification($backupType, $filename, $filepath, $filesize, $status, $errorMessage)
+            );
+            
+            $this->info("✓ Email sent to: {$emailTo}");
+        } catch (\Exception $e) {
+            $this->warn('Failed to send email notification: ' . $e->getMessage());
+            $this->warn('Backup completed but email notification failed.');
+        }
     }
 }

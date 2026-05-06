@@ -4,6 +4,8 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\BackupNotification;
 use Carbon\Carbon;
 use ZipArchive;
 
@@ -118,9 +120,13 @@ class FullBackup extends Command
                 $this->cleanOldBackups($backupPath);
             }
 
+            // Send email notification
+            $this->sendEmailNotification('Full Backup', $zipFilename, $zipFilepath, $size, 'success');
+
             return Command::SUCCESS;
         } else {
             $this->error('Backup file was not created!');
+            $this->sendEmailNotification('Full Backup', $zipFilename, $zipFilepath, '0 B', 'failed', 'Backup file was not created');
             return Command::FAILURE;
         }
     }
@@ -288,9 +294,13 @@ class FullBackup extends Command
                 $this->cleanOldBackups(dirname($zipFilepath));
             }
 
+            // Send email notification
+            $this->sendEmailNotification('Full Backup', $zipFilename, $zipFilepath, $size, 'success');
+
             return Command::SUCCESS;
         } else {
             $this->error('Failed to create backup archive!');
+            $this->sendEmailNotification('Full Backup', $zipFilename, $zipFilepath, '0 B', 'failed', 'Failed to create backup archive');
             return Command::FAILURE;
         }
     }
@@ -343,5 +353,35 @@ class FullBackup extends Command
             }
         }
         rmdir($dir);
+    }
+
+    /**
+     * Send email notification
+     *
+     * @param string $backupType
+     * @param string $filename
+     * @param string $filepath
+     * @param string $filesize
+     * @param string $status
+     * @param string|null $errorMessage
+     * @return void
+     */
+    protected function sendEmailNotification($backupType, $filename, $filepath, $filesize, $status = 'success', $errorMessage = null)
+    {
+        try {
+            $this->newLine();
+            $this->info('Sending email notification...');
+            
+            $emailTo = env('BACKUP_EMAIL_TO', 'thasneemmohamed802@gmail.com');
+            
+            Mail::to($emailTo)->send(
+                new BackupNotification($backupType, $filename, $filepath, $filesize, $status, $errorMessage)
+            );
+            
+            $this->info("✓ Email sent to: {$emailTo}");
+        } catch (\Exception $e) {
+            $this->warn('Failed to send email notification: ' . $e->getMessage());
+            $this->warn('Backup completed but email notification failed.');
+        }
     }
 }
